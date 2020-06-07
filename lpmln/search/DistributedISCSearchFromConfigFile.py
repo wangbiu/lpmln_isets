@@ -3,7 +3,7 @@
 @Time    : 2020/5/22 16:25
 @Author  : 王彬
 @Email   : wangbiu@foxmail.com
-@File    : DistributediscSearchFile.py
+@File    : DistributedISCSearchFile.py
 """
 
 from multiprocessing import Pool, Queue
@@ -28,11 +28,11 @@ stat_signal = "--stat--"
 condition_signal = "--cdt--"
 
 
-class iscFileTaskMasterQueueManager(BaseManager):
+class ISCFileTaskMasterQueueManager(BaseManager):
     pass
 
 
-class iscFileTaskWorkerQueueManager(BaseManager):
+class ISCFileTaskWorkerQueueManager(BaseManager):
     pass
 
 
@@ -52,9 +52,9 @@ def get_result_queue():
 
 def init_kmn_isc_task_master_from_config(isc_config_file="isc-tasks.json", sleep_time=60):
     start_time = datetime.now()
-    iscFileTaskMasterQueueManager.register("get_task_queue", callable=get_task_queue)
-    iscFileTaskMasterQueueManager.register("get_result_queue", callable=get_result_queue)
-    manager = iscFileTaskMasterQueueManager(address=(config.task_host, config.task_host_port),
+    ISCFileTaskMasterQueueManager.register("get_task_queue", callable=get_task_queue)
+    ISCFileTaskMasterQueueManager.register("get_result_queue", callable=get_result_queue)
+    manager = ISCFileTaskMasterQueueManager(address=(config.task_host, config.task_host_port),
                                             authkey=bytes(config.task_host_key, encoding="utf-8"))
     manager.start()
     task_queue = manager.get_task_queue()
@@ -170,9 +170,9 @@ def init_kmn_isc_task_worker(isc_config_file="isets-task.json", is_check_valid_r
     payload = config.worker_payload
     worker_pool = Pool(payload)
     pathlib.Path(config.task_host_lock_file).touch()
-    iscFileTaskWorkerQueueManager.register("get_task_queue")
-    iscFileTaskWorkerQueueManager.register("get_result_queue")
-    manager = iscFileTaskWorkerQueueManager(address=(config.task_host, config.task_host_port),
+    ISCFileTaskWorkerQueueManager.register("get_task_queue")
+    ISCFileTaskWorkerQueueManager.register("get_result_queue")
+    manager = ISCFileTaskWorkerQueueManager(address=(config.task_host, config.task_host_port),
                                             authkey=bytes(config.task_host_key, encoding="utf-8"))
     manager.connect()
     result_queue = manager.get_result_queue()
@@ -192,9 +192,9 @@ def init_kmn_isc_task_worker(isc_config_file="isets-task.json", is_check_valid_r
 
 
 def kmn_isc_task_worker(isc_config_file="isc-tasks.json", worker_name="", is_check_valid_rules=True, lp_type="lpmln"):
-    iscFileTaskWorkerQueueManager.register("get_task_queue")
-    iscFileTaskWorkerQueueManager.register("get_result_queue")
-    manager = iscFileTaskWorkerQueueManager(address=(config.task_host, config.task_host_port),
+    ISCFileTaskWorkerQueueManager.register("get_task_queue")
+    ISCFileTaskWorkerQueueManager.register("get_result_queue")
+    manager = ISCFileTaskWorkerQueueManager(address=(config.task_host, config.task_host_port),
                                             authkey=bytes(config.task_host_key, encoding="utf-8"))
     manager.connect()
     task_queue = manager.get_task_queue()
