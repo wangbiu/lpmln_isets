@@ -67,7 +67,7 @@ class BaseSAT(abc.ABC):
     @staticmethod
     def satisfy_program(cls, interpretation, program):
         for rule in program:
-            if not cls.satisfy_rule(interpretation, rule):
+            if not cls.satisfy_rule(cls, interpretation, rule):
                 return False
         return True
 

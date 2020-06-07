@@ -27,7 +27,7 @@ class LPMLNSAT(ASPSAT):
     def lpmln_reduct(cls, interpretation, program):
         prgs = []
         for rule in program:
-            if cls.satisfy_rule(interpretation, rule):
+            if cls.satisfy_rule(cls, interpretation, rule):
                 prgs.append(rule)
         return prgs
 
