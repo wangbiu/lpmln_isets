@@ -14,7 +14,7 @@ import copy
 
 
 class ISetConditionValidator:
-    def __init__(self, lp_type):
+    def __init__(self, lp_type="lpmln"):
         if lp_type == "asp":
             self.lp_se = ASPSEChecking
             raise RuntimeError("not support for now")
@@ -79,6 +79,7 @@ class ISetConditionValidator:
             if not is_se_sat:
                 singleton_iset_ids.append(nid)
 
+        is_se_sat = True
         condition = self.join_data_list(icondition, ",")
         if len(singleton_iset_ids) != 0:
             singleton_sets = self.join_data_list(singleton_iset_ids, ",")

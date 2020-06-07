@@ -36,6 +36,9 @@ def get_real_nonempty_iset_ids_from_partial_nonemtpy_iset_ids(partial_non_empty_
 
 
 def construct_iset_condition_from_non_emtpy_iset_ids(non_empty_iset_ids, iset_number):
+    """
+        non_empty_set_id = iset_id - 1 (list index)
+    """
     icondition = [0] * iset_number
     for ne in non_empty_iset_ids:
         icondition[ne] = 1

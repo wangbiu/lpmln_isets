@@ -180,6 +180,22 @@ def test_010_se_condition():
     print("all test cases pass !")
 
 
+def test_singleton_condition():
+    iset_id_1 = "0b100000100100010"
+    iset_id_2 = "0b000100100010100"
+    rule_number = 5
+    k = 0
+    m = 2
+    n = 3
+
+    non_empty_ids = [int(iset_id_1, 2) - 1, int(iset_id_2, 2) - 1]
+    print(non_empty_ids)
+
+    validator = ISetConditionValidator()
+    is_contain_valid, is_se_sat, condition = validator.validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids(non_empty_ids, k, m, n)
+    print(is_contain_valid, is_se_sat)
+    print(condition)
+
 
 if __name__ == '__main__':
     pass
