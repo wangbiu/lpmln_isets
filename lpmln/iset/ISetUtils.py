@@ -74,12 +74,12 @@ def construct_isets_from_iset_condition(icondition, iset_atom_number=1):
 
 def construct_sets_from_isets(ind_sets=dict(), is_print=False):
     ind_values = list(ind_sets.values())
-    rset_number = len(ind_values[0].cap_sets) + len(ind_values[0].union_sets)
+    rset_number = len(ind_values[0].intersect_sets) + len(ind_values[0].union_sets)
     sets = [set()] * rset_number
 
     for ind in ind_values:
-        for cn in ind.cap_sets:
-            sets[cn] = sets[cn].union(ind.ind_set)
+        for cn in ind.intersect_sets:
+            sets[cn] = sets[cn].union(ind.members)
 
     if is_print:
         for i in range(rset_number):
