@@ -10,6 +10,7 @@
 import lpmln.iset.ISetUtils as isu
 from lpmln.sat.LPMLNSEChecking import LPMLNSEChecking
 from lpmln.sat.ASPSEChecking import ASPSEChecking
+import copy
 
 
 class ISetConditionValidator():
@@ -38,7 +39,7 @@ class ISetConditionValidator():
         return is_contain_valid_rule, is_se_sat
 
     def validate_isets_kmn_program_from_non_empty_ids(self, non_empty_ids, k_size, m_size, n_size):
-        iset_number = 2 ** (3 * (k_size + m_size + n_size)) - 1
+        iset_number = isu.compute_iset_number_from_kmn(k_size, m_size, n_size)
         isets = isu.construct_isets_from_non_empty_iset_ids(non_empty_ids, iset_number=iset_number, iset_atom_number=1)
         return self.validate_isets_kmn_program(isets, k_size, m_size, n_size)
 
@@ -47,10 +48,36 @@ class ISetConditionValidator():
         return self.validate_isets_kmn_program(isets, k_size, m_size, n_size)
 
     def validate_isets_kmn_program_from_icondition_id(self, icondition_id, k_size, m_size, n_size):
-        iset_number = 2 ** (3 * (k_size + m_size + n_size)) - 1
+        iset_number = isu.compute_iset_number_from_kmn(k_size, m_size, n_size)
         isets = isu.construct_isets_from_icondition_id(icondition_id, iset_number)
         return self.validate_isets_kmn_program(isets, k_size, m_size, n_size)
 
+    def validate_kmn_extended_iset_condition(self, icondition, k_size, m_size, n_size):
+        isets = isu.construct_isets_from_iset_condition(icondition)
+        singleton_iset_ids = list()
+        is_contain_valid, is_se_sat = self.validate_isets_kmn_program(isets, k_size, m_size, n_size)
+        if is_contain_valid or not is_se_sat:
+            return is_contain_valid, is_se_sat, singleton_iset_ids
+
+        non_empty_ids = list()
+        for key in isets:
+            if len(isets[key].members) != 0:
+                non_empty_ids.append(key)
+        new_atom = 0
+
+        for nid in non_empty_ids:
+            extended_isets = copy.deepcopy(isets)
+            extended_isets[nid].members.add(new_atom)
+            is_contain_valid, is_se_sat = self.validate_isets_kmn_program(extended_isets, k_size, m_size, n_size)
+            if not is_se_sat:
+                singleton_iset_ids.append(nid)
+
+        return is_contain_valid, is_se_sat, singleton_iset_ids
+
+    def validate_extended_iset_condition_from_non_emtpy_iset_ids(self, non_emtpy_iset_ids, k_size, m_size, n_size):
+        iset_number = isu.compute_iset_number_from_kmn(k_size, m_size, n_size)
+        icondition = isu.construct_iset_condition_from_non_emtpy_iset_ids(non_emtpy_iset_ids, iset_number)
+        return self.validate_kmn_extended_iset_condition(icondition, k_size, m_size, n_size)
 
 
 if __name__ == '__main__':

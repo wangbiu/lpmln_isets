@@ -35,10 +35,15 @@ def get_real_nonempty_iset_ids_from_partial_nonemtpy_iset_ids(partial_non_empty_
     return partial_non_empty_iset_ids
 
 
-def construct_isets_from_non_empty_iset_ids(non_empty_iset_ids, iset_number, iset_atom_number=1):
+def construct_iset_condition_from_non_emtpy_iset_ids(non_empty_iset_ids, iset_number):
     icondition = [0] * iset_number
     for ne in non_empty_iset_ids:
         icondition[ne] = 1
+    return icondition
+
+
+def construct_isets_from_non_empty_iset_ids(non_empty_iset_ids, iset_number, iset_atom_number=1):
+    icondition = construct_iset_condition_from_non_emtpy_iset_ids(non_empty_iset_ids, iset_number)
     isets = construct_isets_from_iset_condition(icondition, iset_atom_number)
     return isets
 
@@ -123,6 +128,9 @@ def construct_isets_from_icondition_id(condition_id, iset_number, iset_atom_numb
     icondition = construct_iset_condition_from_icondition_id(condition_id, iset_number)
     return construct_isets_from_iset_condition(icondition, iset_atom_number=iset_atom_number)
 
+
+def compute_iset_number_from_kmn(k_size, m_size, n_size):
+    return 2 ** (3 * (k_size + m_size + n_size)) - 1
 
 if __name__ == '__main__':
     pass
