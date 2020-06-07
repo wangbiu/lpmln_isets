@@ -103,13 +103,25 @@ def construct_kmn_program_from_isets(isets, k_size, m_size, n_size):
     km_size = k_size + m_size
     for i in range(rule_number):
         r = rules[i]
-        if i < prg_k:
-            prg_k.extend(r)
-        elif prg_k <= i < km_size:
+        if i < k_size:
+            prg_k.append(r)
+        elif k_size <= i < km_size:
             prg_m.append(r)
         else:
             prg_n.append(r)
     return prg_k, prg_m, prg_n
+
+
+def construct_iset_condition_from_icondition_id(condition_id, iset_number):
+    id_str = bin(condition_id)[2:]
+    id_str = "0" * (iset_number - len(id_str)) + id_str
+    icondition = [int(s) for s in id_str]
+    return icondition
+
+
+def construct_isets_from_icondition_id(condition_id, iset_number, iset_atom_number=1):
+    icondition = construct_iset_condition_from_icondition_id(condition_id, iset_number)
+    return construct_isets_from_iset_condition(icondition, iset_atom_number=iset_atom_number)
 
 
 if __name__ == '__main__':

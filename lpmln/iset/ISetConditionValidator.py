@@ -37,6 +37,20 @@ class ISetConditionValidator():
         is_se_sat = self.lp_se.se_check_kmn_program(*kmn)
         return is_contain_valid_rule, is_se_sat
 
+    def validate_isets_kmn_program_from_non_empty_ids(self, non_empty_ids, k_size, m_size, n_size):
+        iset_number = 2 ** (3 * (k_size + m_size + n_size)) - 1
+        isets = isu.construct_isets_from_non_empty_iset_ids(non_empty_ids, iset_number=iset_number, iset_atom_number=1)
+        return self.validate_isets_kmn_program(isets, k_size, m_size, n_size)
+
+    def validate_isets_kmn_program_from_iset_condition(self, icondition, k_size, m_size, n_size):
+        isets = isu.construct_isets_from_iset_condition(icondition, iset_atom_number=1)
+        return self.validate_isets_kmn_program(isets, k_size, m_size, n_size)
+
+    def validate_isets_kmn_program_from_icondition_id(self, icondition_id, k_size, m_size, n_size):
+        iset_number = 2 ** (3 * (k_size + m_size + n_size)) - 1
+        isets = isu.construct_isets_from_icondition_id(icondition_id, iset_number)
+        return self.validate_isets_kmn_program(isets, k_size, m_size, n_size)
+
 
 
 if __name__ == '__main__':
