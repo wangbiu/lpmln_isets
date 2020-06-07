@@ -7,6 +7,7 @@
 """
 
 import copy
+import math
 
 
 class IndependentSet:
@@ -14,9 +15,13 @@ class IndependentSet:
         self.intersect_sets = list()
         self.union_sets = list()
         self.members = set()
+        self.is_singleton = False
 
         self.iset_id = -1
         self.iset_key = ""
+
+        self.set_names_template = ["h(%d)", "pb(%d)", "nb(%d)"]
+        self.set_names = []
 
     def get_iset_key(self):
         if self.iset_key == "":
@@ -49,6 +54,68 @@ class IndependentSet:
         self.iset_key = ""
         self.iset_id = -1
         self.get_iset_key()
+
+    def generate_set_names(self):
+        rule_set_number = len(self.intersect_sets) + len(self.union_sets)
+        rule_number = rule_set_number // 3 + 1
+        for i in range(1, rule_number):
+            for s in self.set_names_template:
+                self.set_names.append(s % i)
+
+    def generate_prefix_op_string(self, sets, op):
+        if len(sets) == 0:
+            return ""
+
+        if len(sets) == 1:
+            return sets[0]
+
+        set_str = sets[0]
+        for i in range(1, len(sets)):
+            set_str = "%s(%s, %s)" % (op, set_str, sets[i])
+
+        return set_str
+
+    def stringfy_iset_condition_rule(self):
+        self.generate_set_names()
+        intersect_sets = [self.set_names[i] for i in self.intersect_sets]
+        union_sets = [self.set_names[i] for i in self.union_sets]
+        i_part = self.generate_prefix_op_string(intersect_sets, "n")
+        u_part = self.generate_prefix_op_string(union_sets, "u")
+
+        if u_part == "":
+            d_part = i_part
+        else:
+            d_part = "d(%s, %s)" % (i_part, u_part)
+
+        if len(self.members) == 0:
+            iset = "eq(empty_set, %s)." % d_part
+        else:
+            iset = "ps(empty_set, %s)." % d_part
+
+        if self.is_singleton:
+            singleton = "singleton(%s)." % d_part
+            iset = "%s \n %s" % (iset, singleton)
+
+        return iset
+
+    def stringfy_iset_condition_tex(self):
+        self.generate_set_names()
+        intersect_sets = [self.set_names[i] for i in self.intersect_sets]
+        union_sets = [self.set_names[i] for i in self.union_sets]
+        i_part = " \cap ".join(intersect_sets)
+        u_part = " \cup ".join(union_sets)
+        iset = "I_{%d} = \\left( %s \\right) - \\left( %s \\right) %%s \\emptyset \n" % (self.get_iset_id(), i_part, u_part)
+        if len(self.members) == 0:
+            eq = "="
+        else:
+            eq = "\\neq"
+        iset = iset % eq
+
+        if self.is_singleton:
+            singleton = "|I_{%d}| = 1" % self.get_iset_id()
+            iset = iset + singleton
+
+        return iset
 
     def __str__(self):
         self.get_iset_key()
