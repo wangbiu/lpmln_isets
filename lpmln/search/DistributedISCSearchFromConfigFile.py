@@ -61,8 +61,7 @@ def init_kmn_isc_task_master_from_config(isc_config_file="isets-tasks.json", sle
     result_queue = manager.get_result_queue()
 
     working_hosts_number = 0
-    msg_text = "isc task master start, find %d task workers, load isc tasks from %s" % (
-    working_hosts_number, isc_config_file)
+    msg_text = "isc task master start, load isc tasks from %s" % (isc_config_file)
     logging.info(msg_text)
     msg.send_message(msg_text)
 
@@ -84,7 +83,7 @@ def init_kmn_isc_task_master_from_config(isc_config_file="isets-tasks.json", sle
         if sleep_cnt == 10:
             msg_texts = dump_isc_task_results(isc_tasks)
             msg_text = "isc tasks progress info, remain %d task hosts, %d task slices:  \n\t\t%s" % (
-            working_hosts_number, task_queue.qsize(), "\n\t\t".join(msg_texts))
+                working_hosts_number, task_queue.qsize(), "\n\t\t".join(msg_texts))
             logging.info(msg_text)
             msg.send_message(msg_text)
             sleep_cnt = 0
@@ -166,7 +165,7 @@ def dump_isc_task_results(isc_tasks):
     return msg_texts
 
 
-def init_kmn_isc_task_worker(isc_config_file="isets-task.json", is_check_valid_rules=True, lp_type="lpmln"):
+def init_kmn_isc_task_workers(isc_config_file="isets-tasks.json", is_check_valid_rules=True, lp_type="lpmln"):
     payload = config.worker_payload
     worker_pool = Pool(payload)
     pathlib.Path(config.task_host_lock_file).touch()
@@ -205,7 +204,8 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_name="", is_c
     msg_text = "task worker %s start!" % (worker_name)
     logging.info(msg_text)
 
-    isc_tasks = isc_cfg.ISCTaskConfig(isc_config_file).isc_tasks
+    isc_tasks = isc_cfg.ISCTaskConfig(isc_config_file)
+    isc_tasks = isc_tasks.isc_tasks
     processed_task_slices_number = 0
 
     while True:
@@ -216,8 +216,8 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_name="", is_c
             time.sleep(5)
             continue
 
-        task = task_queue.get()
-        if task[0] == kill_signal:
+        itask = task_queue.get()
+        if itask[0] == kill_signal:
             msg_text = "%s:%s isc task worker terminate ..." % (worker_host_name, worker_name)
             logging.info(msg_text)
             break
@@ -225,19 +225,19 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_name="", is_c
         start_time = datetime.now()
         start_time_str = start_time.strftime(time_fmt)[:-3]
 
-        isc_task_id = task[0]
+        isc_task_id = itask[0]
         it = isc_tasks[isc_task_id]
-        task = task[1]
         k_size = it.k_m_n[0]
         m_size = it.k_m_n[1]
         n_size = it.k_m_n[2]
         unknown_iset_number = it.unknown_iset_number
         empty_iset_ids = it.empty_iset_ids
 
-        task_start = task[0]
+        task_details = itask[1]
+        task_start = task_details[0]
         isc_begin = task_start.split(",")
         isc_begin = [int(s) for s in isc_begin]
-        task_number = task[1]
+        task_number = task_details[1]
 
         task_name = worker_name + ("-task-%d" % processed_task_slices_number)
         ne_number = len(isc_begin)
@@ -281,4 +281,4 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_name="", is_c
 
 if __name__ == '__main__':
     # init_kmn_isc_task_master_from_config(sleep_time=2)
-    init_kmn_isc_task_worker()
+    init_kmn_isc_task_workers()

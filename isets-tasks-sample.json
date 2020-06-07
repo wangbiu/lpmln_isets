@@ -4,4 +4,3 @@
   {"rule_number": 2, "min_ne": 1, "max_ne": 24, "is_skip": true, "kmns": ["0-1-1"]},
   {"rule_number": 3, "min_ne": 1, "max_ne": 6, "is_skip": true}
 ]
-6

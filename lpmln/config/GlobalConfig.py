@@ -39,7 +39,6 @@ class GlobalConfiguration:
         self.worker_hosts = ""
         self.worker_payload = 1
         self.worker_host_name = ""
-        self.max_task_works_number = 300
         self.task_host_lock_file = "isc-task.lock"
 
         # log
@@ -72,8 +71,6 @@ class GlobalConfiguration:
 
         self.task_host_port = int(self.task_host_port)
         self.worker_payload = int(self.worker_payload)
-        self.max_task_works_number = int(self.max_task_works_number)
-
 
         # log
         self.log_config_file = os.path.join(self.project_base_dir, self.log_config_file)
@@ -89,6 +86,8 @@ class GlobalConfiguration:
 
         self.isc_results_path = os.path.join(self.io_data_dir, self.isc_results_path)
         self.create_dirs(self.isc_results_path)
+
+        self.task_host_lock_file = os.path.join(self.project_base_dir, self.task_host_lock_file)
 
     def create_dirs(self, path):
         if not os.path.exists(path):
