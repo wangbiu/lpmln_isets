@@ -64,7 +64,7 @@ class ISetConditionValidator:
         singleton_iset_ids = list()
         is_contain_valid, is_se_sat = self.validate_isets_kmn_program(isets, k_size, m_size, n_size, is_check_valid_rule)
         if is_contain_valid or not is_se_sat:
-            return is_contain_valid, is_se_sat, singleton_iset_ids
+            return is_contain_valid, is_se_sat, self.join_data_list(icondition, ",")
 
         non_empty_ids = list()
         for key in isets:
@@ -80,11 +80,12 @@ class ISetConditionValidator:
                 singleton_iset_ids.append(nid)
 
         condition = self.join_data_list(icondition, ",")
-        singleton_sets = self.join_data_list(singleton_iset_ids, ",")
-        condition = condition + ":" + singleton_sets
+        if len(singleton_iset_ids) != 0:
+            singleton_sets = self.join_data_list(singleton_iset_ids, ",")
+            condition = condition + ":" + singleton_sets
         return is_contain_valid, is_se_sat, condition
 
-    def validate_extended_iset_condition_from_non_emtpy_iset_ids(self, non_emtpy_iset_ids, k_size, m_size, n_size, is_check_valid_rule=True):
+    def validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids(self, non_emtpy_iset_ids, k_size, m_size, n_size, is_check_valid_rule=True):
         iset_number = isu.compute_iset_number_from_kmn(k_size, m_size, n_size)
         icondition = isu.construct_iset_condition_from_non_emtpy_iset_ids(non_emtpy_iset_ids, iset_number)
         return self.validate_kmn_extended_iset_condition(icondition, k_size, m_size, n_size, is_check_valid_rule)

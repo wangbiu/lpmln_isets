@@ -17,8 +17,11 @@ def search(k_size, m_size, n_size, is_check_valid_rule=False, lp_type="lpmln"):
     se_conditions = list()
     non_se_conditions = list()
     for sid in range(searching_space_size):
-        is_contain_valid, is_se_sat, condition = validator.validate_isets_kmn_program_from_icondition_id(
-            sid, k_size, m_size, n_size, is_check_valid_rule=is_check_valid_rule)
+        # is_contain_valid, is_se_sat, condition = validator.validate_isets_kmn_program_from_icondition_id(
+        #     sid, k_size, m_size, n_size, is_check_valid_rule=is_check_valid_rule)
+        icondition = isu.construct_iset_condition_from_icondition_id(sid, iset_number)
+        is_contain_valid, is_se_sat, condition = validator.validate_kmn_extended_iset_condition(
+            icondition, k_size, m_size, n_size, is_check_valid_rule)
 
         if not is_contain_valid:
             if is_se_sat:

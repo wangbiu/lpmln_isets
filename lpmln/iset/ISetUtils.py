@@ -59,7 +59,7 @@ def construct_isets_from_iset_condition(icondition, iset_atom_number=1):
             continue
 
         iset = IndependentSet()
-        iset.generate_iset_iusets_from_iset_id(iset_id, rset_number)
+        iset.generate_iset_iusets_from_iset_id(iset_id + 1, rset_number)
         member = set()
         if icondition[iset_id] == 1:
             for i in range(iset_atom_number):
