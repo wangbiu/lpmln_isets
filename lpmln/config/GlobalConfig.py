@@ -94,6 +94,17 @@ class GlobalConfiguration:
         if not os.path.exists(path):
             os.makedirs(path)
 
+    def get_task_slice_file_path(self, rule_number, min_non_empty_iset_number, max_non_empty_iset_number):
+        slice_file = "ts-%d-%d-%d.txt" % (rule_number, min_non_empty_iset_number, max_non_empty_iset_number)
+        slice_file = os.path.join(self.isc_task_path, slice_file)
+        return slice_file
+
+    def get_isc_results_file_path(self, k_size, m_size, n_size, min_non_empty_iset_number, max_non_empty_iset_number):
+        result_file = "%d-%d-%d-isc-%d-%d-emp.txt" % (
+            k_size, m_size, n_size, min_non_empty_iset_number, max_non_empty_iset_number)
+        result_file = os.path.join(self.isc_results_path, result_file)
+        return result_file
+
 
 def load_configuration():
     config = GlobalConfiguration()

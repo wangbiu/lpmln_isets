@@ -312,9 +312,9 @@ $RECYCLE.BIN/
 
 # End of https://www.gitignore.io/api/linux,python,django,windows,pycharm+all
 
-isets_output
+isc-data
 logging.ini
 logs
-lpmln_isets.ini
+lpmln-isets.ini
 isets-worker-host.lock
 isets-tasks.json
