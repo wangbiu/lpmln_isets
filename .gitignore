@@ -316,5 +316,5 @@ isc-data
 logging.ini
 logs
 lpmln-isets.ini
-isets-worker-host.lock
+isc-task.lock
 isets-tasks.json

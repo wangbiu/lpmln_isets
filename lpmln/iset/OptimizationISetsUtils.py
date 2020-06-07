@@ -8,6 +8,7 @@
 """
 
 import lpmln.iset.ISetUtils as isu
+from lpmln.iset.IndependentSet import IndependentSet
 import copy
 
 """
@@ -21,10 +22,11 @@ def get_hpn_independent_set_ids(rule_number):
     iset_number = 2 ** rset_number - 1
 
     empty_iset_ids = set()
+    iset = IndependentSet()
 
     for iset_id in range(0, iset_number):
-        caps, unions = isu.get_cap_union_sets_from_iset_id(iset_id + 1, rset_number)
-        caps = set(caps)
+        iset.generate_iset_iusets_from_iset_id(iset_id + 1, rset_number)
+        caps = set(iset.intersect_sets)
 
         for r in range(rule_number):
             pb_set_id = 3 * r + 1
@@ -42,10 +44,11 @@ def get_hn_independent_set_ids(rule_number):
     iset_number = 2 ** rset_number - 1
 
     empty_iset_ids = set()
+    iset = IndependentSet()
 
     for iset_id in range(0, iset_number):
-        caps, unions = isu.get_cap_union_sets_from_iset_id(iset_id + 1, rset_number)
-        caps = set(caps)
+        iset.generate_iset_iusets_from_iset_id(iset_id + 1, rset_number)
+        caps = set(iset.intersect_sets)
 
         for r in range(rule_number):
             h_set_id = 3 * r

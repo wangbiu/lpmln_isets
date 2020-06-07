@@ -50,7 +50,7 @@ def get_result_queue():
     return global_result_queue
 
 
-def init_kmn_isc_task_master_from_config(isc_config_file="isc-tasks.json", sleep_time=60):
+def init_kmn_isc_task_master_from_config(isc_config_file="isets-tasks.json", sleep_time=60):
     start_time = datetime.now()
     ISCFileTaskMasterQueueManager.register("get_task_queue", callable=get_task_queue)
     ISCFileTaskMasterQueueManager.register("get_result_queue", callable=get_result_queue)
@@ -191,7 +191,7 @@ def init_kmn_isc_task_worker(isc_config_file="isets-task.json", is_check_valid_r
     logging.info("task worker host %s exit ..." % config.worker_host_name)
 
 
-def kmn_isc_task_worker(isc_config_file="isc-tasks.json", worker_name="", is_check_valid_rules=True, lp_type="lpmln"):
+def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_name="", is_check_valid_rules=True, lp_type="lpmln"):
     ISCFileTaskWorkerQueueManager.register("get_task_queue")
     ISCFileTaskWorkerQueueManager.register("get_result_queue")
     manager = ISCFileTaskWorkerQueueManager(address=(config.task_host, config.task_host_port),
