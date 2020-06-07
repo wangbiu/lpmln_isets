@@ -31,14 +31,31 @@ class IndependentSet:
 
         return self.iset_key
 
+    def generate_iset_iusets_from_iset_id(self, id, rule_set_number):
+        self.iset_id = id
+        id_str = bin(id)[2:]
+        id_str = "0" * (rule_set_number - len(id_str)) + id_str
+        self.intersect_sets = []
+        self.union_sets = []
+        for i in range(rule_set_number):
+            if id_str[i] == "1":
+                self.intersect_sets.append(i)
+            else:
+                self.union_sets.append(i)
+
     def set_cap_sets(self, cap_sets):
         self.intersect_sets = list(copy.deepcopy(cap_sets))
 
     def set_union_sets(self, union_sets):
         self.union_sets = list(copy.deepcopy(union_sets))
 
-    def set_ind_set(self, ind_set):
-        self.members = set(copy.deepcopy(ind_set))
+    def set_members(self, members, is_set_singleton=False):
+        self.members = set(copy.deepcopy(members))
+        if is_set_singleton:
+            if self.members == 1:
+                self.is_singleton = True
+            else:
+                self.is_singleton = False
 
     def get_iset_id(self):
         if self.iset_id < 0:

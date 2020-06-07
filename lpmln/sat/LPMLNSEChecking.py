@@ -14,6 +14,21 @@ import itertools
 class LPMLNSEChecking(BaseSEChecking):
 
     @staticmethod
+    def is_se_valid_rule(rule):
+        head = rule[0]
+        pb = rule[1]
+        nb = rule[2]
+
+        hp = head.intersection(pb)
+        pn = pb.intersection(nb)
+        hn = head.difference(nb)
+
+        if len(hp) == 0 and len(pn) == 0 and len(hn) > 0:
+            return False
+        else:
+            return True
+
+    @staticmethod
     def se_check_program(prg1=list(), prg2=list()):
         universe = LPMLNSEChecking.get_universe_from_programs([prg1, prg2])
         size = len(universe)
