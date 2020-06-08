@@ -8,8 +8,9 @@
 """
 
 import math
-from lpmln.iset.IndependentSet import IndependentSet
 import copy
+import itertools
+from lpmln.iset.IndependentSet import IndependentSet
 
 
 def get_real_nonempty_iset_ids_from_partial_nonemtpy_iset_ids(partial_non_empty_iset_ids, known_empty_iset_ids, known_non_empty_iset_ids=list()):
@@ -134,6 +135,51 @@ def construct_isets_from_icondition_id(condition_id, iset_number, iset_atom_numb
 
 def compute_iset_number_from_kmn(k_size, m_size, n_size):
     return 2 ** (3 * (k_size + m_size + n_size)) - 1
+
+
+def get_universe(sets=list()):
+    univ = set()
+    for s in sets:
+        univ = univ.union(s)
+    return univ
+
+
+def compute_isets_for_sets(sets=list(), is_print=False):
+    univ = get_universe(sets)
+    set_number = len(sets)
+    set_names = set([n for n in range(set_number)])
+    ind_sets = dict()
+    for i in range(1, set_number + 1):
+        for ist_set in itertools.combinations(set_names, i):
+            union_sets = set_names.difference(ist_set)
+            iset = IndependentSet()
+
+            iset.set_intersect_sets(ist_set)
+            iset.set_union_sets(union_sets)
+            iset_id = iset.get_iset_id()
+
+            member = univ
+            for s in ist_set:
+                member = member.intersection(sets[s])
+            union = set()
+            for s in union_sets:
+                union = union.union(sets[s])
+            iset.set_members(member.difference(union))
+            ind_sets[iset_id] = iset
+
+    if is_print:
+        for key in ind_sets:
+            print(ind_sets[key])
+
+    return ind_sets
+
+
+def compute_isets_from_program(program=list()):
+    sets = []
+    for rule in program:
+        sets.extend(rule)
+    return compute_isets_for_sets(sets)
+
 
 if __name__ == '__main__':
     pass

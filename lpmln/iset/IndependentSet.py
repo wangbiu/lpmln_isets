@@ -43,7 +43,7 @@ class IndependentSet:
             else:
                 self.union_sets.append(i)
 
-    def set_cap_sets(self, cap_sets):
+    def set_intersect_sets(self, cap_sets):
         self.intersect_sets = list(copy.deepcopy(cap_sets))
 
     def set_union_sets(self, union_sets):
