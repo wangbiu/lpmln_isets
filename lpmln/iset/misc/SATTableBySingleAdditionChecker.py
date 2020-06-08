@@ -64,8 +64,8 @@ class SATTableBySingleAdditionChecker(BaseSATTableChecker):
             iset_atoms = iset.members
             if len(iset_atoms) > 0:
                 add_at = set([-1])
-                interpretation_atoms = atom_universe.union(add_at)
-                se_results = self.check_relations_for_one_rule_and_select_iset(interpretation_atoms, add_at, rule,
+                # interpretation_atoms = atom_universe.union(add_at)
+                se_results = self.check_relations_for_one_rule_and_select_iset(atom_universe, add_at, rule,
                                                                                case_flag)
                 se_case_results[case_flag].extend(se_results)
 
@@ -75,9 +75,10 @@ class SATTableBySingleAdditionChecker(BaseSATTableChecker):
         se_sats = list()
 
         new_rule = copy.deepcopy(rule)
+        add_atom = list(op_atom)[0]
         for i in range(3):
             if case_flag[i] == "1":
-                new_rule[i].union(op_atom)
+                new_rule[i].add(add_atom)
 
         se_sat = self.lp_type.se_satisfy_rule(self.lp_type, here, there, rule)
         se_sats.append(int(se_sat))
@@ -101,6 +102,6 @@ class SATTableBySingleAdditionChecker(BaseSATTableChecker):
 
 if __name__ == '__main__':
     checker = SATTableBySingleAdditionChecker()
-    checker.se_rule_relation_checker(atom_size=3)
+    checker.se_rule_relation_checker(atom_size=5)
     pass
     
