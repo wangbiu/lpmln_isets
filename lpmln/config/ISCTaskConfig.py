@@ -89,15 +89,15 @@ class ISCTask:
 
     def get_progress_info(self):
         if self.task_complete_number == 0:
-            prg_info = ":unicorn: %s: total tasks: %d, waiting for resources !" % (self.task_flag, self.task_total_number)
+            prg_info = ":timer_clock:  %s: total tasks: %d, waiting for resources !" % (self.task_flag, self.task_total_number)
         else:
             self.task_progress_rate = 100.0 * self.task_complete_number / self.task_total_number
+            task_running_time = self.task_end_time - self.task_start_time
             if len(self.se_conditions) == 0:
-                prg_info = ":unicorn: %s: total tasks: %d, complete tasks: %d (%.3f%%), find 0 se conditions." % (
-                    self.task_flag, self.task_total_number, self.task_complete_number, self.task_progress_rate)
+                prg_info = ":mag_right: %s: total tasks: %d, complete tasks: %d (%.3f%%, running time: %s), find 0 se conditions." % (
+                    self.task_flag, self.task_total_number, self.task_complete_number, self.task_progress_rate, str(task_running_time))
             else:
-                task_running_time = self.task_end_time - self.task_start_time
-                prg_info = ":unicorn: %s: total tasks: %d, complete tasks: %d (%.3f%%, running time: %s), find %d se conditions,  dumped to %s" % (
+                prg_info = ":rocket: %s: total tasks: %d, complete tasks: %d (%.3f%%, running time: %s), find %d se conditions,  dumped to %s" % (
                     self.task_flag, self.task_total_number, self.task_complete_number, self.task_progress_rate,
                     str(task_running_time), len(self.se_conditions), self.se_condition_dump_file)
         return prg_info
