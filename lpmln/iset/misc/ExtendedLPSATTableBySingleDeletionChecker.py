@@ -115,8 +115,8 @@ class ExtendedLPSATTableBySingleDeletionChecker(SATTableBySingleDeletionChecker)
 
 
 if __name__ == '__main__':
-    # checker = ExtendedLPSATTableBySingleDeletionChecker(lp_type="asp")
-    checker = ExtendedLPSATTableBySingleDeletionChecker()
+    checker = ExtendedLPSATTableBySingleDeletionChecker(lp_type="asp")
+    # checker = ExtendedLPSATTableBySingleDeletionChecker()
     # generate_000_sat_result()
     checker.se_rule_relation_checker(3)
     pass
