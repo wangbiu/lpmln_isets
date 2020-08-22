@@ -10,7 +10,9 @@
 import itertools
 import copy
 from lpmln.iset.misc.SATTableBySingleDeletionChecker import SATTableBySingleDeletionChecker
-
+import logging
+import lpmln.config.GlobalConfig as cfg
+cofig = cfg.load_configuration()
 
 class ExtendedLPSATTableBySingleDeletionChecker(SATTableBySingleDeletionChecker):
 
@@ -28,9 +30,12 @@ class ExtendedLPSATTableBySingleDeletionChecker(SATTableBySingleDeletionChecker)
 
     def se_rule_relation_checker(self, atom_size=7):
         result_table = dict()
-
+        logging.info("start SE SAT Table by Single Deletion Checker")
         rule_sets = self.generate_all_subsets(atom_size)
         set_size = len(rule_sets)
+        rule_numbers = set_size * set_size * set_size *set_size
+        tested_rule_number = 0
+        print_loop = 5000
         for phi in range(set_size):
             for pbi in range(set_size):
                 for nbi in range(set_size):
@@ -49,7 +54,11 @@ class ExtendedLPSATTableBySingleDeletionChecker(SATTableBySingleDeletionChecker)
                         rule = (set(ph_set), set(pb_set), set(nb_set), set(nh_set))
                         case_sat_results = self.check_se_relation_for_one_rule(rule, atom_universe)
                         self.extract_direct_case_sat_results(case_sat_results, result_table)
+                        tested_rule_number += 1
+                        if tested_rule_number % print_loop == 0:
+                            logging.info("tested rules %d / %d " % (tested_rule_number, rule_numbers))
 
+        logging.info("tested rules %d / %d " % (tested_rule_number, rule_numbers))
         result_table[self.all_case_flags[0]] = self.generate_000_sat_result()
         self.print_sat_result_table(result_table)
 
