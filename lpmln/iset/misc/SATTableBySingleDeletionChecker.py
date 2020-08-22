@@ -8,6 +8,7 @@
 
 import lpmln.iset.ISetUtils as isu
 from lpmln.iset.misc.BaseSATTableChecker import BaseSATTableChecker
+import lpmln.iset.misc.SESATTableUtils as seut
 
 
 class SATTableBySingleDeletionChecker(BaseSATTableChecker):
@@ -15,44 +16,18 @@ class SATTableBySingleDeletionChecker(BaseSATTableChecker):
         super(SATTableBySingleDeletionChecker, self).__init__(lp_type)
 
     def generate_empty_table(self):
-        table = list()
-        for i in range(3):
-            item = list()
-            for j in range(2):
-                item.append(set())
-            table.append(item)
+        table = seut.generate_single_deletion_empty_table()
         return table
 
     def generate_000_sat_result(self):
-        table = self.generate_empty_table()
-        for model in table:
-            model[0].add(0)
-            model[1].add(1)
+        table = seut.generate_0000_single_deletion_sat_result()
         return table
 
     def extract_direct_case_sat_results(self, case_sat_results, total_results):
-        for case in case_sat_results:
-            if case not in total_results:
-                total_results[case] = self.generate_empty_table()
-            case_table = total_results[case]
-            sat_results = case_sat_results[case]
-
-            for sr in sat_results:
-                del_rule_sat = sr[3]
-                for i in range(0, 3):
-                    case_table[i][sr[i]].add(del_rule_sat)
+        seut.extract_direct_single_deletion_case_sat_results(case_sat_results, total_results)
 
     def print_sat_result_table(self, result_table):
-        for case in self.all_case_flags:
-            table = result_table[case]
-            print(case, "|", table[0][1], "|", table[0][0])
-
-        print("")
-        for case in self.all_case_flags:
-            table = result_table[case]
-            print(case, "|", table[1][1], "|", table[1][0], "|", table[2][1], "|", table[2][0])
-
-        print("\n")
+        seut.print_single_deletion_sat_result_table(self.all_case_flags, result_table)
 
     def check_se_relation_for_one_rule(self, rule, atom_universe):
         se_case_results = dict()
@@ -109,10 +84,6 @@ class SATTableBySingleDeletionChecker(BaseSATTableChecker):
         #         print("here+ ", here_int, "there+ ", there_int)
 
         return se_sats
-
-
-
-
 
 
 if __name__ == '__main__':
