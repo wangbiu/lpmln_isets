@@ -14,7 +14,7 @@ import copy
 
 
 class ISetConditionValidator:
-    def __init__(self, lp_type="lpmln"):
+    def __init__(self, is_use_extended_rules, lp_type="lpmln"):
         if lp_type == "asp":
             self.lp_se = ASPSEChecking
             raise RuntimeError("not support for now")
@@ -23,8 +23,14 @@ class ISetConditionValidator:
         else:
             raise RuntimeError("unknown SE checking logic: %s" % lp_type)
 
+        self.is_use_extended_rules = is_use_extended_rules
+        if is_use_extended_rules:
+            self.rule_set_size = 4
+        else:
+            self.rule_set_size = 3
+
     def validate_isets_kmn_program(self, isets, k_size, m_size, n_size, is_check_valid_rule=True):
-        kmn = isu.construct_kmn_program_from_isets(isets, k_size, m_size, n_size)
+        kmn = isu.construct_kmn_program_from_isets(isets, k_size, m_size, n_size, self.rule_set_size)
         is_contain_valid_rule = False
         is_se_sat = False
 
@@ -45,22 +51,22 @@ class ISetConditionValidator:
         return delimiter.join(str_list)
 
     def validate_isets_kmn_program_from_non_empty_ids(self, non_empty_ids, k_size, m_size, n_size, is_check_valid_rule=True):
-        iset_number = isu.compute_iset_number_from_kmn(k_size, m_size, n_size)
+        iset_number = isu.compute_iset_number_from_kmn(k_size, m_size, n_size, self.rule_set_size)
         icondition = isu.construct_iset_condition_from_non_emtpy_iset_ids(non_empty_ids, iset_number)
         return self.validate_isets_kmn_program_from_iset_condition(icondition, k_size, m_size, n_size, is_check_valid_rule)
 
     def validate_isets_kmn_program_from_iset_condition(self, icondition, k_size, m_size, n_size, is_check_valid_rule=True):
-        isets = isu.construct_isets_from_iset_condition(icondition, iset_atom_number=1)
+        isets = isu.construct_isets_from_iset_condition(icondition, self.is_use_extended_rules, iset_atom_number=1)
         is_contain_valid, is_se_sat = self.validate_isets_kmn_program(isets, k_size, m_size, n_size, is_check_valid_rule)
         return is_contain_valid, is_se_sat, self.join_data_list(icondition, ",")
 
     def validate_isets_kmn_program_from_icondition_id(self, icondition_id, k_size, m_size, n_size, is_check_valid_rule=True):
-        iset_number = isu.compute_iset_number_from_kmn(k_size, m_size, n_size)
+        iset_number = isu.compute_iset_number_from_kmn(k_size, m_size, n_size, self.rule_set_size)
         icondition = isu.construct_iset_condition_from_icondition_id(icondition_id, iset_number)
         return self.validate_isets_kmn_program_from_iset_condition(icondition, k_size, m_size, n_size, is_check_valid_rule)
 
     def validate_kmn_extended_iset_condition(self, icondition, k_size, m_size, n_size, is_check_valid_rule=True):
-        isets = isu.construct_isets_from_iset_condition(icondition)
+        isets = isu.construct_isets_from_iset_condition(icondition, self.is_use_extended_rules)
         singleton_iset_ids = list()
         is_contain_valid, is_se_sat = self.validate_isets_kmn_program(isets, k_size, m_size, n_size, is_check_valid_rule)
         if is_contain_valid or not is_se_sat:
@@ -87,7 +93,7 @@ class ISetConditionValidator:
         return is_contain_valid, is_se_sat, condition
 
     def validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids(self, non_emtpy_iset_ids, k_size, m_size, n_size, is_check_valid_rule=True):
-        iset_number = isu.compute_iset_number_from_kmn(k_size, m_size, n_size)
+        iset_number = isu.compute_iset_number_from_kmn(k_size, m_size, n_size, self.rule_set_size)
         icondition = isu.construct_iset_condition_from_non_emtpy_iset_ids(non_emtpy_iset_ids, iset_number)
         return self.validate_kmn_extended_iset_condition(icondition, k_size, m_size, n_size, is_check_valid_rule)
 

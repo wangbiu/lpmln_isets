@@ -19,9 +19,16 @@ class LPMLNSEChecking(BaseSEChecking):
         pb = rule[1]
         nb = rule[2]
 
+        if len(rule) == 3:
+            nh = rule[3]
+        else:
+            nh = set()
+
         hp = head.intersection(pb)
         pn = pb.intersection(nb)
         hn = head.difference(nb)
+
+        # TODO: valid rule?
 
         if len(hp) == 0 and len(pn) == 0 and len(hn) > 0:
             return False

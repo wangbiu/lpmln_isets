@@ -46,13 +46,13 @@ def construct_iset_condition_from_non_emtpy_iset_ids(non_empty_iset_ids, iset_nu
     return icondition
 
 
-def construct_isets_from_non_empty_iset_ids(non_empty_iset_ids, iset_number, iset_atom_number=1):
+def construct_isets_from_non_empty_iset_ids(non_empty_iset_ids, iset_number, is_use_extended_rule, iset_atom_number=1):
     icondition = construct_iset_condition_from_non_emtpy_iset_ids(non_empty_iset_ids, iset_number)
-    isets = construct_isets_from_iset_condition(icondition, iset_atom_number)
+    isets = construct_isets_from_iset_condition(icondition, iset_atom_number, is_use_extended_rule)
     return isets
 
 
-def construct_isets_from_iset_condition(icondition, iset_atom_number=1):
+def construct_isets_from_iset_condition(icondition, is_use_extended_rule, iset_atom_number=1):
     iset_number = len(icondition)
     rset_number = int(math.log(iset_number + 1, 2))
     independent_sets = dict()
@@ -62,7 +62,7 @@ def construct_isets_from_iset_condition(icondition, iset_atom_number=1):
         if icondition[iset_id] == -1:
             continue
 
-        iset = IndependentSet()
+        iset = IndependentSet(is_use_extended_rule)
         iset.generate_iset_iusets_from_iset_id(iset_id + 1, rset_number)
         member = set()
         if icondition[iset_id] == 1:
@@ -92,20 +92,20 @@ def construct_sets_from_isets(ind_sets=dict(), is_print=False):
     return sets
 
 
-def construct_rules_from_isets(independent_sets, rule_number):
+def construct_rules_from_isets(independent_sets, rule_number, rule_set_size):
     rule_sets = construct_sets_from_isets(independent_sets)
     rules = list()
     for i in range(rule_number):
         rule = []
-        for j in range(3):
-            rule.append(rule_sets[3 * i + j])
+        for j in range(rule_set_size):
+            rule.append(rule_sets[rule_set_size * i + j])
         rules.append(rule)
     return rules
 
 
-def construct_kmn_program_from_isets(isets, k_size, m_size, n_size):
+def construct_kmn_program_from_isets(isets, k_size, m_size, n_size, rule_set_size):
     rule_number = k_size + m_size + n_size
-    rules = construct_rules_from_isets(isets, rule_number)
+    rules = construct_rules_from_isets(isets, rule_number, rule_set_size)
     prg_k = list()
     prg_m = list()
     prg_n = list()
@@ -133,8 +133,8 @@ def construct_isets_from_icondition_id(condition_id, iset_number, iset_atom_numb
     return construct_isets_from_iset_condition(icondition, iset_atom_number=iset_atom_number)
 
 
-def compute_iset_number_from_kmn(k_size, m_size, n_size):
-    return 2 ** (3 * (k_size + m_size + n_size)) - 1
+def compute_iset_number_from_kmn(k_size, m_size, n_size, rule_set_size):
+    return 2 ** (rule_set_size * (k_size + m_size + n_size)) - 1
 
 
 def get_universe(sets=list()):
@@ -144,7 +144,7 @@ def get_universe(sets=list()):
     return univ
 
 
-def compute_isets_for_sets(sets=list(), is_print=False):
+def compute_isets_for_sets(sets, is_use_extended_rule, is_print=False):
     univ = get_universe(sets)
     set_number = len(sets)
     set_names = set([n for n in range(set_number)])
@@ -152,7 +152,7 @@ def compute_isets_for_sets(sets=list(), is_print=False):
     for i in range(1, set_number + 1):
         for ist_set in itertools.combinations(set_names, i):
             union_sets = set_names.difference(ist_set)
-            iset = IndependentSet()
+            iset = IndependentSet(is_use_extended_rule)
 
             iset.set_intersect_sets(ist_set)
             iset.set_union_sets(union_sets)
@@ -174,11 +174,11 @@ def compute_isets_for_sets(sets=list(), is_print=False):
     return ind_sets
 
 
-def compute_isets_from_program(program=list()):
+def compute_isets_from_program(program, is_use_extended_rule):
     sets = []
     for rule in program:
         sets.extend(rule)
-    return compute_isets_for_sets(sets)
+    return compute_isets_for_sets(sets, is_use_extended_rule)
 
 
 if __name__ == '__main__':

@@ -10,9 +10,13 @@ import lpmln.iset.ISetUtils as isu
 from lpmln.iset.ISetConditionValidator import ISetConditionValidator
 
 
-def search(k_size, m_size, n_size, is_check_valid_rule=False, lp_type="lpmln"):
-    validator = ISetConditionValidator(lp_type)
-    iset_number = isu.compute_iset_number_from_kmn(k_size, m_size, n_size)
+def search(k_size, m_size, n_size, is_use_extended_rules, is_check_valid_rule=False, lp_type="lpmln"):
+    validator = ISetConditionValidator(is_use_extended_rules=is_use_extended_rules, lp_type=lp_type)
+    rule_set_number = 3
+    if is_use_extended_rules:
+        rule_set_number = 4
+
+    iset_number = isu.compute_iset_number_from_kmn(k_size, m_size, n_size, rule_set_number)
     searching_space_size = 2 ** iset_number
     se_conditions = list()
     non_se_conditions = list()
@@ -42,5 +46,5 @@ def search(k_size, m_size, n_size, is_check_valid_rule=False, lp_type="lpmln"):
 
 
 if __name__ == '__main__':
-    search(0, 1, 0)
+    search(0, 1, 0, is_use_extended_rules=True)
     pass

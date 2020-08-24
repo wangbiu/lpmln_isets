@@ -21,8 +21,12 @@ def task_slice_tuple_2_str(slice_from, slice_length):
     return ",".join(slice_from_str)
 
 
-def generate_isp_slices(rule_number, max_task_slice_size=1000, min_non_empty_iset_number=1, max_non_empty_iset_number=6):
-    rset_number = 3 * rule_number
+def generate_isp_slices(rule_number, is_use_extended_rules, max_task_slice_size=1000, min_non_empty_iset_number=1, max_non_empty_iset_number=6):
+    rule_set_size = 3
+    if is_use_extended_rules:
+        rule_set_size = 4
+
+    rset_number = rule_set_size * rule_number
     iset_number = 2 ** rset_number - 1
 
     if min_non_empty_iset_number < 1:
@@ -31,7 +35,7 @@ def generate_isp_slices(rule_number, max_task_slice_size=1000, min_non_empty_ise
     if rule_number == 1:
         unknown_iset_number = iset_number
     else:
-        empty_iset_ids = oisu.get_empty_indpendent_set_ids(rule_number)
+        empty_iset_ids = oisu.get_empty_indpendent_set_ids(rule_number, is_use_extended_rules)
         unknown_iset_number = iset_number - len(empty_iset_ids)
 
     if max_non_empty_iset_number <= 0:
@@ -82,7 +86,8 @@ def generate_isp_slices(rule_number, max_task_slice_size=1000, min_non_empty_ise
 if __name__ == '__main__':
     rule_number = 1
     max_ne_iset_number = 7
-    generate_isp_slices(rule_number=rule_number, max_non_empty_iset_number=max_ne_iset_number)
+    is_use_extened_rules = True
+    generate_isp_slices(rule_number=rule_number, is_use_extended_rules=is_use_extened_rules, max_non_empty_iset_number=max_ne_iset_number)
 
     pass
     

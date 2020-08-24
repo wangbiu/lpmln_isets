@@ -11,8 +11,8 @@ import lpmln.search.misc.ISCSearchingSlicesGenerator as isg
 
 
 def init():
-    isg.generate_isp_slices(rule_number=2, min_non_empty_iset_number=1, max_non_empty_iset_number=6)
-    isg.generate_isp_slices(rule_number=2, min_non_empty_iset_number=7, max_non_empty_iset_number=7)
+    isg.generate_isp_slices(rule_number=2, min_non_empty_iset_number=1, max_non_empty_iset_number=6, is_use_extended_rules=True)
+    isg.generate_isp_slices(rule_number=2, min_non_empty_iset_number=7, max_non_empty_iset_number=7, is_use_extended_rules=True)
 
 
 if __name__ == '__main__':

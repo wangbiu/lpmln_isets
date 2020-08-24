@@ -11,16 +11,21 @@ import math
 
 
 class IndependentSet:
-    def __init__(self):
+    def __init__(self, is_use_extended_rules):
         self.intersect_sets = list()
         self.union_sets = list()
         self.members = set()
         self.is_singleton = False
+        self.set_names_template = ["h(%d)", "pb(%d)", "nb(%d)"]
+        self.rule_set_size = 3  # h, pb, nb
+        self.is_use_extended_rules = is_use_extended_rules  # use double negation
+
+        if self.is_use_extended_rules:
+            self.set_names_template.append("nh(%d)")
+            self.rule_set_size = 4
 
         self.iset_id = -1
         self.iset_key = ""
-
-        self.set_names_template = ["h(%d)", "pb(%d)", "nb(%d)"]
         self.set_names = []
 
     def get_iset_key(self):
@@ -74,7 +79,7 @@ class IndependentSet:
 
     def generate_set_names(self):
         rule_set_number = len(self.intersect_sets) + len(self.union_sets)
-        rule_number = rule_set_number // 3 + 1
+        rule_number = rule_set_number // self.rule_set_size + 1
         for i in range(1, rule_number):
             for s in self.set_names_template:
                 self.set_names.append(s % i)
