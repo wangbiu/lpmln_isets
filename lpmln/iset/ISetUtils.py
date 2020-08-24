@@ -181,6 +181,31 @@ def compute_isets_from_program(program, is_use_extended_rule):
     return compute_isets_for_sets(sets, is_use_extended_rule)
 
 
+def load_iconditions_from_file(file):
+    iconditions = list()
+    with open(file, mode="r", encoding="utf-8") as f:
+        for row in f:
+            row = row.strip('\n')
+            iconditions.append(row)
+
+    print("load %d iconditions from %s" % (len(iconditions), file))
+    return iconditions
+
+
+def parse_iconditions(iconditions):
+    parsed = list()
+    for cdt in iconditions:
+        cdts = cdt.split(",")
+        parsed_cdts = []
+        for em in cdts:
+            if em == "1" or em == "0":
+                parsed_cdts.append(int(em))
+            else:
+                parsed_cdts.append(-1)
+        parsed.append(parsed_cdts)
+    return parsed
+
+
 if __name__ == '__main__':
     pass
     
