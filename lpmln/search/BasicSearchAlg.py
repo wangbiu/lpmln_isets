@@ -8,9 +8,13 @@
 
 import lpmln.iset.ISetUtils as isu
 from lpmln.iset.ISetConditionValidator import ISetConditionValidator
+import lpmln.config.GlobalConfig as cfg
+config = cfg.load_configuration()
+import logging
 
 
 def search(k_size, m_size, n_size, is_use_extended_rules, is_check_valid_rule=False, lp_type="lpmln"):
+    logging.info("basic isp searching start!")
     validator = ISetConditionValidator(is_use_extended_rules=is_use_extended_rules, lp_type=lp_type)
     rule_set_number = 3
     if is_use_extended_rules:
@@ -20,6 +24,8 @@ def search(k_size, m_size, n_size, is_use_extended_rules, is_check_valid_rule=Fa
     searching_space_size = 2 ** iset_number
     se_conditions = list()
     non_se_conditions = list()
+    print_loop = 1000
+    search_cnt = 0
     for sid in range(searching_space_size):
         # is_contain_valid, is_se_sat, condition = validator.validate_isets_kmn_program_from_icondition_id(
         #     sid, k_size, m_size, n_size, is_check_valid_rule=is_check_valid_rule)
@@ -32,6 +38,12 @@ def search(k_size, m_size, n_size, is_use_extended_rules, is_check_valid_rule=Fa
                 se_conditions.append(condition)
             else:
                 non_se_conditions.append(condition)
+        search_cnt += 1
+        if search_cnt % print_loop == 0:
+            logging.info("search progress: %d / %d" % (search_cnt, searching_space_size))
+
+    logging.info("search progress: %d / %d" % (search_cnt, searching_space_size))
+
     print("%d-%d-%d problem: found %d SE-condition, found %d non-SE-condition" %
           (k_size, m_size, n_size, len(se_conditions), len(non_se_conditions)))
 
