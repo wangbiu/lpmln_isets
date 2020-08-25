@@ -15,7 +15,16 @@ def init():
     isg.generate_isp_slices(rule_number=2, min_non_empty_iset_number=7, max_non_empty_iset_number=7, is_use_extended_rules=True)
 
 
+def init2():
+    isg.generate_isp_slices(rule_number=2, min_non_empty_iset_number=8, max_non_empty_iset_number=8,
+                            is_use_extended_rules=True)
+    isg.generate_isp_slices(rule_number=2, min_non_empty_iset_number=9, max_non_empty_iset_number=9,
+                            is_use_extended_rules=True)
+    isg.generate_isp_slices(rule_number=2, min_non_empty_iset_number=10, max_non_empty_iset_number=10,
+                            is_use_extended_rules=True)
+
+
 if __name__ == '__main__':
-    init()
+    init2()
     pass
     
