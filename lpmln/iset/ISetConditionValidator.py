@@ -17,7 +17,6 @@ class ISetConditionValidator:
     def __init__(self, is_use_extended_rules, lp_type="lpmln"):
         if lp_type == "asp":
             self.lp_se = ASPSEChecking
-            raise RuntimeError("not support for now")
         elif lp_type == "lpmln":
             self.lp_se = LPMLNSEChecking
         else:

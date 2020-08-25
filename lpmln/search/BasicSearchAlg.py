@@ -58,5 +58,5 @@ def search(k_size, m_size, n_size, is_use_extended_rules, is_check_valid_rule=Fa
 
 
 if __name__ == '__main__':
-    search(0, 1, 0, is_use_extended_rules=True)
+    search(0, 1, 0, is_use_extended_rules=False, lp_type="asp")
     pass

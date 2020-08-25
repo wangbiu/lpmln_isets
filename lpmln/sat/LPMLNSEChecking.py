@@ -50,7 +50,7 @@ class LPMLNSEChecking(BaseSEChecking):
 
     @staticmethod
     def se_check_program(prg1=list(), prg2=list()):
-        universe = LPMLNSEChecking.get_universe_from_programs([prg1, prg2])
+        universe = LPMLNSEChecking.get_universe_from_programs(LPMLNSEChecking, [prg1, prg2])
         size = len(universe)
         for t_size in range(1, size + 1):
             for there in itertools.combinations(universe, t_size):
