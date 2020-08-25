@@ -41,8 +41,8 @@ def get_hpn_independent_set_ids(rule_number, is_use_extended_rules):
                 if nb_set_id in caps and nb_set_id + 1 in caps:
                     empty_iset_ids.add(iset_id)
 
-    # print("rule number %d, find %d empty sets, remain %d independent sets" % (
-    #     rule_number, len(empty_iset_ids), iset_number - len(empty_iset_ids)))
+    print("rule number %d, find %d empty sets, remain %d independent sets" % (
+        rule_number, len(empty_iset_ids), iset_number - len(empty_iset_ids)))
     return empty_iset_ids
 
 
@@ -59,13 +59,13 @@ def get_hn_independent_set_ids(rule_number, is_use_extended_rules):
         caps = set(iset.intersect_sets)
 
         for r in range(rule_number):
-            h_set_id = 3 * r
+            h_set_id = iset.rule_set_size * r
             if h_set_id in caps:
                 if h_set_id + 2 in caps:
                     empty_iset_ids.add(iset_id)
 
-    # print("rule number %d, find %d empty sets, remain %d independent sets" % (
-    #     rule_number, len(empty_iset_ids), iset_number - len(empty_iset_ids)))
+    print("rule number %d, find %d empty sets, remain %d independent sets" % (
+        rule_number, len(empty_iset_ids), iset_number - len(empty_iset_ids)))
     return empty_iset_ids
 
 
@@ -112,5 +112,8 @@ def get_real_non_empty_iset_ids_from_partial_iset_list(unknown_iset_nonempty_lis
 
 
 if __name__ == '__main__':
+    # get_empty_indpendent_set_ids(2, True)
+    ids = get_hpn_independent_set_ids(1, True)
+    print(ids)
     pass
     

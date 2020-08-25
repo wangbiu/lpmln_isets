@@ -15,25 +15,38 @@ class LPMLNSEChecking(BaseSEChecking):
 
     @staticmethod
     def is_se_valid_rule(rule):
+        """
+        only check "diff" relation
+        :param rule:
+        :return:
+        """
         head = rule[0]
         pb = rule[1]
         nb = rule[2]
 
         if len(rule) == 3:
-            nh = rule[3]
+            hn = head.difference(nb)
+            # if len(hp) == 0 and len(pn) == 0 and len(hn) > 0:
+            if len(hn) > 0:
+                return False
+            else:
+                return True
         else:
-            nh = set()
+            nh = rule[3]
+            uset = pb.union(nb)
+            cset = head.intersection(nh)
+            s1 = cset.difference(uset)
+            uset = uset.union(nh)
+            s2 = head.difference(uset)
 
-        hp = head.intersection(pb)
-        pn = pb.intersection(nb)
-        hn = head.difference(nb)
+            if len(s1) == 0 and len(s2) == 0:
+                return True
+            else:
+                return False
 
         # TODO: valid rule?
 
-        if len(hp) == 0 and len(pn) == 0 and len(hn) > 0:
-            return False
-        else:
-            return True
+
 
     @staticmethod
     def se_check_program(prg1=list(), prg2=list()):
@@ -84,5 +97,12 @@ class LPMLNSEChecking(BaseSEChecking):
 
 
 if __name__ == '__main__':
+    rules = [
+        ({1, 2}, {3}, {1}, {1}),
+        ({1, 2}, {3}, {1, 4}, {1})
+    ]
+
+    for r in rules:
+        print(LPMLNSEChecking.is_se_valid_rule(r))
     pass
     

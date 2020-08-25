@@ -165,7 +165,7 @@ def dump_isc_task_results(isc_tasks):
     return msg_texts
 
 
-def init_kmn_isc_task_workers(isc_config_file="isets-tasks.json", is_check_valid_rules=True, lp_type="lpmln"):
+def init_kmn_isc_task_workers(isc_config_file="isets-tasks.json", is_check_valid_rules=True, lp_type="lpmln", is_use_extended_rules=False):
     payload = config.worker_payload
     worker_pool = Pool(payload)
     pathlib.Path(config.task_host_lock_file).touch()
@@ -181,7 +181,7 @@ def init_kmn_isc_task_workers(isc_config_file="isets-tasks.json", is_check_valid
 
     for i in range(payload):
         worker_pool.apply_async(kmn_isc_task_worker,
-                                args=(isc_config_file, "worker-%d" % (i + 1), is_check_valid_rules, lp_type))
+                                args=(isc_config_file, "worker-%d" % (i + 1), is_check_valid_rules, lp_type, is_use_extended_rules))
     worker_pool.close()
     worker_pool.join()
     # if pathlib.Path(task_worker_host_lock_file).exists():
@@ -190,7 +190,7 @@ def init_kmn_isc_task_workers(isc_config_file="isets-tasks.json", is_check_valid
     logging.info("task worker host %s exit ..." % config.worker_host_name)
 
 
-def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_name="", is_check_valid_rules=True, lp_type="lpmln"):
+def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_name="", is_check_valid_rules=True, lp_type="lpmln", is_use_extended_rules=False):
     ISCFileTaskWorkerQueueManager.register("get_task_queue")
     ISCFileTaskWorkerQueueManager.register("get_result_queue")
     manager = ISCFileTaskWorkerQueueManager(address=(config.task_host, config.task_host_port),
@@ -251,7 +251,7 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_name="", is_c
         se_cdt_cnt = 0
 
         se_conditions_cache = list()
-        validator = ISetConditionValidator(lp_type)
+        validator = ISetConditionValidator(lp_type=lp_type, is_use_extended_rules=is_use_extended_rules)
 
         for i in range(task_number):
             task_idx = task_counter.get_current_indicator()
