@@ -54,7 +54,15 @@ def search(k_size, m_size, n_size, is_use_extended_rules, is_check_valid_rule=Fa
     print("\nnon-SE-conditions (%d): " % len(non_se_conditions))
     for c in non_se_conditions:
         print("\t", c)
+
     return se_conditions, non_se_conditions
+
+
+def save_iconditions(file, iconditions):
+    with open(file, mode="w", encoding="utf-8") as f:
+        for ic in iconditions:
+            f.write(ic)
+            f.write("\n")
 
 
 if __name__ == '__main__':
