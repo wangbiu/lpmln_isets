@@ -165,7 +165,7 @@ def dump_isc_task_results(isc_tasks):
     return msg_texts
 
 
-def init_kmn_isc_task_workers(isc_config_file="isets-tasks.json", is_check_valid_rules=True, lp_type="lpmln", is_use_extended_rules=False):
+def init_kmn_isc_task_workers(isc_config_file="isets-tasks.json", is_check_valid_rules=True, lp_type="lpmln", is_use_extended_rules=True):
     payload = config.worker_payload
     worker_pool = Pool(payload)
     pathlib.Path(config.task_host_lock_file).touch()
