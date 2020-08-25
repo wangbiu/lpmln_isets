@@ -22,6 +22,10 @@ class ISCTask:
         self.min_ne = min_ne
         self.max_ne = max_ne
         self.is_use_extended_rules = is_use_extended_rules
+        if self.is_use_extended_rules:
+            self.rule_set_size = 4
+        else:
+            self.rule_set_size = 3
 
         self.empty_iset_ids = set()
         self.iset_number = 0
@@ -45,7 +49,7 @@ class ISCTask:
         self.se_condition_dump_file = "no file"
 
     def complete_params(self):
-        self.iset_number = 2 ** (3 * self.rule_number) - 1
+        self.iset_number = 2 ** (self.rule_set_size * self.rule_number) - 1
         self.task_slice_file = config.get_task_slice_file_path(self.rule_number, self.min_ne, self.max_ne)
         self.empty_iset_ids = oisu.get_empty_indpendent_set_ids(self.rule_number, self.is_use_extended_rules)
         self.unknown_iset_number = self.iset_number - len(self.empty_iset_ids)
@@ -186,5 +190,5 @@ class ISCTaskConfig:
 
 
 if __name__ == '__main__':
-    tsc = ISCTaskConfig("isc-tasks-temp.json")
+    tsc = ISCTaskConfig("isc-tasks-temp.json", True)
     pass

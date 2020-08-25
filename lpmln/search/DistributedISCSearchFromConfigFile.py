@@ -204,7 +204,7 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_name="", is_c
     msg_text = "task worker %s start!" % (worker_name)
     logging.info(msg_text)
 
-    isc_tasks = isc_cfg.ISCTaskConfig(isc_config_file)
+    isc_tasks = isc_cfg.ISCTaskConfig(isc_config_file, is_use_extended_rules)
     isc_tasks = isc_tasks.isc_tasks
     processed_task_slices_number = 0
 
