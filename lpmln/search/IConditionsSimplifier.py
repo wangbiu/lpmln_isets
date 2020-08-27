@@ -100,13 +100,14 @@ if __name__ == '__main__':
     file_010_se = r"W:\my_projects\lpmln_isets\isc-data\isc-results\0-1-0-isc.txt"
     file_010_nse2 = r"W:\my_projects\lpmln_isets\isc-data\isc-results\0-1-0-non-se-3sets.txt"
     file_010_asp3_nse = r"W:\my_projects\lpmln_isets\isc-data\isc-results\0-1-0-asp-non-se-3sets.txt"
+    file_010_asp4_nse = r"W:\my_projects\lpmln_isets\isc-data\isc-results\0-1-0-isc-asp-nse.txt"
 
     ignore_isets = {2, 5, 6, 10, 11, 12, 13, 14}
     # isp_simplify(file_010_nse, ignore_isets)
 
     # check_01_distributions_of_iconditions(file_010_nse)
-    check_01_distributions_of_iconditions(file_010_asp3_nse)
-    isp_simplify(file_010_asp3_nse)
+    check_01_distributions_of_iconditions(file_010_asp4_nse)
+    isp_simplify(file_010_asp4_nse, ignore_isets)
 
     # check_01_distributions_of_iconditions(file_010_se)
     pass

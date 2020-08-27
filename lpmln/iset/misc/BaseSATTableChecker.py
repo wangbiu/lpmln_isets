@@ -15,8 +15,9 @@ from lpmln.sat.ASPSAT import ASPSAT
 
 
 class BaseSATTableChecker(abc.ABC):
-    def __init__(self, lp_type="lpmln"):
+    def __init__(self, lp_type="lpmln", is_use_extended_rules=False):
         self.all_case_flags = ["000", "100", "010", "001", "101", "110", "011", "111"]
+        self.is_use_extended_rules = is_use_extended_rules
         if lp_type == "lpmln":
             self.lp_type = LPMLNSAT
         elif lp_type == "asp":

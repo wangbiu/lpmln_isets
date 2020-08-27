@@ -54,7 +54,7 @@ class SATTableBySingleAdditionChecker(BaseSATTableChecker):
 
     def check_se_relation_for_one_rule(self, rule, atom_universe):
         se_case_results = dict()
-        ind_sets = isu.compute_isets_for_sets(rule)
+        ind_sets = isu.compute_isets_for_sets(rule, self.is_use_extended_rules)
         for key in ind_sets:
             iset = ind_sets[key]
             case_flag = self.get_case_by_intersection_sets(iset.intersect_sets)
@@ -102,6 +102,6 @@ class SATTableBySingleAdditionChecker(BaseSATTableChecker):
 
 if __name__ == '__main__':
     checker = SATTableBySingleAdditionChecker()
-    checker.se_rule_relation_checker(atom_size=5)
+    checker.se_rule_relation_checker(atom_size=4)
     pass
     

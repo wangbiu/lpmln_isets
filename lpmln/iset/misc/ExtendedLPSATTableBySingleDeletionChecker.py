@@ -18,6 +18,7 @@ class ExtendedLPSATTableBySingleDeletionChecker(SATTableBySingleDeletionChecker)
 
     def __init__(self, lp_type="lpmln"):
         super(ExtendedLPSATTableBySingleDeletionChecker, self).__init__(lp_type)
+        self.is_use_extended_rules = True
         self.all_case_flags = ["0000", "1000", "0100", "0010", "1010", "1100", "0110", "1110",
                                "0001", "1001", "0101", "0011", "1011", "1101", "0111", "1111"]
 
