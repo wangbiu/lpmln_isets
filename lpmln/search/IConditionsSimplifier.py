@@ -106,6 +106,8 @@ def analysis_iconditions_by_nonempty_isets_numbers(icondition_file, min_ne_iset_
 
     for ic in conditions:
         number = isu.get_ne_iset_number(ic)
+        if number == 0:
+            continue
         ne_iset_conditions[number].append(ic)
         ids = isu.get_ne_iset_ids(ic)
         ne_iset_ids[number].append(ids)
@@ -160,7 +162,10 @@ if __name__ == '__main__':
     # isp_simplify(file_010_asp4_nse, ignore_isets)
 
     # check_01_distributions_of_iconditions(file_010_se)
-    analysis_iconditions_by_nonempty_isets_numbers(file_011_lpmln4_1_6, min_ne_iset_number=1, max_ne_iset_number=6)
+
+    file_010_lpmln3_se = r"W:\my_projects\lpmln_isets\isc-data\isc-results-2020.6.8\isc-results\0-1-0-isc-emp.txt"
+
+    analysis_iconditions_by_nonempty_isets_numbers(file_010_lpmln3_se, min_ne_iset_number=1, max_ne_iset_number=7)
     # analysis_iconditions_by_nonempty_isets_numbers(file_011_asp4_7_7, min_ne_iset_number=7, max_ne_iset_number=7)
     pass
     
