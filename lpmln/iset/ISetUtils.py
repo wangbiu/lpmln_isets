@@ -195,15 +195,46 @@ def load_iconditions_from_file(file):
 def parse_iconditions(iconditions):
     parsed = list()
     for cdt in iconditions:
-        cdts = cdt.split(",")
-        parsed_cdts = []
-        for em in cdts:
-            if em == "1" or em == "0":
-                parsed_cdts.append(int(em))
-            else:
-                parsed_cdts.append(-1)
-        parsed.append(parsed_cdts)
+        pos = cdt.find(":")
+        if pos != -1:
+            parts = cdt.split(":")
+            singletons = parts[1].split(",")
+            singletons = [int(s) for s in singletons]
+            cdts = parts[0].split(",")
+        else:
+            cdts = cdt.split(",")
+            singletons = list()
+
+        cdts = [int(s) for s in cdts]
+        parsed.append((cdts, singletons))
     return parsed
+
+
+def parse_iconditions_ignore_singletons(iconditions):
+    parsed = parse_iconditions(iconditions)
+    results = list()
+    for ict in parsed:
+        results.append(ict[0])
+    return results
+
+
+def get_ne_iset_number(condition):
+    number = 0
+    for c in condition:
+        number += c
+
+    return number
+
+
+def get_ne_iset_ids(condition):
+    ids = set()
+    for i in range(len(condition)):
+        if condition[i] == 1:
+            ids.add(i)
+    return ids
+
+
+
 
 
 if __name__ == '__main__':

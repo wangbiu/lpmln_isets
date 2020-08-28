@@ -14,7 +14,7 @@ import lpmln.iset.ISetUtils as isu
 
 def get_dnf_from_iconditions(file, ignore_isets):
     iconditions = isu.load_iconditions_from_file(file)
-    iconditions = isu.parse_iconditions(iconditions)
+    iconditions = isu.parse_iconditions_ignore_singletons(iconditions)
     iset_size = len(iconditions[0])
     chars = ["a" + str(i) for i in range(iset_size)]
     symbol_chars = " ".join(chars)
@@ -53,7 +53,7 @@ def isp_simplify(file, ignore_isets=set()):
 
 def check_01_distributions_of_iconditions(file):
     iconditions = isu.load_iconditions_from_file(file)
-    iconditions = isu.parse_iconditions(iconditions)
+    iconditions = isu.parse_iconditions_ignore_singletons(iconditions)
     iset_size = len(iconditions[0])
     zero_cnts = [0] * iset_size
     one_cnts = [0] * iset_size
@@ -93,6 +93,30 @@ def check_01_distributions_of_iconditions(file):
     print("one zero eq cols", one_zero_eq_cols)
 
 
+def analysis_iconditions_by_nonempty_isets_numbers(icondition_file, min_ne_iset_number, max_ne_iset_number):
+    conditions = isu.load_iconditions_from_file(icondition_file)
+    conditions = isu.parse_iconditions_ignore_singletons(conditions)
+    ne_iset_conditions = dict()
+    ne_iset_ids = dict()
+    for i in range(min_ne_iset_number, max_ne_iset_number + 1):
+        nc = list()
+        ne_iset_conditions[i] = nc
+        nc = set()
+        ne_iset_ids[i] = nc
+
+    for ic in conditions:
+        number = isu.get_ne_iset_number(ic)
+        ne_iset_conditions[number].append(ic)
+        ids = isu.get_ne_iset_ids(ic)
+        ne_iset_ids[number] = ne_iset_ids[number].union(ids)
+
+    for i in ne_iset_conditions:
+        print("non empty isets number %d, has %d iconditions, iset ids: " % (i, len(ne_iset_conditions[i])), ne_iset_ids[i])
+
+
+
+
+
 
 
 if __name__ == '__main__':
@@ -101,14 +125,17 @@ if __name__ == '__main__':
     file_010_nse2 = r"W:\my_projects\lpmln_isets\isc-data\isc-results\0-1-0-non-se-3sets.txt"
     file_010_asp3_nse = r"W:\my_projects\lpmln_isets\isc-data\isc-results\0-1-0-asp-non-se-3sets.txt"
     file_010_asp4_nse = r"W:\my_projects\lpmln_isets\isc-data\isc-results\0-1-0-isc-asp-nse.txt"
+    file_011_lpmln4_1_6 = r"W:\my_projects\lpmln_isets\isc-data\isc-results\0-1-1-isc-1-6-emp.txt"
+    file_011_lpmln4_7_7 = r"W:\my_projects\lpmln_isets\isc-data\isc-results\0-1-1-isc-7-7-emp.txt"
 
     ignore_isets = {2, 5, 6, 10, 11, 12, 13, 14}
     # isp_simplify(file_010_nse, ignore_isets)
 
     # check_01_distributions_of_iconditions(file_010_nse)
-    check_01_distributions_of_iconditions(file_010_asp4_nse)
-    isp_simplify(file_010_asp4_nse, ignore_isets)
+    # check_01_distributions_of_iconditions(file_010_asp4_nse)
+    # isp_simplify(file_010_asp4_nse, ignore_isets)
 
     # check_01_distributions_of_iconditions(file_010_se)
+    analysis_iconditions_by_nonempty_isets_numbers(file_011_lpmln4_7_7, max_ne_iset_number=7, min_ne_iset_number=7)
     pass
     
