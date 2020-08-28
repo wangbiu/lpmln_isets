@@ -14,6 +14,9 @@ from lpmln.sat.LPMLNSAT import LPMLNSAT
 from lpmln.sat.ASPSAT import ASPSAT
 import lpmln.iset.ISetUtils as isu
 from lpmln.utils.counter.BinaryCounter import BinaryCounter
+import lpmln.config.GlobalConfig as cfg
+config = cfg.load_configuration()
+import logging
 
 
 class SingleAddition2EmptyISetSATTableChecker:
@@ -46,13 +49,22 @@ class SingleAddition2EmptyISetSATTableChecker:
         return table
 
     def check_all_rules(self):
+        logging.info("start sat checker: atom size = %d, lp type = %s, is use extended rule = %s" % (self.atom_size, str(self.lp_type), str(self.is_use_extended_rules)))
         all_rules = seut.generate_all_rules(self.atom_size, self.is_use_extended_rules)
         results = dict()
         results[self.all_case_flags[0]] = self.generate_000_sat_result()
+        total_rules = len(all_rules)
+        rule_cnt = 0
+        print_loop = 1000
         for rule in all_rules:
             # print(rule)
             tmp = self.check_one_rule(rule)
             results = self.merge_results(results, tmp)
+            rule_cnt += 1
+            if rule_cnt % print_loop == 0:
+                logging.info("checker progress: %d / %d" % (rule_cnt, total_rules))
+        logging.info("checker progress: %d / %d" % (rule_cnt, total_rules))
+        print("results dict: ", results)
         self.print_sat_result_table(results)
         return results
 
@@ -116,8 +128,9 @@ class SingleAddition2EmptyISetSATTableChecker:
         return old
 
     def print_sat_result_table(self, result_table):
+        print("\nIset Type | (X, Y) \\models r | (X, Y) \\not\\models r \n")
         for key in self.all_case_flags:
-            print(key, ": ", result_table[key][1], " | ", result_table[key][0])
+            print(key, " | ", result_table[key][1], " | ", result_table[key][0])
 
 
 if __name__ == '__main__':
