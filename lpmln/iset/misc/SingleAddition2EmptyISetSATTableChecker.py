@@ -43,6 +43,7 @@ class SingleAddition2EmptyISetSATTableChecker:
         table = self.generate_empty_table()
         for i in range(2):
             table[i].add(i)
+        return table
 
     def check_all_rules(self):
         all_rules = seut.generate_all_rules(self.atom_size, self.is_use_extended_rules)
@@ -120,16 +121,18 @@ class SingleAddition2EmptyISetSATTableChecker:
 
 
 if __name__ == '__main__':
-    checker = SingleAddition2EmptyISetSATTableChecker(atom_size=3, is_use_extended_rules=True)
-    rule = ({0}, {1}, set())
+    checker = SingleAddition2EmptyISetSATTableChecker(atom_size=2, is_use_extended_rules=True, lp_type="lpmln")
+    rule = ({0}, {1}, set(),set())
     here = {1}
     there = {0, 1}
 
     # results = checker.check_one_rule_and_seint(rule, here, there)
     # print(results)
+    # checker.print_sat_result_table(results)
 
 
     results = checker.check_all_rules()
+
     # print(results)
     pass
     
