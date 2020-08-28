@@ -101,20 +101,42 @@ def analysis_iconditions_by_nonempty_isets_numbers(icondition_file, min_ne_iset_
     for i in range(min_ne_iset_number, max_ne_iset_number + 1):
         nc = list()
         ne_iset_conditions[i] = nc
-        nc = set()
+        nc = list()
         ne_iset_ids[i] = nc
 
     for ic in conditions:
         number = isu.get_ne_iset_number(ic)
         ne_iset_conditions[number].append(ic)
         ids = isu.get_ne_iset_ids(ic)
-        ne_iset_ids[number] = ne_iset_ids[number].union(ids)
+        ne_iset_ids[number].append(ids)
+
+    chains = list()
+    for i in range(min_ne_iset_number + 1, max_ne_iset_number + 1):
+        for ids in ne_iset_ids[i]:
+            chain = find_parent_icondition(ne_iset_ids[i-1], ids)
+            if chain == -1:
+                print("unchained iconditions non empty isets", ids)
+            else:
+                chains.append(chain)
+                print(chain)
 
     for i in ne_iset_conditions:
         print("non empty isets number %d, has %d iconditions, iset ids: " % (i, len(ne_iset_conditions[i])), ne_iset_ids[i])
 
 
+def find_parent_icondition(parent_ne_iset_ids, iset_ids):
+    for i in range(len(parent_ne_iset_ids)):
+        ids = parent_ne_iset_ids[i]
+        if ids.issubset(iset_ids):
+            chain = generate_set_chain(ids, iset_ids)
+            return chain
+    return -1
 
+def generate_set_chain(s1, s2):
+    s1 = [str(s) for s in s1]
+    s2 = [str(s) for s in s2]
+    chain = "{%s} -> {%s}" % (",".join(s1), ",".join(s2))
+    return chain
 
 
 
@@ -127,6 +149,8 @@ if __name__ == '__main__':
     file_010_asp4_nse = r"W:\my_projects\lpmln_isets\isc-data\isc-results\0-1-0-isc-asp-nse.txt"
     file_011_lpmln4_1_6 = r"W:\my_projects\lpmln_isets\isc-data\isc-results\0-1-1-isc-1-6-emp.txt"
     file_011_lpmln4_7_7 = r"W:\my_projects\lpmln_isets\isc-data\isc-results\0-1-1-isc-7-7-emp.txt"
+    file_011_asp4_1_6 = r"W:\my_projects\lpmln_isets\isc-data\isc-results\0-1-1-isc-1-6-asp-emp.txt"
+    file_011_asp4_7_7 = r"W:\my_projects\lpmln_isets\isc-data\isc-results\0-1-1-isc-7-7-asp-emp.txt"
 
     ignore_isets = {2, 5, 6, 10, 11, 12, 13, 14}
     # isp_simplify(file_010_nse, ignore_isets)
@@ -136,6 +160,7 @@ if __name__ == '__main__':
     # isp_simplify(file_010_asp4_nse, ignore_isets)
 
     # check_01_distributions_of_iconditions(file_010_se)
-    analysis_iconditions_by_nonempty_isets_numbers(file_011_lpmln4_7_7, max_ne_iset_number=7, min_ne_iset_number=7)
+    analysis_iconditions_by_nonempty_isets_numbers(file_011_lpmln4_1_6, min_ne_iset_number=1, max_ne_iset_number=6)
+    # analysis_iconditions_by_nonempty_isets_numbers(file_011_asp4_7_7, min_ne_iset_number=7, max_ne_iset_number=7)
     pass
     
