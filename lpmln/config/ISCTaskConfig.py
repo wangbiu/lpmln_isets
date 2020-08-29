@@ -140,7 +140,9 @@ class ISCTaskConfig:
         self.config_file = os.path.join(config.project_base_dir, config_file)
         self.isc_tasks = list()
         self.is_use_extended_rules = is_use_extended_rules
+        self.load_isc_config_file()
 
+    def load_isc_config_file(self):
         with open(self.config_file, encoding="utf-8", mode="r") as cf:
             jobj = json.load(cf)
             for task in jobj:
@@ -160,6 +162,7 @@ class ISCTaskConfig:
                 for kmn in kmns:
                     itask = ISCTask(rule_number, min_ne, max_ne, kmn, self.is_use_extended_rules)
                     self.isc_tasks.append(itask)
+
 
     def get_kmn_by_rule_number(self, rule_number):
         kmns = list()

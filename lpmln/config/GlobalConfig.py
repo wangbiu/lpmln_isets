@@ -98,9 +98,14 @@ class GlobalConfiguration:
         slice_file = os.path.join(self.isc_task_path, slice_file)
         return slice_file
 
-    def get_isc_results_file_path(self, k_size, m_size, n_size, min_non_empty_iset_number, max_non_empty_iset_number):
-        result_file = "%d-%d-%d-isc-%d-%d-emp.txt" % (
-            k_size, m_size, n_size, min_non_empty_iset_number, max_non_empty_iset_number)
+    def get_isc_results_file_path(self, k_size, m_size, n_size, min_non_empty_iset_number, max_non_empty_iset_number, isc_task_type=""):
+        if isc_task_type == "":
+            result_file = "%d-%d-%d-isc-%d-%d-emp.txt" % (
+                k_size, m_size, n_size, min_non_empty_iset_number, max_non_empty_iset_number)
+        else:
+            result_file = "%d-%d-%d-%s-isc-%d-%d-emp.txt" % (
+                k_size, m_size, n_size, isc_task_type, min_non_empty_iset_number, max_non_empty_iset_number)
+
         result_file = os.path.join(self.isc_results_path, result_file)
         return result_file
 

@@ -30,7 +30,7 @@ def search(k_size, m_size, n_size, is_use_extended_rules, is_check_valid_rule=Fa
         # is_contain_valid, is_se_sat, condition = validator.validate_isets_kmn_program_from_icondition_id(
         #     sid, k_size, m_size, n_size, is_check_valid_rule=is_check_valid_rule)
         icondition = isu.construct_iset_condition_from_icondition_id(sid, iset_number)
-        is_contain_valid, is_se_sat, condition = validator.validate_kmn_extended_iset_condition(
+        is_contain_valid, is_se_sat, condition = validator.validate_kmn_extended_iset_condition_return_isetcondition_str(
             icondition, k_size, m_size, n_size, is_check_valid_rule)
 
         if not is_contain_valid:
