@@ -14,7 +14,7 @@ import copy
 import datetime
 import lpmln.iset.OptimizationISetsUtils as oisu
 from lpmln.config.ISCTaskConfig import ISCTask, ISCTaskConfig
-from scipy.misc import comb
+from scipy.special import comb
 from lpmln.iset.ISetCondition import ISetCondition
 
 config = cfg.load_configuration()
