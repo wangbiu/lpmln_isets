@@ -153,13 +153,26 @@ class IncrementalISCTask:
             self.task_progress_rate = 100.0 * self.task_complete_number / self.task_total_number
             task_running_time = self.task_end_time - self.task_start_time
             if self.icondition_number == 0:
-                prg_info = ":mag_right: %s: total tasks: %d, complete tasks: %d (%.3f%%, running time: %s), find 0 se conditions." % (
-                    self.task_flag, self.task_total_number, self.task_complete_number, self.task_progress_rate, str(task_running_time))
+                prg_info = ":mag_right: %s: total tasks: %d, complete tasks: %d (%.3f%%, running time: %s), find 0 se conditions. details: \n%s" % (
+                    self.task_flag, self.task_total_number, self.task_complete_number, self.task_progress_rate, str(task_running_time), self.get_itask_item_detail_status())
             else:
-                prg_info = ":rocket: %s: total tasks: %d, complete tasks: %d (%.3f%%, running time: %s), find %d se conditions,  dumped to %s" % (
+                prg_info = ":rocket: %s: total tasks: %d, complete tasks: %d (%.3f%%, running time: %s), find %d se conditions,  dumped to %s. details: \n%s" % (
                     self.task_flag, self.task_total_number, self.task_complete_number, self.task_progress_rate,
-                    str(task_running_time), self.icondition_number, self.se_condition_dump_file)
+                    str(task_running_time), self.icondition_number, self.se_condition_dump_file, self.get_itask_item_detail_status())
         return prg_info
+
+    def get_itask_item_detail_status(self):
+        status = list()
+        tmpl = "\t\t\t non-empty iset number: %d, space size: %d, task items progress: %d / %d (speed up: %3.f), found %d se condition"
+        for i in range(1, self.max_ne):
+            space_size = self.incremental_task_space_size[i]
+            task_number = self.incremental_task_number[i]
+            speed_up_ratio = 1.0 * space_size / task_number
+            st = tmpl % (i, space_size, self.incremental_task_complete_number[i],
+                         task_number, speed_up_ratio, len(self.incremental_iconditions[i]))
+            status.append(st)
+
+        return "\n".join(status)
 
     def task_finish(self):
         self.save_se_condition(self.result_file)

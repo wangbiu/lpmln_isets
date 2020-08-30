@@ -56,8 +56,8 @@ def get_result_queue():
 def put_isc_task_items(task_id, items, msg_text, task_queue):
     for it in items:
         task_queue.put((task_id, it))
-    logging.info(msg_text)
-    msg.send_message(msg_text)
+    # logging.info(msg_text)
+    # msg.send_message(msg_text)
 
 
 def dump_isc_task_results(isc_tasks):
