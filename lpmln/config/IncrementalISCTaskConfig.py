@@ -81,6 +81,7 @@ class IncrementalISCTask:
             self.incremental_iconditions[i] = list()
             self.incremental_task_number[i] = 0
             self.incremental_task_space_size[i] = comb(self.iset_number, i)
+            self.incremental_task_complete_number[i] = 0
             self.task_space_size += self.incremental_task_space_size[i]
 
         self.result_file = config.get_isc_results_file_path(self.k_m_n[0], self.k_m_n[1], self.k_m_n[2], self.min_ne, self.max_ne, self.task_type)
@@ -93,41 +94,45 @@ class IncrementalISCTask:
 
 
         for iset in self.unknown_iset_ids:
+            if iset not in ne_iset_ids:
+                task_batch.add(iset)
+
             if len(task_batch) == self.task_max_slice_size:
                 isc_task_items.append((copy.deepcopy(ne_iset_ids), task_batch))
                 task_batch = set()
-            else:
-                if iset not in ne_iset_ids:
-                    task_batch.add(iset)
 
         if len(task_batch) != 0:
             isc_task_items.append((copy.deepcopy(ne_iset_ids), task_batch))
 
         task_items_size = len(self.unknown_iset_ids) - len(ne_iset_ids)
         self.incremental_task_number[len(ne_iset_ids) + 1] += task_items_size
+        self.task_total_number += task_items_size
 
         msg_text = "generate %d %s from base icondition %s" % (task_items_size, self.task_flag, base_icondition.get_ne_iset_str())
 
         return isc_task_items, msg_text
 
     def get_initial_isc_task_items(self):
+        tmp = self.task_max_slice_size
+        self.task_max_slice_size = 2
         icondition = ISetCondition(list(), list())
         itask_items, msg_text = self.generate_isc_task_items_by_base_icondition(icondition)
+        self.task_max_slice_size = tmp
         return itask_items, msg_text
 
-    def insert_se_condition(self, condition):
+    def insert_se_condition(self, icondition):
         self.icondition_number += 1
-        ne_iset_number = condition.ne_iset_number
-        ne_iset_ids = condition.ne_iset_ids
-        self.incremental_iconditions[ne_iset_number].append(condition)
-        if ne_iset_number < self.max_ne:
-            next_isc_task_items = self.generate_isc_task_items_by_base_icondition(ne_iset_ids)
+        base_ne_iset_number = icondition.ne_iset_number
+        self.incremental_iconditions[base_ne_iset_number].append(icondition)
+        if base_ne_iset_number < self.max_ne:
+            next_isc_task_items, msg_text = self.generate_isc_task_items_by_base_icondition(icondition)
         else:
             next_isc_task_items = list()
+            msg_text = "no more new %s items from base icondition %s!" % (self.task_flag, icondition.get_ne_iset_str())
 
         self.is_find_new_se_condition = True
 
-        return next_isc_task_items
+        return next_isc_task_items, msg_text
 
     def dump_tmp_se_condition(self):
         if self.is_find_new_se_condition:
@@ -185,6 +190,16 @@ class IncrementalISCTask:
             if self.task_end_time.__lt__(et):
                 self.task_end_time = et
 
+    def set_task_complete_number(self, task_complete_number, ne_iset_number):
+        self.incremental_task_complete_number[ne_iset_number] += task_complete_number
+        self.task_complete_number += task_complete_number
+
+    def has_new_itask_items(self):
+        if self.task_complete_number < self.task_total_number:
+            return True
+        else:
+            return False
+
 
 class IncrementalISCTaskConfig(ISCTaskConfig):
     def load_isc_config_file(self):
@@ -197,7 +212,7 @@ class IncrementalISCTaskConfig(ISCTaskConfig):
                 rule_number = task["rule_number"]
                 max_ne = task["max_ne"]
 
-                if lp_type not in task:
+                if "lp_type" not in task:
                     lp_type = "lpmln"
                 else:
                     lp_type = task["lp_type"]

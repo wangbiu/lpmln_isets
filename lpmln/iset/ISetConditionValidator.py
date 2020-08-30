@@ -97,10 +97,15 @@ class ISetConditionValidator:
         is_contain_valid, is_se_sat, condition = self.validate_kmn_extended_icondition_return_isetcondition_obj(icondition, k_size, m_size, n_size, is_check_valid_rule)
         return is_contain_valid, is_se_sat, str(condition)
 
-    def validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids(self, non_emtpy_iset_ids, k_size, m_size, n_size, is_check_valid_rule=True):
+    def validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids_return_icondition_str(self, non_emtpy_iset_ids, k_size, m_size, n_size, is_check_valid_rule=True):
         iset_number = isu.compute_iset_number_from_kmn(k_size, m_size, n_size, self.rule_set_size)
         icondition = isu.construct_iset_condition_from_non_emtpy_iset_ids(non_emtpy_iset_ids, iset_number)
         return self.validate_kmn_extended_iset_condition_return_isetcondition_str(icondition, k_size, m_size, n_size, is_check_valid_rule)
+
+    def validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids_return_icondition_obj(self, non_emtpy_iset_ids, k_size, m_size, n_size, is_check_valid_rule=True):
+        iset_number = isu.compute_iset_number_from_kmn(k_size, m_size, n_size, self.rule_set_size)
+        icondition = isu.construct_iset_condition_from_non_emtpy_iset_ids(non_emtpy_iset_ids, iset_number)
+        return self.validate_kmn_extended_icondition_return_isetcondition_obj(icondition, k_size, m_size, n_size, is_check_valid_rule)
 
 
 if __name__ == '__main__':

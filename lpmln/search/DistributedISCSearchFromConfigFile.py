@@ -258,7 +258,7 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_name="", is_c
             non_ne_ids = isu.get_real_nonempty_iset_ids_from_partial_nonemtpy_iset_ids(task_idx, empty_iset_ids)
 
             is_contain_valid_rule, is_strongly_equivalent, condition = \
-                validator.validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids(
+                validator.validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids_return_icondition_str(
                     non_ne_ids, k_size, m_size, n_size, is_check_valid_rule=is_check_valid_rules)
 
             if not is_contain_valid_rule and is_strongly_equivalent:

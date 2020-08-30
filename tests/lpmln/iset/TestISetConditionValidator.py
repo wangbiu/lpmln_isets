@@ -192,7 +192,7 @@ def test_singleton_condition():
     print(non_empty_ids)
 
     validator = ISetConditionValidator()
-    is_contain_valid, is_se_sat, condition = validator.validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids(non_empty_ids, k, m, n)
+    is_contain_valid, is_se_sat, condition = validator.validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids_return_icondition_str(non_empty_ids, k, m, n)
     print(is_contain_valid, is_se_sat)
     print(condition)
 
