@@ -166,11 +166,13 @@ if __name__ == '__main__':
 
     file_010_lpmln3_se = r"W:\my_projects\lpmln_isets\isc-data\isc-results-2020.6.8\isc-results\0-1-0-isc-emp.txt"
     file_110_lpmln3_se = r"W:\my_projects\lpmln_isets\isc-data\isc-results-2020.6.8\isc-results\1-1-0-isc-1-24-emp.txt"
+    file_011_lpmln3_se = r"W:\my_projects\lpmln_isets\isc-data\isc-results-2020.6.8\isc-results\0-1-1-isc-1-24-emp.txt"
     file_120_lpmln3_se = r"W:\my_projects\lpmln_isets\isc-data\isc-results-2020.6.8\isc-results\1-2-0-isp-1-6-emp.txt"
 
     # analysis_iconditions_by_nonempty_isets_numbers(file_110_lpmln3_se, min_ne_iset_number=1, max_ne_iset_number=24)
+    analysis_iconditions_by_nonempty_isets_numbers(file_011_lpmln3_se, min_ne_iset_number=1, max_ne_iset_number=24)
     # analysis_iconditions_by_nonempty_isets_numbers(file_010_lpmln3_se, min_ne_iset_number=1, max_ne_iset_number=7)
-    analysis_iconditions_by_nonempty_isets_numbers(file_120_lpmln3_se, min_ne_iset_number=1, max_ne_iset_number=6)
+    # analysis_iconditions_by_nonempty_isets_numbers(file_120_lpmln3_se, min_ne_iset_number=1, max_ne_iset_number=6)
     # analysis_iconditions_by_nonempty_isets_numbers(file_011_asp4_7_7, min_ne_iset_number=7, max_ne_iset_number=7)
     pass
     

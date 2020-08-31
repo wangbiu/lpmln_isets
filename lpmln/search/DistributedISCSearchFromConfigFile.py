@@ -281,4 +281,4 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_name="", is_c
 
 if __name__ == '__main__':
     # init_kmn_isc_task_master_from_config(sleep_time=2)
-    init_kmn_isc_task_workers()
+    init_kmn_isc_task_workers(is_use_extended_rules=False, is_check_valid_rules=False)
