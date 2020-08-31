@@ -48,9 +48,13 @@ class SingleAddition2EmptyISetSATTableChecker:
             table[i].add(i)
         return table
 
+    def generate_all_rules(self):
+        all_rules = seut.generate_all_rules(self.atom_size, self.is_use_extended_rules)
+        return all_rules
+
     def check_all_rules(self):
         logging.info("start sat checker: atom size = %d, lp type = %s, is use extended rule = %s" % (self.atom_size, str(self.lp_type), str(self.is_use_extended_rules)))
-        all_rules = seut.generate_all_rules(self.atom_size, self.is_use_extended_rules)
+        all_rules = self.generate_all_rules()
         results = dict()
         results[self.all_case_flags[0]] = self.generate_000_sat_result()
         total_rules = len(all_rules)
