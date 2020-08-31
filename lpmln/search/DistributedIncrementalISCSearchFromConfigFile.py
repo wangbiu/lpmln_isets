@@ -88,12 +88,13 @@ def process_result_queue(task_queue, result_queue, isc_tasks):
         isc_tasks[isc_task_id].set_task_complete_number(task_complete_number, ne_iset_number)
         isc_tasks[isc_task_id].set_task_running_time(task_running_time)
     elif result_state == condition_signal:
-        icondition = result[2]
-        if icondition.contain_se_valid_rules:
-            itask_items, msg_text = isc_tasks[isc_task_id].generate_isc_task_items_by_base_icondition(icondition)
-        else:
-            itask_items, msg_text = isc_tasks[isc_task_id].insert_se_condition(icondition)
-        put_isc_task_items(isc_task_id, itask_items, msg_text, task_queue)
+        iconditions = result[2]
+        for ic in iconditions:
+            if ic.contain_se_valid_rules:
+                itask_items, msg_text = isc_tasks[isc_task_id].generate_isc_task_items_by_base_icondition(ic)
+            else:
+                itask_items, msg_text = isc_tasks[isc_task_id].insert_se_condition(ic)
+            put_isc_task_items(isc_task_id, itask_items, msg_text, task_queue)
 
     return working_hosts_number_diff
 
@@ -131,8 +132,9 @@ def init_kmn_isc_task_master_from_config(isc_config_file="isets-tasks.json", sle
         put_isc_task_items(task_id, itask_items, msg_text, task_queue)
 
     has_new_itask_items = True
+    progress_msg_cnt = 10
     while not task_queue.empty() or has_new_itask_items:
-        if sleep_cnt == 10:
+        if sleep_cnt == progress_msg_cnt*100:
             msg_texts = dump_isc_task_results(isc_tasks)
             msg_text = "isc tasks progress info, remain %d task hosts, %d task slices:  \n\t\t%s" % (
                 working_hosts_number, task_queue.qsize(), "\n\t\t".join(msg_texts))
@@ -141,13 +143,14 @@ def init_kmn_isc_task_master_from_config(isc_config_file="isets-tasks.json", sle
             sleep_cnt = 0
 
         if result_queue.empty():
-            time.sleep(sleep_time)
-            sleep_cnt += 1
+            time.sleep(sleep_time * progress_msg_cnt)
+            sleep_cnt = progress_msg_cnt
             continue
 
         whn_diff = process_result_queue(task_queue, result_queue, isc_tasks)
         working_hosts_number += whn_diff
         has_new_itask_items = check_has_new_itask_items(isc_tasks)
+        sleep_cnt += 1
 
 
 
@@ -284,12 +287,12 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_name="", lp_t
                 validator.validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids_return_icondition_obj(
                     non_ne_ids, k_size, m_size, n_size, is_check_valid_rule=is_check_valid_rules)
 
-            if not is_contain_valid_rule and is_strongly_equivalent:
+            condition.contain_se_valid_rules = is_contain_valid_rule
+            if is_contain_valid_rule or is_strongly_equivalent:
                 se_conditions_cache.append(condition)
                 se_cdt_cnt += 1
 
-        for sec in se_conditions_cache:
-            result_queue.put((condition_signal, isc_task_id, sec))
+        result_queue.put((condition_signal, isc_task_id, se_conditions_cache))
 
         end_time = datetime.now()
         end_time_str = end_time.strftime(time_fmt)[:-3]
