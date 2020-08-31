@@ -51,7 +51,7 @@ class IncrementalISCTask:
         self.icondition_number = 0
 
         self.task_total_number = 0
-        self.task_max_slice_size = 20
+        self.task_max_slice_size = 100
         self.task_space_size = 0
 
         # runtime records
@@ -80,7 +80,7 @@ class IncrementalISCTask:
         for i in range(1, self.max_ne + 1):
             self.incremental_iconditions[i] = list()
             self.incremental_task_number[i] = 0
-            self.incremental_task_space_size[i] = comb(self.iset_number, i)
+            self.incremental_task_space_size[i] = comb(self.unknown_iset_number, i)
             self.incremental_task_complete_number[i] = 0
             self.task_space_size += self.incremental_task_space_size[i]
 
@@ -163,8 +163,8 @@ class IncrementalISCTask:
 
     def get_itask_item_detail_status(self):
         status = list()
-        tmpl = "\t\t\t non-empty iset number: %d, space size: %d, task items progress: %d / %d (speed up: %3.f), found %d se condition"
-        for i in range(1, self.max_ne):
+        tmpl = "\t\t\t\t non-empty iset number: %d, space size: %d, task items progress: %d / %d (speed up: %3.f), found %d se condition"
+        for i in range(1, self.max_ne + 1):
             space_size = self.incremental_task_space_size[i]
             task_number = self.incremental_task_number[i]
             speed_up_ratio = 1.0 * space_size / task_number

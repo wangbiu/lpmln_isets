@@ -88,7 +88,11 @@ def process_result_queue(task_queue, result_queue, isc_tasks):
         isc_tasks[isc_task_id].set_task_complete_number(task_complete_number, ne_iset_number)
         isc_tasks[isc_task_id].set_task_running_time(task_running_time)
     elif result_state == condition_signal:
-        itask_items, msg_text = isc_tasks[isc_task_id].insert_se_condition(result[2])
+        icondition = result[2]
+        if icondition.contain_se_valid_rules:
+            itask_items, msg_text = isc_tasks[isc_task_id].generate_isc_task_items_by_base_icondition(icondition)
+        else:
+            itask_items, msg_text = isc_tasks[isc_task_id].insert_se_condition(icondition)
         put_isc_task_items(isc_task_id, itask_items, msg_text, task_queue)
 
     return working_hosts_number_diff
@@ -183,7 +187,7 @@ def init_kmn_isc_task_master_from_config(isc_config_file="isets-tasks.json", sle
     msg.send_message(msg=msg_text, attached_files=attached_files)
 
 
-def init_kmn_isc_task_workers(isc_config_file="isets-tasks.json", lp_type="lpmln", is_use_extended_rules=True):
+def init_kmn_isc_task_workers(isc_config_file="isets-tasks.json", lp_type="lpmln", is_check_valid_rules=True, is_use_extended_rules=True):
     payload = config.worker_payload
     worker_pool = Pool(payload)
     pathlib.Path(config.task_host_lock_file).touch()
@@ -199,7 +203,7 @@ def init_kmn_isc_task_workers(isc_config_file="isets-tasks.json", lp_type="lpmln
 
     for i in range(payload):
         worker_pool.apply_async(kmn_isc_task_worker,
-                                args=(isc_config_file, "worker-%d" % (i + 1), lp_type, is_use_extended_rules))
+                                args=(isc_config_file, "worker-%d" % (i + 1), lp_type, is_check_valid_rules, is_use_extended_rules))
     worker_pool.close()
     worker_pool.join()
     # if pathlib.Path(task_worker_host_lock_file).exists():
@@ -208,8 +212,8 @@ def init_kmn_isc_task_workers(isc_config_file="isets-tasks.json", lp_type="lpmln
     logging.info("task worker host %s exit ..." % config.worker_host_name)
 
 
-def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_name="", lp_type="lpmln", is_use_extended_rules=True):
-    is_check_valid_rules = False
+def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_name="", lp_type="lpmln", is_check_valid_rules=True, is_use_extended_rules=True):
+
     IncrementalISCFileTaskWorkerQueueManager.register("get_task_queue")
     IncrementalISCFileTaskWorkerQueueManager.register("get_result_queue")
     manager = IncrementalISCFileTaskWorkerQueueManager(address=(config.task_host, config.task_host_port),

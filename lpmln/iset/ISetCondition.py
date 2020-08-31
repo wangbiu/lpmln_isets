@@ -14,6 +14,7 @@ class ISetCondition:
         self.singletom_iset_ids = singletons
         self.iset_number = len(icondition)
         self.ne_iset_ids = set()
+        self.contain_se_valid_rules = False
         for i in range(self.iset_number):
             if self.icondition[i] == 1:
                 self.ne_iset_ids.add(i)
