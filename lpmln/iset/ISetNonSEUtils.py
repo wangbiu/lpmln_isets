@@ -19,13 +19,34 @@ def join_list_data(data):
 
 
 def get_file_path(k_size, m_size, n_size, non_empty_iset_number, lp_type, is_use_extended_rules):
+    file_name = get_file_name(k_size, m_size, n_size, non_empty_iset_number, lp_type, is_use_extended_rules)
+    file_path = os.path.join(config.isc_non_se_icondition_path, file_name)
+    return file_path
+
+
+def get_file_name_prefix(k_size, m_size, n_size, lp_type, is_use_extended_rules):
     if is_use_extended_rules:
         rule_set_size = 4
     else:
         rule_set_size = 3
-    file_name = "%s-%d-kmn-%d%d%d-%d-nse.txt" % (lp_type, rule_set_size, k_size, m_size, n_size, non_empty_iset_number)
-    file_path = os.path.join(config.isc_non_se_icondition_path, file_name)
-    return file_path
+    file_name_prefix = "%s-%d-kmn-%d%d%d" % (lp_type, rule_set_size, k_size, m_size, n_size)
+    return file_name_prefix
+
+
+def get_file_name(k_size, m_size, n_size, non_empty_iset_number, lp_type, is_use_extended_rules):
+    prefix = get_file_name_prefix(k_size, m_size, n_size, lp_type, is_use_extended_rules)
+    file_name = "%s-%d-nse.txt" % (prefix, non_empty_iset_number)
+    return file_name
+
+
+def get_all_non_se_file_names(k_size, m_size, n_size, lp_type, is_use_extended_rules):
+    prefix = get_file_name_prefix(k_size, m_size, n_size, lp_type, is_use_extended_rules)
+    all_files = os.listdir(config.isc_non_se_icondition_path)
+    non_se_files = list()
+    for f in all_files:
+        if f.startswith(prefix):
+            non_se_files.append(f)
+    return non_se_files
 
 
 def save_kmn_non_se_results(k_size, m_size, n_size, non_empty_iset_number, conditions, lp_type, is_use_extended_rules):

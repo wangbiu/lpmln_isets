@@ -13,7 +13,6 @@ import lpmln.config.GlobalConfig as cfg
 import os
 import copy
 import datetime
-import lpmln.iset.OptimizationISetsUtils as oisu
 import lpmln.config.ISCTasksMetaData as iscmeta
 import lpmln.iset.ISetNonSEUtils as isnse
 
@@ -49,6 +48,7 @@ class ISCTask:
         self.complete_params()
         self.task_total_number = 0
         self.task_slice_number = 0
+        self.se_condition_number = 0
 
         # runtime records
         self.task_complete_number = 0
@@ -62,17 +62,20 @@ class ISCTask:
         self.incremental_se_conditions = dict()
         self.incremental_nse_condition_number = dict()
         self.incremental_task_check_number = dict()
-
         self.incremental_task_slices = dict()
 
         # non se conditions
-        self.non_se_conditions = list()
+        self.non_se_condition_files = list()
         self.non_se_conditions_buffer = list()
         self.non_se_conditions_buffer_non_empty_iset_number = 1
 
+        # worker
+        self.non_se_conditions = list()
+        self.loaded_non_se_condition_files = set()
+
     def complete_params(self):
         self.iset_number = 2 ** (self.rule_set_size * self.rule_number) - 1
-        self.task_slice_file = config.get_task_slice_file_path(self.rule_number, self.min_ne, self.max_ne)
+        self.task_slice_file = config.get_task_slice_file_path_by_kmn(*self.k_m_n, self.min_ne, self.max_ne)
         self.unknown_iset_number = len(self.meta_data.se_iset_ids)
         self.result_file = config.get_isc_results_file_path(self.k_m_n[0], self.k_m_n[1], self.k_m_n[2], self.min_ne, self.max_ne)
         self.task_flag = self.task_flag % (self.k_m_n[0], self.k_m_n[1], self.k_m_n[2], self.min_ne, self.max_ne, self.task_type)
@@ -89,8 +92,9 @@ class ISCTask:
         non_se_file = isnse.save_kmn_non_se_results(self.k_m_n[0], self.k_m_n[1], self.k_m_n[2],
                                                     self.non_se_conditions_buffer_non_empty_iset_number, self.non_se_conditions_buffer,
                                                     self.lp_type, self.is_use_extended_rules)
-        for nse in self.non_se_conditions_buffer:
-            self.non_se_conditions.append(nse)
+        # for nse in self.non_se_conditions_buffer:
+        #     self.non_se_conditions.append(nse)
+        self.non_se_condition_files.append(non_se_file)
         self.non_se_conditions_buffer.clear()
         self.non_se_conditions_buffer_non_empty_iset_number += 1
 
@@ -119,13 +123,18 @@ class ISCTask:
                 self.task_total_number += slice_length
 
     def get_isc_task_load_message(self):
-        msg_text = "load %s, put %d isc task slices" % (self.task_flag, self.task_slice_number)
+        msg_text = "load %s, has %d isc task slices" % (self.task_flag, self.task_slice_number)
         return msg_text
 
     def insert_se_condition(self, condition):
         ne_iset_number = len(condition.ne_iset_ids)
         self.incremental_se_conditions[ne_iset_number].append(condition)
         self.is_find_new_se_condition = True
+        self.se_condition_number += 1
+
+    def insert_nse_condition(self, condition):
+        self.non_se_conditions_buffer.append(condition.ne_iset_ids)
+
 
     def dump_tmp_se_condition(self):
         if self.is_find_new_se_condition:
@@ -147,14 +156,28 @@ class ISCTask:
         else:
             self.task_progress_rate = 100.0 * self.task_complete_number / self.task_total_number
             task_running_time = self.task_end_time - self.task_start_time
-            if len(self.se_conditions) == 0:
-                prg_info = ":mag_right: %s: total tasks: %d, complete tasks: %d (%.3f%%, running time: %s), find 0 se conditions." % (
-                    self.task_flag, self.task_total_number, self.task_complete_number, self.task_progress_rate, str(task_running_time))
+            details = self.get_itask_detail_status()
+            if self.se_condition_number == 0:
+                prg_info = ":mag_right: %s: total tasks: %d, complete tasks: %d (%.3f%%, running time: %s), find 0 se conditions. details: \n %s" % (
+                    self.task_flag, self.task_total_number, self.task_complete_number, self.task_progress_rate, str(task_running_time), details)
             else:
-                prg_info = ":rocket: %s: total tasks: %d, complete tasks: %d (%.3f%%, running time: %s), find %d se conditions,  dumped to %s" % (
+                prg_info = ":rocket: %s: total tasks: %d, complete tasks: %d (%.3f%%, running time: %s), find %d se conditions,  dumped to %s details: \n %s" % (
                     self.task_flag, self.task_total_number, self.task_complete_number, self.task_progress_rate,
-                    str(task_running_time), len(self.se_conditions), self.se_condition_dump_file)
+                    str(task_running_time), self.se_condition_number, self.se_condition_dump_file, details)
         return prg_info
+
+    def get_itask_detail_status(self):
+        status = list()
+        tmpl = "\t\t\t\t non-empty iset number: %d, task items progress: %d / %d (speed up: %3.f), found %d se condition"
+        for i in range(1, self.max_ne + 1):
+            task_number = self.incremental_task_number[i]
+            check_number = self.incremental_task_check_number[i]
+            speed_up_ratio = 1.0 * task_number / check_number
+            st = tmpl % (i, self.incremental_task_complete_number[i],
+                         task_number, speed_up_ratio, len(self.incremental_se_conditions[i]))
+            status.append(st)
+
+        return "\n".join(status)
 
     def task_finish(self):
         self.save_se_condition(self.result_file)
@@ -188,6 +211,16 @@ class ISCTask:
         self.incremental_task_complete_number[ne_iset_number] += task_complete_number
         self.task_complete_number += task_complete_number
 
+    def has_new_itask_items(self):
+        if self.task_complete_number < self.task_total_number:
+            return True
+        else:
+            return False
+
+    def load_non_se_conditions(self):
+        file_prefix = ""
+        base_dir = config.isc_non_se_icondition_path
+
 
 class ISCTaskConfig:
     def __init__(self, config_file, is_use_extended_rules):
@@ -207,6 +240,12 @@ class ISCTaskConfig:
                 min_ne = task["min_ne"]
                 max_ne = task["max_ne"]
 
+                lp_type_key = "lp_type"
+                if lp_type_key in task:
+                    lp_type = task[lp_type_key]
+                else:
+                    lp_type = "lpmln"
+
                 kmns_key = "kmns"
                 if kmns_key in task:
                     kmns = self.get_kmn_from_config(task[kmns_key])
@@ -214,7 +253,7 @@ class ISCTaskConfig:
                     kmns = self.get_kmn_by_rule_number(rule_number)
 
                 for kmn in kmns:
-                    itask = ISCTask(rule_number, min_ne, max_ne, kmn, self.is_use_extended_rules)
+                    itask = ISCTask(min_ne, max_ne, kmn, self.is_use_extended_rules, lp_type)
                     self.isc_tasks.append(itask)
 
 
