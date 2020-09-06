@@ -21,8 +21,8 @@ config = cfg.load_configuration()
 
 
 class IncrementalISCTask:
-    def __init__(self, max_ne, kmn, is_use_extended_rules, lp_type="lpmln"):
-        self.min_ne = 1
+    def __init__(self, min_ne, max_ne, kmn, is_use_extended_rules, lp_type="lpmln"):
+        self.min_ne = min_ne
         self.max_ne = max_ne
         self.k_m_n = kmn
         self.is_use_extended_rules = is_use_extended_rules
@@ -237,7 +237,7 @@ class IncrementalISCTaskConfig(ISCTaskConfig):
                     kmns = self.get_kmn_by_rule_number(rule_number)
 
                 for kmn in kmns:
-                    itask = IncrementalISCTask(max_ne, kmn, self.is_use_extended_rules, lp_type)
+                    itask = IncrementalISCTask(1, max_ne, kmn, self.is_use_extended_rules, lp_type)
                     self.isc_tasks.append(itask)
 
 if __name__ == '__main__':
