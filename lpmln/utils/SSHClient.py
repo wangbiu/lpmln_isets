@@ -9,6 +9,19 @@
 
 import paramiko
 import os
+import socket
+
+
+def get_host_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = str(s.getsockname()[0])
+        # print(s)
+    finally:
+        s.close()
+    # print("current ip: ", ip)
+    return ip
 
 
 def sftp_transport_file_by_threeparts_path(sftp, local_path, server_path, file_name):
@@ -65,6 +78,7 @@ def transport_files_by_threeparts_path(ip, port, username, password, files):
 
 
 if __name__ == '__main__':
-
+    ip = get_host_ip()
+    print(ip)
     pass
     

@@ -22,6 +22,7 @@ class GlobalConfiguration:
         self.isc_tmp_path = "isc-tmp"
         self.isc_task_path = "isc-tasks"
         self.isc_results_path = "isc-results"
+        self.isc_non_se_icondition_path = "isc-non-se-results"
 
         #ssh
         self.ssh_user_name = ""
@@ -90,6 +91,9 @@ class GlobalConfiguration:
 
         self.isc_results_path = os.path.join(self.io_data_dir, self.isc_results_path)
         self.create_dirs(self.isc_results_path)
+
+        self.isc_non_se_icondition_path = os.path.join(self.io_data_dir, self.isc_non_se_icondition_path)
+        self.create_dirs(self.isc_non_se_icondition_path)
 
         self.task_host_lock_file = os.path.join(self.project_base_dir, self.task_host_lock_file)
 

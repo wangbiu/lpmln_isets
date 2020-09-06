@@ -14,7 +14,7 @@ config = cfg.load_configuration()
 
 server_path = "/home/wangbin/experiments/tmp/"
 local_path = "W:/my_projects/lpmln_isets/isc-data/isc-tasks/"
-
+ip = "10.201.186.98"
 
 def get_local_file_names(local_path):
     files = os.listdir(local_path)
@@ -37,8 +37,13 @@ def get_threeparts_paths():
 
 def test_transport_files():
     paths = get_threeparts_paths()
-    ip = "10.201.186.98"
+
     ssh.transport_files_by_threeparts_path(ip, 22, config.ssh_user_name, config.ssh_password, paths)
+
+
+def test_transport_file2():
+    path = [(local_path + "ts-2-1-1.txt", server_path + "ts-2-1-1.txt")]
+    ssh.transport_files(ip, 22, config.ssh_user_name, config.ssh_password, path)
 
 
 if __name__ == '__main__':
