@@ -23,6 +23,10 @@ class GlobalConfiguration:
         self.isc_task_path = "isc-tasks"
         self.isc_results_path = "isc-results"
 
+        #ssh
+        self.ssh_user_name = ""
+        self.ssh_password = ""
+
         # mattermost
         self.mattermost_username = ""
         self.mattermost_password = ""
