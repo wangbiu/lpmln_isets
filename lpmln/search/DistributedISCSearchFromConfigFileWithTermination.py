@@ -30,6 +30,7 @@ kill_signal = "--over--"
 stat_signal = "--stat--"
 se_condition_signal = "--cdt--"
 nse_condition_signal = "--nse--"
+nse_condition_ready_signal = "--nse-ready--"
 
 
 
@@ -77,7 +78,7 @@ def dump_isc_task_results(isc_tasks):
     return msg_texts
 
 
-def process_result_queue(task_queue, result_queue, isc_tasks):
+def process_result_queue(result_queue, isc_tasks):
     working_hosts_number_diff = (0, 0)
     result = result_queue.get()
     result_state = result[0]
@@ -121,6 +122,45 @@ def check_has_new_itask_items(itasks):
     return False
 
 
+def check_itasks_status(itasks, task_queue, working_hosts_number):
+    is_finish = True
+    is_task_queue_change = False
+    for tid in range(len(itasks)):
+        it = itasks[tid]
+        current_ne_number = it.working_ne_iset_numbers
+        task_complete = it.incremental_task_complete_number[current_ne_number]
+        task_total = it.incremental_task_number[current_ne_number]
+        if task_complete == task_total:
+            if it.is_terminate():
+                continue
+
+            if current_ne_number < it.max_ne:
+                is_task_queue_change = True
+                is_finish = False
+                it.flush_non_se_condition()
+                task_slices, msg_text = it.get_check_itasks_by_non_empty_iset_number()
+
+                for ts in task_slices:
+                    task_queue.put((tid, ts))
+                logging.info(msg_text)
+                msg.send_message(msg_text)
+        else:
+            is_finish = False
+
+    if is_task_queue_change:
+        send_itasks_progress_info(itasks, task_queue, working_hosts_number)
+
+    return is_finish
+
+
+def send_itasks_progress_info(isc_tasks, task_queue, working_hosts_number):
+    msg_texts = dump_isc_task_results(isc_tasks)
+    msg_text = "isc tasks progress info, remain %d task hosts, %d task slices:  \n\t\t%s" % (
+        working_hosts_number, task_queue.qsize(), "\n\t\t".join(msg_texts))
+    logging.info(msg_text)
+    msg.send_message(msg_text)
+
+
 def init_kmn_isc_task_master_from_config(isc_config_file="isets-tasks.json", sleep_time=30, is_use_extended_rules=True):
     start_time = datetime.now()
     ISCFileTaskTerminationMasterQueueManager.register("get_task_queue", callable=get_task_queue)
@@ -142,42 +182,44 @@ def init_kmn_isc_task_master_from_config(isc_config_file="isets-tasks.json", sle
     sleep_cnt = 0
     online_hosts = set()
 
-    for itask in isc_tasks:
+    for tid in range(len(isc_tasks)):
+        itask = isc_tasks[tid]
         itask.load_isc_task_items()
         msg_text = itask.get_isc_task_load_message()
+        ne_iset = itask.working_ne_iset_numbers
+        slices = itask.incremental_task_slices[ne_iset]
+        for s in slices:
+            task_queue.put((tid, s))
         logging.info(msg_text)
         msg.send_message(msg_text)
 
 
-    has_new_itask_items = True
     progress_msg_cnt = 10
-    while not task_queue.empty() or has_new_itask_items:
+    task_finish = False
+    while not task_finish:
         if sleep_cnt == progress_msg_cnt:
-            msg_texts = dump_isc_task_results(isc_tasks)
-            msg_text = "isc tasks progress info, remain %d task hosts, %d task slices:  \n\t\t%s" % (
-                working_hosts_number, task_queue.qsize(), "\n\t\t".join(msg_texts))
-            logging.info(msg_text)
-            msg.send_message(msg_text)
+            send_itasks_progress_info(isc_tasks, task_queue, working_hosts_number)
             sleep_cnt = 0
 
+        task_finish = check_itasks_status(isc_tasks, task_queue, working_hosts_number)
         if result_queue.empty():
             time.sleep(sleep_time)
             sleep_cnt += 1
             continue
 
-        whn_diff = process_result_queue(task_queue, result_queue, isc_tasks)
+        whn_diff = process_result_queue(result_queue, isc_tasks)
         whn_number = whn_diff[0]
         host_ip = whn_diff[1]
         working_hosts_number += whn_number
 
         if whn_number == 1:
             online_hosts.add(host_ip)
-            for itask in isc_tasks:
-                transport_files(host_ip, itask.non_se_condition_files)
+            # for itask in isc_tasks:
+            #     transport_files(host_ip, itask.non_se_condition_files)
         elif whn_number == -1:
             online_hosts.remove(host_ip)
 
-        has_new_itask_items = check_has_new_itask_items(isc_tasks)
+
 
 
     msg_text = "all isc task slices are discatched!"
@@ -191,7 +233,7 @@ def init_kmn_isc_task_master_from_config(isc_config_file="isets-tasks.json", sle
         if sleep_cnt == 10:
             msg_texts = dump_isc_task_results(isc_tasks)
 
-            msg_text = "all isc tasks have been discatched, DO NOT add new worker! isc tasks progress info, remain %d task hosts:  \n\t\t%s" \
+            msg_text = "all isc tasks are discatched, DO NOT add new worker! isc tasks progress info, remain %d task hosts:  \n\t\t%s" \
                        % (working_hosts_number, "\n\t\t".join(msg_texts))
             logging.info(msg_text)
             msg.send_message(msg_text)
@@ -202,8 +244,8 @@ def init_kmn_isc_task_master_from_config(isc_config_file="isets-tasks.json", sle
             sleep_cnt += 1
             continue
 
-        whn_diff = process_result_queue(task_queue, result_queue, isc_tasks)
-        working_hosts_number += whn_diff
+        whn_diff = process_result_queue(result_queue, isc_tasks)
+        working_hosts_number += whn_diff[0]
 
     msg_texts = []
     attached_files = []
@@ -265,7 +307,7 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_name="", lp_t
             break
 
         if task_queue.empty():
-            time.sleep(10)
+            time.sleep(20)
             continue
 
         itask = task_queue.get()
@@ -286,11 +328,13 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_name="", lp_t
         se_iset_ids = it.meta_data.se_iset_ids
         unknown_iset_number = len(se_iset_ids)
         task_details = itask[1]
-        task_start = task_details[0]
-        isc_begin = task_start.split(",")
-        isc_begin = [int(s) for s in isc_begin]
-        task_number = task_details[1]
+        isc_begin = copy.deepcopy(task_details[0])
 
+        task_start = task_details[0]
+        task_start = [str(s) for s in task_start]
+        task_start = ",".join(task_start)
+
+        task_number = task_details[1]
         task_name = worker_name + ("-task-%d" % processed_task_slices_number)
         ne_number = len(isc_begin)
 
@@ -301,8 +345,10 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_name="", lp_t
         task_counter = CombinaryCounter(ne_number, unknown_iset_number)
         task_counter.reset_current_indicator(isc_begin)
         se_cdt_cnt = 0
+        nse_cdt_cnt = 0
 
         se_conditions_cache = list()
+        nse_conditions_cache = list()
         validator = ISetConditionValidator(lp_type=lp_type, is_use_extended_rules=is_use_extended_rules)
 
         for i in range(task_number):
@@ -312,27 +358,32 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_name="", lp_t
                 non_ne_ids.add(se_iset_ids[t])
 
             is_contain_valid_rule, is_strongly_equivalent, condition = \
-                validator.validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids_return_icondition_str(
+                validator.validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids_return_icondition_obj(
                     non_ne_ids, k_size, m_size, n_size, is_check_valid_rule=is_check_valid_rules)
 
-            if not is_contain_valid_rule and is_strongly_equivalent:
-                se_conditions_cache.append(condition)
-                se_cdt_cnt += 1
+            if not is_contain_valid_rule:
+                if is_strongly_equivalent:
+                    se_conditions_cache.append(condition)
+                    se_cdt_cnt += 1
+                else:
+                    nse_conditions_cache.append(condition)
+                    nse_cdt_cnt += 1
 
-        for sec in se_conditions_cache:
-            result_queue.put((condition_signal, isc_task_id, sec))
+        # for sec in se_conditions_cache:
+        result_queue.put((nse_condition_signal, isc_task_id, nse_conditions_cache))
+        result_queue.put((se_condition_signal, isc_task_id, se_conditions_cache))
 
         end_time = datetime.now()
         end_time_str = end_time.strftime(time_fmt)[:-3]
-        msg_text = "%s, end %d-%d-%d isc tasks from %s length %d, start time %s, end time %s, find %d se conditions" % (
-            task_name, k_size, m_size, n_size, task_start, task_number, start_time_str, end_time_str, se_cdt_cnt)
+        msg_text = "%s, end %d-%d-%d isc tasks from %s length %d, start time %s, end time %s, find %d se conditions (no semi-valid rules), find %d non-se conditions" % (
+            task_name, k_size, m_size, n_size, task_start, task_number, start_time_str, end_time_str, se_cdt_cnt, nse_cdt_cnt)
         logging.info(msg_text)
-        result_queue.put((stat_signal, isc_task_id, task_number, (start_time, end_time)))
+        result_queue.put((stat_signal, isc_task_id, ne_number, task_number, (start_time, end_time)))
         processed_task_slices_number += 1
 
     logging.info("%s processes %d isc task slices" % (worker_name, processed_task_slices_number))
 
 
 if __name__ == '__main__':
-    # init_kmn_isc_task_master_from_config(sleep_time=2)
-    init_kmn_isc_task_workers(lp_type="lpmln", is_use_extended_rules=False)
+    init_kmn_isc_task_master_from_config(sleep_time=2, is_use_extended_rules=False)
+    # init_kmn_isc_task_workers(lp_type="lpmln", is_use_extended_rules=False)
