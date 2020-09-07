@@ -21,8 +21,7 @@ def task_slice_tuple_2_str(slice_from, slice_length):
     slice_from_str.append(str(slice_length))
     return ",".join(slice_from_str)
 
-
-def generate_isp_slices(max_task_slice_size, min_non_empty_iset_number, max_non_empty_iset_number, unknown_iset_number, slice_file):
+def generate_isp_slices_task_queue(max_task_slice_size, min_non_empty_iset_number, max_non_empty_iset_number, unknown_iset_number):
     task_total_number = 0
     task_slice_number = 0
 
@@ -44,15 +43,21 @@ def generate_isp_slices(max_task_slice_size, min_non_empty_iset_number, max_non_
             task_idx_cnt += 1
 
             if task_idx_cnt == max_task_slice_size:
-                task_queue.append(task_slice_tuple_2_str(task_start_idx, task_idx_cnt))
+                task_queue.append((task_start_idx, task_idx_cnt))
                 task_total_number += task_idx_cnt
                 task_slice_number += 1
                 task_idx_cnt = 0
 
         if task_idx_cnt != 0:
-            task_queue.append(task_slice_tuple_2_str(task_start_idx, task_idx_cnt))
+            task_queue.append((task_start_idx, task_idx_cnt))
             task_total_number += task_idx_cnt
             task_slice_number += 1
+
+    return task_queue, task_total_number, task_slice_number
+
+def generate_isp_slices(max_task_slice_size, min_non_empty_iset_number, max_non_empty_iset_number, unknown_iset_number, slice_file):
+    task_queue, task_total_number, task_slice_number = \
+        generate_isp_slices_task_queue(max_task_slice_size, min_non_empty_iset_number, max_non_empty_iset_number, unknown_iset_number)
 
     msg_text = "unknown iset number %d isc task %d - %d non-empty isets, has %d tasks, task batch size %d, generate %d task slices!" % (
         unknown_iset_number, min_non_empty_iset_number, max_non_empty_iset_number, task_total_number, max_task_slice_size,
@@ -61,7 +66,7 @@ def generate_isp_slices(max_task_slice_size, min_non_empty_iset_number, max_non_
     print(msg_text)
     with open(slice_file, mode="w", encoding="utf-8") as sf:
         for ts in task_queue:
-            sf.write(ts)
+            sf.write(task_slice_tuple_2_str(*ts))
             sf.write("\n")
 
 

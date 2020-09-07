@@ -16,6 +16,8 @@ import datetime
 import lpmln.config.ISCTasksMetaData as iscmeta
 import lpmln.iset.ISetNonSEUtils as isnse
 from lpmln.utils.counter.CombinaryCounter import CombinaryCounter
+import lpmln.search.misc.ISCSearchingSlicesGenerator as isg
+
 
 config = cfg.load_configuration()
 
@@ -36,6 +38,7 @@ class ISCTask:
 
         self.iset_number = 0
         self.task_slice_file = ""
+        self.task_slice_file_exist = True
         self.unknown_iset_number = 0
         self.result_file = ""
 
@@ -110,6 +113,8 @@ class ISCTask:
     def is_early_terminate(self):
         # complete_itasks = self.incremental_task_complete_number[current_non_empty_iset_number]
         itask_number = self.incremental_task_number[self.working_ne_iset_numbers]
+        if itask_number == 0:
+            return False
         nse_icondition_number = self.incremental_nse_condition_number[self.working_ne_iset_numbers]
         if nse_icondition_number == itask_number:
             self.is_task_finish = True
@@ -118,30 +123,37 @@ class ISCTask:
             return False
 
     def load_isc_task_items(self):
-        with open(self.task_slice_file, mode="r", encoding="utf-8") as itk:
-            for ts in itk:
-                task_slice_data = ts.split(",")
-                ne_iset_number = len(task_slice_data) - 1
-                slice_from = [int(d) for d in task_slice_data[0:-1]]
-                slice_length = int(task_slice_data[-1])
-                self.incremental_task_slices[ne_iset_number].append((slice_from, slice_length))
-                self.incremental_task_number[ne_iset_number] += slice_length
-                self.incremental_task_check_number[ne_iset_number] += slice_length
+        if os.path.exists(self.task_slice_file):
+            self.task_slice_file_exist = True
+            with open(self.task_slice_file, mode="r", encoding="utf-8") as itk:
+                for ts in itk:
+                    task_slice_data = ts.split(",")
+                    ne_iset_number = len(task_slice_data) - 1
+                    slice_from = [int(d) for d in task_slice_data[0:-1]]
+                    slice_length = int(task_slice_data[-1])
+                    self.incremental_task_slices[ne_iset_number].append((slice_from, slice_length))
+                    self.incremental_task_number[ne_iset_number] += slice_length
+                    self.incremental_task_check_number[ne_iset_number] += slice_length
+                    self.task_slice_number += 1
+                    self.task_total_number += slice_length
+        else:
+            self.task_slice_file_exist = False
+            unknown_iset_number = len(self.meta_data.se_iset_ids)
+            task_queue, task_number, task_slice_number = isg.generate_isp_slices_task_queue(1000, 1, 2, unknown_iset_number)
+            for ts in task_queue:
+                ne_iset_number = len(ts[0])
+                self.incremental_task_slices[ne_iset_number].append(ts)
+                self.incremental_task_number[ne_iset_number] += ts[1]
+                self.incremental_task_check_number[ne_iset_number] += ts[1]
                 self.task_slice_number += 1
-                self.task_total_number += slice_length
+                self.task_total_number += ts[1]
 
-    def get_check_itasks_by_non_empty_iset_number(self):
-        self.working_ne_iset_numbers += 1
+    def get_check_itasks_by_non_empty_iset_number_from_loaded_isc_slices(self):
         ne_iset_number = self.working_ne_iset_numbers
-        if self.working_ne_iset_numbers > self.max_ne:
-            return list(), "task finish!"
-
         task_slices = self.incremental_task_slices[ne_iset_number]
         unknown_iset_number = len(self.meta_data.se_iset_ids)
         se_iset_ids = self.meta_data.se_iset_ids
-        msg_text = "task queue put %d itasks" % len(task_slices)
-        if ne_iset_number < 3:
-            return task_slices, msg_text
+
 
         filtered_task_slices = list()
         check_icondition_number = 0
@@ -180,6 +192,76 @@ class ISCTask:
             self.incremental_nse_condition_number[ne_iset_number] = nse_icondition_number
         msg_text = "task queue put %d itasks" % len(filtered_task_slices)
         return filtered_task_slices, msg_text
+
+    def get_check_itasks_by_non_empty_iset_number_from_autogen(self):
+        se_iset_ids = self.meta_data.se_iset_ids
+        unknown_iset_number = len(se_iset_ids)
+        ne_iset_number = self.working_ne_iset_numbers
+        max_slice_size = 1000
+        task_counter = CombinaryCounter(ne_iset_number, unknown_iset_number)
+
+        filtered_task_slices = list()
+        check_icondition_number = 0
+
+        task_begin = []
+        task_length = 0
+        task_total_number = 0
+
+        while True:
+            task_idx = task_counter.get_current_indicator()
+            if task_idx is None:
+                break
+
+            task_total_number += 1
+            if task_length == 0:
+                task_begin = copy.deepcopy(task_idx)
+
+            iset_ids = set()
+            for t in task_idx:
+                iset_ids.add(se_iset_ids[t])
+
+            if not self.is_contain_non_se_condition(iset_ids):
+                task_length += 1
+                if task_length == max_slice_size:
+                    filtered_task_slices.append((task_begin, task_length))
+                    check_icondition_number += task_length
+                    task_length = 0
+            else:
+                if task_length > 0:
+                    filtered_task_slices.append((task_begin, task_length))
+                    check_icondition_number += task_length
+                    task_length = 0
+
+        if task_length > 0:
+            filtered_task_slices.append((task_begin, task_length))
+            check_icondition_number += task_length
+
+        self.incremental_task_number[ne_iset_number] = task_total_number
+        self.task_total_number += task_total_number
+
+        nse_icondition_number = task_total_number - check_icondition_number
+        self.incremental_task_check_number[ne_iset_number] = check_icondition_number
+        self.incremental_task_complete_number[ne_iset_number] = nse_icondition_number
+        self.incremental_nse_condition_number[ne_iset_number] = nse_icondition_number
+        msg_text = "task queue put %d itasks" % len(filtered_task_slices)
+        return filtered_task_slices, msg_text
+
+    def get_check_itasks_by_non_empty_iset_number(self):
+        self.working_ne_iset_numbers += 1
+        ne_iset_number = self.working_ne_iset_numbers
+
+        if ne_iset_number < 3:
+            task_slices = self.incremental_task_slices[ne_iset_number]
+            msg_text = "task queue put %d itasks" % len(task_slices)
+            return task_slices, msg_text
+
+        if ne_iset_number > self.max_ne:
+            return list(), "task finish!"
+
+        if self.task_slice_file_exist:
+            return self.get_check_itasks_by_non_empty_iset_number_from_loaded_isc_slices()
+        else:
+            return self.get_check_itasks_by_non_empty_iset_number_from_autogen()
 
 
     def is_contain_non_se_condition(self, ne_iset_ids):
