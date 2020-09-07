@@ -17,6 +17,7 @@ import lpmln.config.ISCTasksMetaData as iscmeta
 import lpmln.iset.ISetNonSEUtils as isnse
 from lpmln.utils.counter.CombinaryCounter import CombinaryCounter
 import lpmln.search.misc.ISCSearchingSlicesGenerator as isg
+from scipy.special import comb
 
 
 config = cfg.load_configuration()
@@ -72,8 +73,6 @@ class ISCTask:
         # non se conditions
         self.non_se_condition_files = list()
         self.non_se_conditions_buffer = list()
-        self.non_se_conditions_buffer_non_empty_iset_number = 1
-
 
         # worker
         self.non_se_conditions = list()
@@ -99,14 +98,13 @@ class ISCTask:
 
     def flush_non_se_condition(self):
         non_se_file = isnse.save_kmn_non_se_results(self.k_m_n[0], self.k_m_n[1], self.k_m_n[2],
-                                                    self.non_se_conditions_buffer_non_empty_iset_number, self.non_se_conditions_buffer,
+                                                    self.working_ne_iset_numbers, self.non_se_conditions_buffer,
                                                     self.lp_type, self.is_use_extended_rules)
-        self.incremental_new_non_se_condition_number[self.non_se_conditions_buffer_non_empty_iset_number] = len(self.non_se_conditions_buffer)
+        self.incremental_new_non_se_condition_number[self.working_ne_iset_numbers] = len(self.non_se_conditions_buffer)
         for nse in self.non_se_conditions_buffer:
             self.non_se_conditions.append(nse)
-        self.non_se_condition_files.append(non_se_file)
+        self.non_se_condition_files.append(self.working_ne_iset_numbers)
         self.non_se_conditions_buffer.clear()
-        self.non_se_conditions_buffer_non_empty_iset_number += 1
 
         return non_se_file
 
@@ -285,6 +283,13 @@ class ISCTask:
         ne_iset_ids = condition.ne_iset_ids
         self.non_se_conditions_buffer.append(ne_iset_ids)
         self.incremental_nse_condition_number[len(ne_iset_ids)] += 1
+
+    def init_task_numbers(self):
+        unknown_iset_number = len(self.meta_data.se_iset_ids)
+        for i in range(self.min_ne, self.max_ne + 1):
+            task_number = int(comb(unknown_iset_number, i))
+            self.task_total_number += task_number
+            self.incremental_task_number[i] = task_number
 
 
     def dump_tmp_se_condition(self):
