@@ -108,6 +108,8 @@ def load_kmn_non_se_results(k_size, m_size, n_size, non_empty_iset_number, lp_ty
 
 
 def transport_non_se_results(files, hosts):
+    print(files)
+    print(hosts)
     file_pairs = list()
     for f in files:
         file_pairs.append((f, f))
