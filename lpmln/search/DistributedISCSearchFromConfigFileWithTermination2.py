@@ -113,7 +113,7 @@ def check_has_new_itask_items(itasks):
     return False
 
 
-def check_itasks_status(itasks, host_ips):
+def check_itasks_status(itasks, host_ips, task_queue, working_host_number):
     is_finish = True
     for tid in range(len(itasks)):
         it = itasks[tid]
@@ -125,6 +125,8 @@ def check_itasks_status(itasks, host_ips):
                 nse_file = it.flush_non_se_condition()
                 isnse.transport_non_se_results([nse_file], host_ips)
                 isnse.create_and_send_transport_complete_flag_file(*it.k_m_n, current_ne_number, host_ips)
+
+                send_itasks_progress_info(itasks, task_queue, working_host_number)
 
                 if it.is_early_terminate():
                     continue
@@ -218,12 +220,22 @@ def init_kmn_isc_task_master_from_config(isc_config_file="isets-tasks.json", sle
 
     progress_msg_cnt = 10
     task_finish = False
+    print_loop = 100000
+    print_cnt = 0
     while not task_finish:
+        print_cnt += 1
+
+        if print_cnt == print_loop:
+            send_itasks_progress_info(isc_tasks, task_queue, working_hosts_number)
+            sleep_cnt = 0
+            print_cnt = 0
+
         if sleep_cnt == progress_msg_cnt:
             send_itasks_progress_info(isc_tasks, task_queue, working_hosts_number)
             sleep_cnt = 0
+            print_cnt = 0
 
-        task_finish = check_itasks_status(isc_tasks, online_hosts)
+        task_finish = check_itasks_status(isc_tasks, online_hosts, task_queue, working_hosts_number)
         if result_queue.empty():
             time.sleep(sleep_time)
             sleep_cnt += 1
