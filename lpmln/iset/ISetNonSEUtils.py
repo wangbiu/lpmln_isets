@@ -40,8 +40,7 @@ def create_transport_complete_flag_file(k_size, m_size, n_size, non_empty_iset_n
 
 def create_and_send_transport_complete_flag_file(k_size, m_size, n_size, non_empty_iset_number, host_ips):
     path = create_transport_complete_flag_file(k_size, m_size, n_size, non_empty_iset_number)
-    for ip in host_ips:
-        transport_non_se_results([path], ip)
+    transport_non_se_results([path], host_ips)
 
 
 def clear_transport_complete_flag_files(k_size, m_size, n_size, min_ne, max_ne):
