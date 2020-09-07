@@ -108,10 +108,9 @@ class ISCTask:
         return non_se_file
 
     def is_terminate(self):
-        current_non_empty_iset_number = self.non_se_conditions_buffer_non_empty_iset_number + 1
         # complete_itasks = self.incremental_task_complete_number[current_non_empty_iset_number]
-        itask_number = self.incremental_task_number[current_non_empty_iset_number]
-        nse_icondition_number = self.incremental_nse_condition_number[current_non_empty_iset_number]
+        itask_number = self.incremental_task_number[self.working_ne_iset_numbers]
+        nse_icondition_number = self.incremental_nse_condition_number[self.working_ne_iset_numbers]
         if nse_icondition_number == itask_number:
             return True
         else:
