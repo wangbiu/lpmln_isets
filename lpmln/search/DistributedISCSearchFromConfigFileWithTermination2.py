@@ -176,7 +176,7 @@ def itask_slices_generator(isc_config_file="isets-tasks.json", is_use_extended_r
         se_iset_ids = it.meta_data.se_iset_ids
         unknown_iset_number = len(se_iset_ids)
         max_task_slice_number = 1000
-        for i in range(min_ne, max_ne):
+        for i in range(min_ne, max_ne+1):
             task_items, task_total_number, task_slice_number = isg.generate_isp_slices_task_queue(max_task_slice_number, i, i, unknown_iset_number)
 
             for ti in task_items:
@@ -185,6 +185,7 @@ def itask_slices_generator(isc_config_file="isets-tasks.json", is_use_extended_r
     working_hosts_number = 5
     for i in range(working_hosts_number * 200):
         task_queue.put((kill_signal, -1))
+    logging.info("all itasks has been dispatched")
 
 
 def init_kmn_isc_task_master_from_config(isc_config_file="isets-tasks.json", sleep_time=30, is_use_extended_rules=True, is_frequent_log=False):
@@ -267,12 +268,14 @@ def init_kmn_isc_task_master_from_config(isc_config_file="isets-tasks.json", sle
     msg_texts = []
     attached_files = []
     for it in isc_tasks:
-        msg_texts.append(it.task_finish())
+        it.task_finish()
+        msg_texts.append(it.get_final_detail_progress_info())
         attached_files.append(it.result_file)
 
     msg_text = "isc tasks finish! \n\t\t%s" % "\n\t\t".join(msg_texts)
     logging.info(msg_text)
     msg.send_message(msg=msg_text, attached_files=attached_files)
+    return isc_tasks
 
 
 def init_worker_host_nse_envs(isc_tasks):

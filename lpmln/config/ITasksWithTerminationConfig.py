@@ -306,6 +306,15 @@ class ISCTask:
                 self.se_condition_dump_file = file_name
                 self.save_se_condition(file_name)
 
+    def get_final_detail_progress_info(self):
+        self.task_progress_rate = 100.0 * self.task_complete_number / self.task_total_number
+        task_running_time = self.task_end_time - self.task_start_time
+        details = self.get_itask_detail_status()
+        prg_info = ":rocket: %s: total tasks: %d, complete tasks: %d (%.3f%%, running time: %s), find %d se conditions,  dumped to %s details: \n %s" % (
+            self.task_flag, self.task_total_number, self.task_complete_number, self.task_progress_rate,
+            str(task_running_time), self.se_condition_number, self.se_condition_dump_file, details)
+        return prg_info
+
     def get_progress_info(self):
         if not self.is_task_finish:
             if self.task_complete_number == 0:
