@@ -33,6 +33,6 @@ def sync_all_files(host_ips, files):
 
 
 if __name__ == '__main__':
-    sync_all_files(host_ips, sync_files)
+    sync_all_files(host_ips, sync_files[0:1])
     pass
     

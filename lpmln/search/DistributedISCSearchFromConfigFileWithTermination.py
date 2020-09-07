@@ -127,25 +127,28 @@ def check_itasks_status(itasks, task_queue, working_hosts_number):
     is_task_queue_change = False
     for tid in range(len(itasks)):
         it = itasks[tid]
-        current_ne_number = it.working_ne_iset_numbers
-        task_complete = it.incremental_task_complete_number[current_ne_number]
-        task_total = it.incremental_task_number[current_ne_number]
-        if task_complete == task_total:
-            if it.is_terminate():
-                continue
+        if not it.is_task_finish:
+            current_ne_number = it.working_ne_iset_numbers
+            task_complete = it.incremental_task_complete_number[current_ne_number]
+            task_total = it.incremental_task_number[current_ne_number]
+            if task_complete == task_total:
+                if it.is_early_terminate():
+                    continue
 
-            if current_ne_number < it.max_ne:
-                is_task_queue_change = True
+                if current_ne_number < it.max_ne:
+                    is_task_queue_change = True
+                    is_finish = False
+                    it.flush_non_se_condition()
+                    task_slices, msg_text = it.get_check_itasks_by_non_empty_iset_number()
+
+                    for ts in task_slices:
+                        task_queue.put((tid, ts))
+                    logging.info(msg_text)
+                    msg.send_message(msg_text)
+                else:
+                    it.is_task_finish = True
+            else:
                 is_finish = False
-                it.flush_non_se_condition()
-                task_slices, msg_text = it.get_check_itasks_by_non_empty_iset_number()
-
-                for ts in task_slices:
-                    task_queue.put((tid, ts))
-                logging.info(msg_text)
-                msg.send_message(msg_text)
-        else:
-            is_finish = False
 
     if is_task_queue_change:
         send_itasks_progress_info(itasks, task_queue, working_hosts_number)

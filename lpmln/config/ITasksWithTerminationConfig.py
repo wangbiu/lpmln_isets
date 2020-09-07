@@ -75,7 +75,7 @@ class ISCTask:
         # worker
         self.non_se_conditions = list()
         self.loaded_non_se_condition_files = set()
-
+        self.is_task_finish = False
         self.complete_params()
 
     def complete_params(self):
@@ -107,11 +107,12 @@ class ISCTask:
 
         return non_se_file
 
-    def is_terminate(self):
+    def is_early_terminate(self):
         # complete_itasks = self.incremental_task_complete_number[current_non_empty_iset_number]
         itask_number = self.incremental_task_number[self.working_ne_iset_numbers]
         nse_icondition_number = self.incremental_nse_condition_number[self.working_ne_iset_numbers]
         if nse_icondition_number == itask_number:
+            self.is_task_finish = True
             return True
         else:
             return False
@@ -207,7 +208,7 @@ class ISCTask:
     def dump_tmp_se_condition(self):
         if self.is_find_new_se_condition:
             self.is_find_new_se_condition = False
-            if self.task_complete_number == self.task_total_number:
+            if self.is_task_finish:
                 self.task_finish()
             else:
                 file_time_fmt = "%Y_%m_%d_%H_%M_%S"
@@ -219,19 +220,31 @@ class ISCTask:
                 self.save_se_condition(file_name)
 
     def get_progress_info(self):
-        if self.task_complete_number == 0:
-            prg_info = ":timer_clock:  %s: total tasks: %d, waiting for resources !" % (self.task_flag, self.task_total_number)
-        else:
-            self.task_progress_rate = 100.0 * self.task_complete_number / self.task_total_number
-            task_running_time = self.task_end_time - self.task_start_time
-            details = self.get_itask_detail_status()
-            if self.se_condition_number == 0:
-                prg_info = ":mag_right: %s: total tasks: %d, complete tasks: %d (%.3f%%, running time: %s), find 0 se conditions. details: \n %s" % (
-                    self.task_flag, self.task_total_number, self.task_complete_number, self.task_progress_rate, str(task_running_time), details)
+        if not self.is_task_finish:
+            if self.task_complete_number == 0:
+                prg_info = ":timer_clock:  %s: total tasks: %d, waiting for resources !" % (
+                self.task_flag, self.task_total_number)
             else:
-                prg_info = ":rocket: %s: total tasks: %d, complete tasks: %d (%.3f%%, running time: %s), find %d se conditions,  dumped to %s details: \n %s" % (
-                    self.task_flag, self.task_total_number, self.task_complete_number, self.task_progress_rate,
-                    str(task_running_time), self.se_condition_number, self.se_condition_dump_file, details)
+                self.task_progress_rate = 100.0 * self.task_complete_number / self.task_total_number
+                task_running_time = self.task_end_time - self.task_start_time
+                details = self.get_itask_detail_status()
+                if self.se_condition_number == 0:
+                    prg_info = ":mag_right: %s: total tasks: %d, complete tasks: %d (%.3f%%, running time: %s), find 0 se conditions. details: \n %s" % (
+                        self.task_flag, self.task_total_number, self.task_complete_number, self.task_progress_rate,
+                        str(task_running_time), details)
+                else:
+                    prg_info = ":rocket: %s: total tasks: %d, complete tasks: %d (%.3f%%, running time: %s), find %d se conditions,  dumped to %s details: \n %s" % (
+                        self.task_flag, self.task_total_number, self.task_complete_number, self.task_progress_rate,
+                        str(task_running_time), self.se_condition_number, self.se_condition_dump_file, details)
+        else:
+            task_check_number = 0
+            task_running_time = self.task_end_time - self.task_start_time
+            for i in range(self.min_ne, self.max_ne + 1):
+                task_check_number += self.incremental_task_check_number[i]
+            prg_info = ":rocket: %s finish: total tasks: %d, check tasks: %d, complete tasks: %d (%.3f%% (c/t), running time: %s), find %d se conditions,  dumped to %s" % (
+                self.task_flag, self.task_total_number, task_check_number, self.task_complete_number, self.task_progress_rate,
+                str(task_running_time), self.se_condition_number, self.se_condition_dump_file)
+
         return prg_info
 
     def get_itask_detail_status(self):
