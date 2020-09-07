@@ -122,7 +122,7 @@ def check_has_new_itask_items(itasks):
     return False
 
 
-def check_itasks_status(itasks, task_queue, working_hosts_number):
+def check_itasks_status(itasks, task_queue, working_hosts_number, is_frequent_log):
     is_finish = True
     is_task_queue_change = False
     for tid in range(len(itasks)):
@@ -150,7 +150,7 @@ def check_itasks_status(itasks, task_queue, working_hosts_number):
             else:
                 is_finish = False
 
-    if is_task_queue_change:
+    if is_task_queue_change and is_frequent_log:
         send_itasks_progress_info(itasks, task_queue, working_hosts_number)
 
     return is_finish
@@ -164,7 +164,7 @@ def send_itasks_progress_info(isc_tasks, task_queue, working_hosts_number):
     msg.send_message(msg_text)
 
 
-def init_kmn_isc_task_master_from_config(isc_config_file="isets-tasks.json", sleep_time=30, is_use_extended_rules=True):
+def init_kmn_isc_task_master_from_config(isc_config_file="isets-tasks.json", sleep_time=30, is_use_extended_rules=True, is_frequent_log=False):
     start_time = datetime.now()
     ISCFileTaskTerminationMasterQueueManager.register("get_task_queue", callable=get_task_queue)
     ISCFileTaskTerminationMasterQueueManager.register("get_result_queue", callable=get_result_queue)
@@ -204,7 +204,7 @@ def init_kmn_isc_task_master_from_config(isc_config_file="isets-tasks.json", sle
             send_itasks_progress_info(isc_tasks, task_queue, working_hosts_number)
             sleep_cnt = 0
 
-        task_finish = check_itasks_status(isc_tasks, task_queue, working_hosts_number)
+        task_finish = check_itasks_status(isc_tasks, task_queue, working_hosts_number, is_frequent_log)
         if result_queue.empty():
             time.sleep(sleep_time)
             sleep_cnt += 1
