@@ -446,7 +446,7 @@ def task_worker_load_nse_conditions(itask, nse_iset_number):
                 if pathlib.Path(complete_flag).exists():
                     transport_complete = True
                 else:
-                    time.sleep(5)
+                    time.sleep(3)
             nse_conditions = isnse.load_kmn_non_se_results(*itask.k_m_n, i, itask.lp_type, itask.is_use_extended_rules)
             itask.non_se_conditions.extend(nse_conditions)
             itask.loaded_non_se_condition_files.add(i)
