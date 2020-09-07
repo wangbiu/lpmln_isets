@@ -11,6 +11,44 @@ import os
 import lpmln.config.GlobalConfig as cfg
 config = cfg.load_configuration()
 import lpmln.utils.SSHClient as ssh
+import pathlib
+
+
+def get_lock_file(pid):
+    return os.path.join(config.isc_non_se_icondition_path, "update-nse-%d.lock" % pid)
+
+
+def check_lock(pid):
+    lock = get_lock_file(pid)
+    if os.path.exists(lock):
+        return True
+    else:
+        return False
+
+
+def get_transport_complete_flag_file(k_size, m_size, n_size, non_empty_iset_number):
+    name = "kmn-%d-%d-%d-nse-%d.complete" % (k_size, m_size, n_size, non_empty_iset_number)
+    path = os.path.join(config.isc_non_se_icondition_path, name)
+    return path
+
+
+def create_transport_complete_flag_file(k_size, m_size, n_size, non_empty_iset_number):
+    path = get_transport_complete_flag_file(k_size, m_size, n_size, non_empty_iset_number)
+    pathlib.Path(path).touch()
+    return path
+
+
+def create_and_send_transport_complete_flag_file(k_size, m_size, n_size, non_empty_iset_number, host_ips):
+    path = create_transport_complete_flag_file(k_size, m_size, n_size, non_empty_iset_number)
+    for ip in host_ips:
+        transport_non_se_results([path], ip)
+
+
+def clear_transport_complete_flag_files(k_size, m_size, n_size, min_ne, max_ne):
+    for i in range(min_ne, max_ne+1):
+        path = get_transport_complete_flag_file(k_size, m_size, n_size, i)
+        if os.path.exists(path):
+            os.remove(path)
 
 
 def join_list_data(data):
