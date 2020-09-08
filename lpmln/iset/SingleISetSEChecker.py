@@ -152,6 +152,29 @@ def compute_i4_number_from_iset_id_list(iset_ids):
     return cnt
 
 
+def get_oct_iset_id(iset_id, rule_number):
+    iset_id = oct(iset_id + 1)[2:]
+    diff = rule_number - len(iset_id)
+    iset_id = "0"*diff + iset_id
+    return iset_id
+
+
+def check_contain_semi_valid_rule(iset_ids, rule_number):
+    flags = [0] * rule_number
+    for id in iset_ids:
+        id_bits = get_oct_iset_id(id, rule_number)
+        for i in range(rule_number):
+            if id_bits[i] == "4":
+                flags[i] = 1
+
+    if sum(flags) < rule_number:
+        return True
+    else:
+        return False
+
+
+
+
 def get_se_i4_iset_bases(k_size, m_size, n_size, is_use_extended_rules=False):
     se_i4_set_ids = get_se_i4_iset_ids(k_size, m_size, n_size, is_use_extended_rules)
     iset_ids = list()
@@ -166,8 +189,7 @@ def get_se_i4_iset_bases(k_size, m_size, n_size, is_use_extended_rules=False):
         counter = itertools.combinations(iset_ids, i)
         for tuple in counter:
             tuple = set(tuple)
-            i4_number = compute_i4_number_from_iset_id_list(tuple)
-            if i4_number >= rule_number:
+            if not check_contain_semi_valid_rule(tuple, rule_number):
                 i4_isets_tuples.append(tuple)
             # print("i4 tuple: ", tuple, " has %d i4 sets" % i4_number)
 
@@ -184,12 +206,14 @@ def get_se_i4_iset_bases(k_size, m_size, n_size, is_use_extended_rules=False):
         elif s2.issubset(s1):
             skip_tuple_ids.add(pair[0])
 
+    print("min i4 isets:")
     min_i4_iset_tuples = list()
     for i in i4_isets_tuples_ids:
         if i not in skip_tuple_ids:
             min_i4_iset_tuples.append(i4_isets_tuples[i])
             print(i4_isets_tuples[i], "has %d i4 isets" % compute_i4_number_from_iset_id_list(i4_isets_tuples[i]))
 
+    print("")
     return min_i4_iset_tuples
 
 
@@ -199,6 +223,7 @@ def batch_generate_min_i4_iset_tuples():
     for kmn in kmns:
         kmn_data = dict()
         key = "%d-%d-%d" % tuple(kmn)
+        print("-----------------%s--------------------" % key)
         data[key] = kmn_data
         tuples = get_se_i4_iset_bases(*kmn)
         tuples = [list(s) for s in tuples]
