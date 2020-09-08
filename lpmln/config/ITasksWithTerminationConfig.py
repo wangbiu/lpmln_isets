@@ -46,6 +46,8 @@ class ISCTask:
         self.task_type = "%s-%s" % ("elp" if self.is_use_extended_rules else "dlp", str(self.lp_type))
         self.task_flag = "**%d-%d-%d (%d ~ %d) %s isc tasks**"
 
+        self.min_i4_iset_tuples = list()
+
 
         self.task_start_time = 0
         self.task_end_time = 0
@@ -96,6 +98,8 @@ class ISCTask:
             self.incremental_se_conditions[i] = list()
             self.incremental_task_slices[i] = list()
 
+        self.load_min_i4_iset_tuples()
+
     def flush_non_se_condition(self):
         non_se_file = isnse.save_kmn_non_se_results(self.k_m_n[0], self.k_m_n[1], self.k_m_n[2],
                                                     self.working_ne_iset_numbers, self.non_se_conditions_buffer,
@@ -145,6 +149,18 @@ class ISCTask:
                 self.incremental_task_check_number[ne_iset_number] += ts[1]
                 self.task_slice_number += 1
                 self.task_total_number += ts[1]
+
+    def load_min_i4_iset_tuples(self):
+        data_file = config.isc_meta_data_file
+        with open(data_file, mode="r", encoding="utf-8") as f:
+            data = json.load(f)
+            kmn_key = "%d-%d-%d" % tuple(self.k_m_n)
+            i4_iset_key = "i4-tuples"
+            tuples = data[kmn_key][i4_iset_key]
+            tuples = [set(s) for s in tuples]
+            self.min_i4_iset_tuples = tuples
+
+
 
     def get_check_itasks_by_non_empty_iset_number_from_loaded_isc_slices(self):
         ne_iset_number = self.working_ne_iset_numbers
@@ -470,5 +486,7 @@ class ISCTaskConfig:
 
 
 if __name__ == '__main__':
-    tsc = ISCTaskConfig("isc-tasks-temp.json", True)
+    tsc = ISCTaskConfig("isets-tasks.json", True)
+    for it in tsc.isc_tasks:
+        print(it.min_i4_iset_tuples)
     pass

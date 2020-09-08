@@ -23,6 +23,7 @@ class GlobalConfiguration:
         self.isc_task_path = "isc-tasks"
         self.isc_results_path = "isc-results"
         self.isc_non_se_icondition_path = "isc-non-se-results"
+        self.isc_meta_data_file = "isc-meta.json"
 
         #ssh
         self.ssh_user_name = ""
@@ -60,6 +61,7 @@ class GlobalConfiguration:
 
         self.project_base_dir = cwd_path
 
+        self.isc_meta_data_file = os.path.join(cwd_path, self.isc_meta_data_file)
         global_config_path = os.path.join(cwd_path, self.global_config_file_name)
         cf.read(global_config_path)
 

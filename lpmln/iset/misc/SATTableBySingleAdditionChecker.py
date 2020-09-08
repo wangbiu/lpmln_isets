@@ -63,6 +63,7 @@ class SATTableBySingleAdditionChecker(BaseSATTableChecker):
 
             iset_atoms = iset.members
             if len(iset_atoms) > 0:
+            # if len(iset_atoms) == 0:
                 add_at = set([-1])
                 # interpretation_atoms = atom_universe.union(add_at)
                 se_results = self.check_relations_for_one_rule_and_select_iset(atom_universe, add_at, rule,
@@ -102,6 +103,6 @@ class SATTableBySingleAdditionChecker(BaseSATTableChecker):
 
 if __name__ == '__main__':
     checker = SATTableBySingleAdditionChecker()
-    checker.se_rule_relation_checker(atom_size=4)
+    checker.se_rule_relation_checker(atom_size=5)
     pass
     
