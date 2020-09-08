@@ -24,6 +24,7 @@ from lpmln.config.ITasksWithTerminationConfig import ISCTaskConfig
 import lpmln.iset.ISetNonSEUtils as isnse
 import lpmln.utils.SSHClient as ssh
 import lpmln.search.misc.ISCSearchingSlicesGenerator as isg
+import itertools
 
 config = cfg.load_configuration()
 
@@ -177,29 +178,24 @@ def itask_slices_generator(isc_config_file="isets-tasks.json", is_use_extended_r
         max_ne = it.max_ne
         se_iset_ids = it.meta_data.se_iset_ids
         unknown_iset_number = len(se_iset_ids)
-        max_task_slice_number = 10000
         for i in range(min_ne, max_ne+1):
-            task_counter = CombinaryCounter(i, unknown_iset_number)
-            task_start_idx = []
-            task_idx_cnt = 0
+            ne_iset_number = i
+            left_length = int(unknown_iset_number / 2)
+            if left_length > 12:
+                left_length = 12
 
-            while True:
-                task_end_idx = task_counter.get_current_indicator()
-                if task_end_idx is None:
-                    break
+            right_length = unknown_iset_number - left_length
 
-                if task_idx_cnt == 0:
-                    task_start_idx = copy.deepcopy(task_end_idx)
+            left_iset_ids = se_iset_ids[0:left_length]
+            for left_iset_number in range(ne_iset_number + 1):
+                right_iset_number = ne_iset_number - left_iset_number
+                if left_iset_number > left_length or right_iset_number > right_length:
+                    continue
 
-                task_idx_cnt += 1
-
-                if task_idx_cnt == max_task_slice_number:
-                    task_queue.put((tid, (task_start_idx, task_idx_cnt)))
-                    task_idx_cnt = 0
-
-            if task_idx_cnt != 0:
-                task_queue.put((tid, (task_start_idx, task_idx_cnt)))
-
+                task_iter = itertools.combinations(left_iset_ids, left_iset_number)
+                for left_ti in task_iter:
+                    task_item = (tid, (ne_iset_number, left_length, list(left_ti)))
+                    task_queue.put(task_item)
 
     working_hosts_number = 5
     for i in range(working_hosts_number * 200):
@@ -207,7 +203,7 @@ def itask_slices_generator(isc_config_file="isets-tasks.json", is_use_extended_r
     logging.info("all itasks has been dispatched")
 
 
-def init_kmn_isc_task_master_from_config(isc_config_file="isets-tasks.json", sleep_time=30, is_use_extended_rules=True, is_frequent_log=False):
+def init_kmn_isc_task_master_from_config(isc_config_file="isets-tasks.json", sleep_time=30, is_use_extended_rules=False, is_frequent_log=False):
     start_time = datetime.now()
     ISCFileTaskTerminationMasterQueueManager.register("get_task_queue", callable=get_task_queue)
     ISCFileTaskTerminationMasterQueueManager.register("get_result_queue", callable=get_result_queue)
@@ -318,7 +314,7 @@ def init_worker_host_nse_envs(isc_tasks):
         pathlib.Path(nse_1_path).touch()
 
 
-def init_kmn_isc_task_workers(isc_config_file="isets-tasks.json", lp_type="lpmln", is_check_valid_rules=True, is_use_extended_rules=True):
+def init_kmn_isc_task_workers(isc_config_file="isets-tasks.json", lp_type="lpmln", is_check_valid_rules=True, is_use_extended_rules=False):
     payload = config.worker_payload
     worker_pool = Pool(payload)
     pathlib.Path(config.task_host_lock_file).touch()
@@ -390,10 +386,12 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_id=1, lp_type
             break
 
         isc_task_id = itask[0]
+        task_params = itask[1]
+        ne_iset_number = task_params[0]
+        left_length = task_params[1]
+        left_iset_ids = task_params[2]
+
         it = isc_tasks[isc_task_id]
-        task_details = itask[1]
-        isc_begin = copy.deepcopy(task_details[0])
-        ne_iset_number = len(isc_begin)
 
         nse_iset_number = ne_iset_number - 1
         if nse_iset_number not in it.loaded_non_se_condition_files:
@@ -407,21 +405,15 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_id=1, lp_type
         n_size = it.k_m_n[2]
 
         se_iset_ids = it.meta_data.se_iset_ids
-        unknown_iset_number = len(se_iset_ids)
+        right_iset_ids = se_iset_ids[left_length:]
+        right_iset_number = ne_iset_number - len(left_iset_ids)
+        # unknown_iset_number = len(se_iset_ids)
 
-        task_start = task_details[0]
-        task_start = [str(s) for s in task_start]
-        task_start = ",".join(task_start)
-
-        task_number = task_details[1]
         task_name = worker_name + ("-task-%d" % processed_task_slices_number)
 
-        msg_text = "%s: %d-%d-%d isc task: from %s length %d, nonempty iset number %d" % (
-            task_name, k_size, m_size, n_size, task_start, task_number, ne_iset_number)
+        msg_text = "%s: %d-%d-%d isc task: nonempty iset number %d, left zoon length %d, left isets {%s}" % (
+            task_name, k_size, m_size, n_size, ne_iset_number, left_length, join_list_data(left_iset_ids))
         logging.info(msg_text)
-
-        task_counter = CombinaryCounter(ne_iset_number, unknown_iset_number)
-        task_counter.reset_current_indicator(isc_begin)
 
         se_cdt_cnt = 0
         nse_cdt_cnt = 0
@@ -432,11 +424,14 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_id=1, lp_type
         nse_conditions_cache = list()
         validator = ISetConditionValidator(lp_type=lp_type, is_use_extended_rules=is_use_extended_rules)
 
-        for i in range(task_number):
-            task_idx = task_counter.get_current_indicator()
-            non_ne_ids = set()
-            for t in task_idx:
-                non_ne_ids.add(se_iset_ids[t])
+        task_iter = itertools.combinations(right_iset_ids, right_iset_number)
+        task_number = 0
+        for right_ti in task_iter:
+            non_ne_ids = list()
+            non_ne_ids.extend(left_iset_ids)
+            non_ne_ids.extend(list(right_ti))
+            non_ne_ids = set(non_ne_ids)
+            task_number += 1
 
             if check_contain_nse_subparts(non_ne_ids, it):
                 nse_cdt_cnt += 1
@@ -469,8 +464,10 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_id=1, lp_type
 
         end_time = datetime.now()
         end_time_str = end_time.strftime(time_fmt)[:-3]
-        msg_text = "%s, end %d-%d-%d isc tasks from %s length %d, start time %s, end time %s, find %d se conditions (no semi-valid rules), find %d non-se conditions" % (
-            task_name, k_size, m_size, n_size, task_start, task_number, start_time_str, end_time_str, se_cdt_cnt, nse_cdt_cnt)
+
+        msg_text = "%s: %d-%d-%d isc task: nonempty iset number %d, left zoon length %d, left isets {%s}, start time %s, end time %s, find %d se conditions (no semi-valid rules), find %d non-se conditions" % (
+            task_name, k_size, m_size, n_size, ne_iset_number, left_length, join_list_data(left_iset_ids), start_time_str, end_time_str, se_cdt_cnt, nse_cdt_cnt)
+
         logging.info(msg_text)
         result_queue.put((stat_signal, isc_task_id, ne_iset_number, check_cdt_cnt, task_number, (start_time, end_time)))
         processed_task_slices_number += 1
@@ -504,6 +501,11 @@ def check_contain_i4_isets(iset_ids, itask):
         if i4_isets.issubset(iset_ids):
             return True
     return False
+
+
+def join_list_data(data):
+    data = [str(s) for s in data]
+    return ",".join(data)
 
 if __name__ == '__main__':
     init_kmn_isc_task_master_from_config(sleep_time=2, is_use_extended_rules=False)
