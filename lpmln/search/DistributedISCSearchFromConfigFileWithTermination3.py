@@ -376,6 +376,7 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_id=1, lp_type
             break
 
         if task_queue.empty():
+            logging.info("waiting for isc task slices")
             time.sleep(20)
             continue
 
@@ -411,7 +412,7 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_id=1, lp_type
 
         task_name = worker_name + ("-task-%d" % processed_task_slices_number)
 
-        msg_text = "%s: %d-%d-%d isc task: nonempty iset number %d, left zoon length %d, left isets {%s}" % (
+        msg_text = "%s: %d-%d-%d isc task: nonempty iset number %d, left zone length %d, left isets {%s}" % (
             task_name, k_size, m_size, n_size, ne_iset_number, left_length, join_list_data(left_iset_ids))
         logging.info(msg_text)
 
@@ -465,7 +466,7 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_id=1, lp_type
         end_time = datetime.now()
         end_time_str = end_time.strftime(time_fmt)[:-3]
 
-        msg_text = "%s: %d-%d-%d isc task: nonempty iset number %d, left zoon length %d, left isets {%s}, start time %s, end time %s, find %d se conditions (no semi-valid rules), find %d non-se conditions" % (
+        msg_text = "%s: %d-%d-%d isc task: nonempty iset number %d, left zone length %d, left isets {%s}, start time %s, end time %s, find %d se conditions (no semi-valid rules), find %d non-se conditions" % (
             task_name, k_size, m_size, n_size, ne_iset_number, left_length, join_list_data(left_iset_ids), start_time_str, end_time_str, se_cdt_cnt, nse_cdt_cnt)
 
         logging.info(msg_text)
@@ -481,6 +482,7 @@ def task_worker_load_nse_conditions(itask, nse_iset_number):
             complete_flag = isnse.get_transport_complete_flag_file(*itask.k_m_n, i)
             transport_complete = False
             while not transport_complete:
+                logging.info("waiting for transport complete file %s" % complete_flag)
                 if pathlib.Path(complete_flag).exists():
                     transport_complete = True
                 else:
