@@ -177,12 +177,29 @@ def itask_slices_generator(isc_config_file="isets-tasks.json", is_use_extended_r
         max_ne = it.max_ne
         se_iset_ids = it.meta_data.se_iset_ids
         unknown_iset_number = len(se_iset_ids)
-        max_task_slice_number = 1000
+        max_task_slice_number = 10000
         for i in range(min_ne, max_ne+1):
-            task_items, task_total_number, task_slice_number = isg.generate_isp_slices_task_queue(max_task_slice_number, i, i, unknown_iset_number)
+            task_counter = CombinaryCounter(i, unknown_iset_number)
+            task_start_idx = []
+            task_idx_cnt = 0
 
-            for ti in task_items:
-                task_queue.put((tid, ti))
+            while True:
+                task_end_idx = task_counter.get_current_indicator()
+                if task_end_idx is None:
+                    break
+
+                if task_idx_cnt == 0:
+                    task_start_idx = copy.deepcopy(task_end_idx)
+
+                task_idx_cnt += 1
+
+                if task_idx_cnt == max_task_slice_number:
+                    task_queue.append((task_start_idx, task_idx_cnt))
+                    task_idx_cnt = 0
+
+            if task_idx_cnt != 0:
+                task_queue.append((task_start_idx, task_idx_cnt))
+
 
     working_hosts_number = 5
     for i in range(working_hosts_number * 200):
