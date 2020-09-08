@@ -194,11 +194,11 @@ def itask_slices_generator(isc_config_file="isets-tasks.json", is_use_extended_r
                 task_idx_cnt += 1
 
                 if task_idx_cnt == max_task_slice_number:
-                    task_queue.append((tid, (task_start_idx, task_idx_cnt)))
+                    task_queue.put((tid, (task_start_idx, task_idx_cnt)))
                     task_idx_cnt = 0
 
             if task_idx_cnt != 0:
-                task_queue.append((tid, (task_start_idx, task_idx_cnt)))
+                task_queue.put((tid, (task_start_idx, task_idx_cnt)))
 
 
     working_hosts_number = 5
@@ -506,5 +506,5 @@ def check_contain_i4_isets(iset_ids, itask):
     return False
 
 if __name__ == '__main__':
-    # init_kmn_isc_task_master_from_config(sleep_time=2, is_use_extended_rules=False)
-    init_kmn_isc_task_workers(lp_type="lpmln", is_use_extended_rules=False)
+    init_kmn_isc_task_master_from_config(sleep_time=2, is_use_extended_rules=False)
+    # init_kmn_isc_task_workers(lp_type="lpmln", is_use_extended_rules=False)
