@@ -194,11 +194,11 @@ def itask_slices_generator(isc_config_file="isets-tasks.json", is_use_extended_r
                 task_idx_cnt += 1
 
                 if task_idx_cnt == max_task_slice_number:
-                    task_queue.append((task_start_idx, task_idx_cnt))
+                    task_queue.append((tid, (task_start_idx, task_idx_cnt)))
                     task_idx_cnt = 0
 
             if task_idx_cnt != 0:
-                task_queue.append((task_start_idx, task_idx_cnt))
+                task_queue.append((tid, (task_start_idx, task_idx_cnt)))
 
 
     working_hosts_number = 5
