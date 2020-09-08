@@ -339,6 +339,9 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_id=1, lp_type
     ISCFileTaskTerminationWorkerQueueManager.register("get_result_queue")
     manager = ISCFileTaskTerminationWorkerQueueManager(address=(config.task_host, config.task_host_port),
                                                        authkey=bytes(config.task_host_key, encoding="utf-8"))
+
+    is_check_valid_rules = False
+
     manager.connect()
     task_queue = manager.get_task_queue()
     result_queue = manager.get_result_queue()
@@ -405,6 +408,7 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_id=1, lp_type
 
         se_cdt_cnt = 0
         nse_cdt_cnt = 0
+        new_nse_cdt_cnt = 0
         check_cdt_cnt = 0
 
         se_conditions_cache = list()
@@ -421,22 +425,30 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_id=1, lp_type
                 nse_cdt_cnt += 1
                 continue
 
+            check_cdt_cnt += 1
+            if not check_contain_i4_isets(non_ne_ids, it):
+                continue
+
             is_contain_valid_rule, is_strongly_equivalent, condition = \
                 validator.validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids_return_icondition_obj(
                     non_ne_ids, k_size, m_size, n_size, is_check_valid_rule=is_check_valid_rules)
-            check_cdt_cnt += 1
 
-            if not is_contain_valid_rule:
-                if is_strongly_equivalent:
-                    se_conditions_cache.append(condition)
-                    se_cdt_cnt += 1
-                else:
-                    nse_conditions_cache.append(condition)
-                    nse_cdt_cnt += 1
+            # if not is_contain_valid_rule:
+            if is_strongly_equivalent:
+                se_conditions_cache.append(condition)
+                se_cdt_cnt += 1
+            else:
+                nse_conditions_cache.append(condition)
+                nse_cdt_cnt += 1
+                new_nse_cdt_cnt += 1
 
         # for sec in se_conditions_cache:
-        result_queue.put((nse_condition_signal, isc_task_id, nse_conditions_cache))
-        result_queue.put((se_condition_signal, isc_task_id, se_conditions_cache))
+        if se_cdt_cnt > 0:
+            result_queue.put((se_condition_signal, isc_task_id, se_conditions_cache))
+
+        if new_nse_cdt_cnt > 0:
+            result_queue.put((nse_condition_signal, isc_task_id, nse_conditions_cache))
+
 
         end_time = datetime.now()
         end_time_str = end_time.strftime(time_fmt)[:-3]
@@ -467,6 +479,12 @@ def task_worker_load_nse_conditions(itask, nse_iset_number):
 def check_contain_nse_subparts(iset_ids, itask):
     for nse in itask.non_se_conditions:
         if nse.issubset(iset_ids):
+            return True
+    return False
+
+def check_contain_i4_isets(iset_ids, itask):
+    for i4_isets in itask.min_i4_iset_tuples:
+        if i4_isets.issubset(iset_ids):
             return True
     return False
 
