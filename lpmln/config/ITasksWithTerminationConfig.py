@@ -422,7 +422,12 @@ class ISCTask:
 
     def save_progress_info(self):
         file_path = config.get_itask_progress_info_file(*self.k_m_n, self.min_ne, self.max_ne, self.lp_type, self.rule_set_size)
+        task_running_time = self.task_end_time - self.task_start_time
+        prg_info = " %s: total tasks: %d, complete tasks: %d, running time: %s, find %d se conditions." % (
+            self.task_flag, self.task_total_number, self.task_complete_number, str(task_running_time), self.se_condition_number)
+
         data = list()
+        data.append(prg_info)
         title = "ne_iset,complete,check,total,tc_ratio,se,nse,new_nse"
         data.append(title)
         for i in range(self.min_ne, self.max_ne + 1):
