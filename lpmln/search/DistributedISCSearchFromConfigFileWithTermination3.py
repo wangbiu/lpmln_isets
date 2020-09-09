@@ -131,6 +131,7 @@ def check_itasks_status(itasks, host_ips, task_queue, working_host_number):
 
                 if it.is_early_terminate():
                     isnse.create_and_send_task_early_terminate_flag_file(*it.k_m_n, host_ips)
+                    it.save_progress_info()
                     continue
 
                 if current_ne_number < it.max_ne:
@@ -138,6 +139,7 @@ def check_itasks_status(itasks, host_ips, task_queue, working_host_number):
                     is_finish = False
                 else:
                     it.is_task_finish = True
+                    it.save_progress_info()
             else:
                 is_finish = False
     return is_finish

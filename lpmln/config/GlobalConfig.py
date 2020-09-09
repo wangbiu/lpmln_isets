@@ -99,6 +99,12 @@ class GlobalConfiguration:
 
         self.task_host_lock_file = os.path.join(self.project_base_dir, self.task_host_lock_file)
 
+    def get_itask_progress_info_file(self, k_size, m_size, n_size, min_ne, max_ne, lp_type, rule_set_size):
+        file_name = "%s-%d-kmn-prg-%d-%d-%d-%d-%d.csv" % (lp_type, rule_set_size, k_size, m_size, n_size, min_ne,max_ne)
+        file_name = os.path.join(self.isc_results_path, file_name)
+        return file_name
+
+
     def create_dirs(self, path):
         if not os.path.exists(path):
             os.makedirs(path)

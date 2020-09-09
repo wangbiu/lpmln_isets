@@ -420,6 +420,35 @@ class ISCTask:
         file_prefix = ""
         base_dir = config.isc_non_se_icondition_path
 
+    def save_progress_info(self):
+        file_path = config.get_itask_progress_info_file(*self.k_m_n, self.min_ne, self.max_ne, self.lp_type, self.rule_set_size)
+        data = list()
+        title = "ne_iset,complete,check,total,tc_ratio,se,nse,new_nse"
+        data.append(title)
+        for i in range(self.min_ne, self.max_ne + 1):
+            complete = self.incremental_task_complete_number[i]
+            check = self.incremental_task_check_number[i]
+            total = self.incremental_task_number[i]
+
+            if check == 0:
+                check_c = total
+            else:
+                check_c = check
+
+            ratio = 1.0 * total / check_c
+            se = len(self.incremental_se_conditions[i])
+            nse = self.incremental_nse_condition_number[i]
+            new_nse = self.incremental_new_non_se_condition_number[i]
+
+            data_item = "%d,%d,%d,%d,%.3f,%d,%d,%d" % (i, complete, check, total, ratio, se, nse, new_nse)
+            data.append(data_item)
+
+        with open(file_path, mode="w", encoding="utf-8") as f:
+            for d in data:
+                f.write(d)
+                f.write("\n")
+
+
 
 class ISCTaskConfig:
     def __init__(self, config_file, is_use_extended_rules):
