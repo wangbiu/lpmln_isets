@@ -67,6 +67,12 @@ def clear_transport_complete_flag_files(k_size, m_size, n_size, min_ne, max_ne):
             os.remove(path)
 
 
+def clear_task_terminate_flag_files(k_size, m_size, n_size):
+    flag_file = get_task_early_terminate_flag_file(k_size, m_size, n_size)
+    if pathlib.Path(flag_file).exists():
+        os.remove(flag_file)
+
+
 def join_list_data(data):
     data = [str(d) for d in data]
     return ",".join(data)

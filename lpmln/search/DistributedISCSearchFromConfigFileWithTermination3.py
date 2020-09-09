@@ -315,6 +315,7 @@ def init_worker_host_nse_envs(isc_tasks):
         isnse.create_transport_complete_flag_file(k_size, m_size, n_size, 1)
         nse_1_path = isnse.get_nse_condition_file_path(k_size, m_size, n_size, 1, it.lp_type, it.is_use_extended_rules)
         pathlib.Path(nse_1_path).touch()
+        isnse.clear_task_terminate_flag_files(k_size, m_size, n_size)
 
 
 def init_kmn_isc_task_workers(isc_config_file="isets-tasks.json", lp_type="lpmln", is_check_valid_rules=True, is_use_extended_rules=False):
