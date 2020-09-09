@@ -371,12 +371,15 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_id=1, lp_type
     for it in isc_tasks:
         it.loaded_non_se_condition_files.add(1)
 
+    first_print_debug_log = True
     while True:
         if not pathlib.Path(config.task_host_lock_file).exists():
             break
 
         if task_queue.empty():
-            logging.info("waiting for isc task slices")
+            if first_print_debug_log:
+                logging.info("waiting for isc task slices")
+                first_print_debug_log = False
             time.sleep(20)
             continue
 
@@ -473,16 +476,21 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_id=1, lp_type
         result_queue.put((stat_signal, isc_task_id, ne_iset_number, check_cdt_cnt, task_number, (start_time, end_time)))
         processed_task_slices_number += 1
 
+        first_print_debug_log = True
+
     logging.info("%s processes %d isc task slices" % (worker_name, processed_task_slices_number))
 
 
 def task_worker_load_nse_conditions(itask, nse_iset_number):
     for i in range(1, nse_iset_number + 1):
+        first_print_debug_log = True
         if i not in itask.loaded_non_se_condition_files:
             complete_flag = isnse.get_transport_complete_flag_file(*itask.k_m_n, i)
             transport_complete = False
             while not transport_complete:
-                logging.info("waiting for transport complete file %s" % complete_flag)
+                if first_print_debug_log:
+                    logging.info("waiting for transport complete file %s" % complete_flag)
+                    first_print_debug_log = False
                 if pathlib.Path(complete_flag).exists():
                     transport_complete = True
                 else:
