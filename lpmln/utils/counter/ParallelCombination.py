@@ -27,28 +27,59 @@ def combination(n, m, k):
 
 
 def combination2(unknown_iset_number, ne_iset_number):
-    answer = int(comb(unknown_iset_number, ne_iset_number))
+    # answer = comb(unknown_iset_number, ne_iset_number)
+    answer = compute_comb(unknown_iset_number, ne_iset_number)
     compute = 0
-    k = int(unknown_iset_number / 2)
-    if k > 12:
-        k = 12
+    left_length = int(unknown_iset_number / 2)
+    if left_length > 12:
+        left_length = 12
+    # k = 10
 
-    for i in range(ne_iset_number + 1):
-        if i > k or ne_iset_number - i > unknown_iset_number - k:
+    right_length = unknown_iset_number - left_length
+
+    print("C(%d, %d) = " % (unknown_iset_number, ne_iset_number))
+
+    # if ne_iset_number > left_length:
+    #     left_length = right_length
+    #
+    # right_length = unknown_iset_number - left_length
+
+
+    for left_iset_number in range(ne_iset_number + 1):
+        right_iset_number = ne_iset_number - left_iset_number
+        if left_iset_number > left_length or right_iset_number > right_length:
             continue
 
-        formula = "C(%d, %d) * C(%d, %d)" % (k, i, unknown_iset_number - k, ne_iset_number - i)
-        tmp = comb(k, i) * comb(unknown_iset_number - k, ne_iset_number - i)
+        formula = "C(%d, %d) * C(%d, %d)" % (left_length, left_iset_number, right_length, right_iset_number)
+        tmp = comb(left_length, left_iset_number) * comb(right_length, right_iset_number)
         compute += tmp
 
-        print(formula)
+        print("\t", formula)
 
-    print(answer == compute)
+    if answer != compute:
+        msg = "total iset %d, ne iset %d, real value %f, computed value %f, same %s" % (unknown_iset_number, ne_iset_number, answer, compute, answer == compute)
+        print(msg)
 
+
+def compute_comb(n, m):
+    part1 = product(n-m+1, n)
+    part2 = product(1, m)
+    return part1 / part2
+
+
+def product(i, j):
+    result = 1
+    for k in range(i, j + 1):
+        result *= k
+    return result
 
 
 
 if __name__ == '__main__':
-    combination2(33, 14)
+    iset_number = 33
+    for iset_number in range(1, 50):
+        for i in range(1, iset_number):
+            combination2(iset_number, i)
+    # combination2(iset_number, 16)
     pass
     

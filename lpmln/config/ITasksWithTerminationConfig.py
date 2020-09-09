@@ -17,7 +17,6 @@ import lpmln.config.ISCTasksMetaData as iscmeta
 import lpmln.iset.ISetNonSEUtils as isnse
 from lpmln.utils.counter.CombinaryCounter import CombinaryCounter
 import lpmln.search.misc.ISCSearchingSlicesGenerator as isg
-from scipy.special import comb
 
 
 config = cfg.load_configuration()
@@ -303,7 +302,7 @@ class ISCTask:
     def init_task_numbers(self):
         unknown_iset_number = len(self.meta_data.se_iset_ids)
         for i in range(self.min_ne, self.max_ne + 1):
-            task_number = int(comb(unknown_iset_number, i))
+            task_number = CombinaryCounter.compute_comb(unknown_iset_number, i)
             self.task_total_number += task_number
             self.incremental_task_number[i] = task_number
 
