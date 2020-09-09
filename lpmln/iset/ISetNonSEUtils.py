@@ -26,6 +26,23 @@ def check_lock(pid):
         return False
 
 
+def get_task_early_terminate_flag_file(k_size, m_size, n_size):
+    name = "kmn-%d-%d-%d.terminate" % (k_size, m_size, n_size)
+    path = os.path.join(config.isc_non_se_icondition_path, name)
+    return path
+
+
+def create_task_early_terminate_flag_file(k_size, m_size, n_size):
+    path = get_task_early_terminate_flag_file(k_size, m_size, n_size)
+    pathlib.Path(path).touch()
+    return path
+
+
+def create_and_send_task_early_terminate_flag_file(k_size, m_size, n_size, host_ips):
+    path = create_task_early_terminate_flag_file(k_size, m_size, n_size)
+    transport_non_se_results([path], host_ips)
+
+
 def get_transport_complete_flag_file(k_size, m_size, n_size, non_empty_iset_number):
     name = "kmn-%d-%d-%d-nse-%d.complete" % (k_size, m_size, n_size, non_empty_iset_number)
     path = os.path.join(config.isc_non_se_icondition_path, name)

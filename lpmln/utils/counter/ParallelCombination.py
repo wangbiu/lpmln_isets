@@ -37,7 +37,7 @@ def combination2(unknown_iset_number, ne_iset_number):
 
     right_length = unknown_iset_number - left_length
 
-    print("C(%d, %d) = " % (unknown_iset_number, ne_iset_number))
+    # print("C(%d, %d) = " % (unknown_iset_number, ne_iset_number))
 
     # if ne_iset_number > left_length:
     #     left_length = right_length
@@ -51,13 +51,13 @@ def combination2(unknown_iset_number, ne_iset_number):
             continue
 
         formula = "C(%d, %d) * C(%d, %d)" % (left_length, left_iset_number, right_length, right_iset_number)
-        tmp = comb(left_length, left_iset_number) * comb(right_length, right_iset_number)
+        tmp = compute_comb(left_length, left_iset_number) * compute_comb(right_length, right_iset_number)
         compute += tmp
 
-        print("\t", formula)
+        # print("\t", formula)
 
     if answer != compute:
-        msg = "total iset %d, ne iset %d, real value %f, computed value %f, same %s" % (unknown_iset_number, ne_iset_number, answer, compute, answer == compute)
+        msg = "total iset %d, ne iset %d, real value %d, computed value %d, same %s" % (unknown_iset_number, ne_iset_number, answer, compute, answer == compute)
         print(msg)
 
 
@@ -77,7 +77,7 @@ def product(i, j):
 
 if __name__ == '__main__':
     iset_number = 33
-    for iset_number in range(1, 50):
+    for iset_number in range(33, 55):
         for i in range(1, iset_number):
             combination2(iset_number, i)
     # combination2(iset_number, 16)

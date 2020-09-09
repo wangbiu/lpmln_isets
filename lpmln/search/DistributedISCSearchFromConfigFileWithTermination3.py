@@ -130,6 +130,7 @@ def check_itasks_status(itasks, host_ips, task_queue, working_host_number):
                 send_itasks_progress_info(itasks, task_queue, working_host_number)
 
                 if it.is_early_terminate():
+                    isnse.create_and_send_task_early_terminate_flag_file(*it.k_m_n, host_ips)
                     continue
 
                 if current_ne_number < it.max_ne:
@@ -397,9 +398,20 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_id=1, lp_type
 
         it = isc_tasks[isc_task_id]
 
+        task_terminate_flag = isnse.get_task_early_terminate_flag_file(*it.k_m_n)
         nse_iset_number = ne_iset_number - 1
+
+        is_terminate = False
         if nse_iset_number not in it.loaded_non_se_condition_files:
-            task_worker_load_nse_conditions(it, nse_iset_number)
+            load_complete = False
+            while not load_complete:
+                if pathlib.Path(task_terminate_flag).exists():
+                    is_terminate = True
+                    break
+                load_complete = task_worker_load_nse_conditions(it, nse_iset_number)
+
+        if is_terminate:
+            break
 
         start_time = datetime.now()
         start_time_str = start_time.strftime(time_fmt)[:-3]
@@ -482,6 +494,7 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_id=1, lp_type
 
 
 def task_worker_load_nse_conditions(itask, nse_iset_number):
+    sleep_cnt = 0
     for i in range(1, nse_iset_number + 1):
         first_print_debug_log = True
         if i not in itask.loaded_non_se_condition_files:
@@ -491,13 +504,18 @@ def task_worker_load_nse_conditions(itask, nse_iset_number):
                 if first_print_debug_log:
                     logging.info("waiting for transport complete file %s" % complete_flag)
                     first_print_debug_log = False
+                if sleep_cnt == 10:
+                    return False
+
                 if pathlib.Path(complete_flag).exists():
                     transport_complete = True
                 else:
+                    sleep_cnt += 1
                     time.sleep(5)
             nse_conditions = isnse.load_kmn_non_se_results(*itask.k_m_n, i, itask.lp_type, itask.is_use_extended_rules)
             itask.non_se_conditions.extend(nse_conditions)
             itask.loaded_non_se_condition_files.add(i)
+    return True
 
 
 def check_contain_nse_subparts(iset_ids, itask):
