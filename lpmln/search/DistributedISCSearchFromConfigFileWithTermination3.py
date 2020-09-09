@@ -403,17 +403,16 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_id=1, lp_type
         task_terminate_flag = isnse.get_task_early_terminate_flag_file(*it.k_m_n)
         nse_iset_number = ne_iset_number - 1
 
-        is_terminate = False
         if nse_iset_number not in it.loaded_non_se_condition_files:
             load_complete = False
             while not load_complete:
                 if pathlib.Path(task_terminate_flag).exists():
-                    is_terminate = True
+                    it.is_task_finish = True
                     break
                 load_complete = task_worker_load_nse_conditions(it, nse_iset_number)
 
-        if is_terminate:
-            break
+        if it.is_task_finish:
+            continue
 
         start_time = datetime.now()
         start_time_str = start_time.strftime(time_fmt)[:-3]
