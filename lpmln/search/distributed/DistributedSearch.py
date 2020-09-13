@@ -480,8 +480,7 @@ class DistributedSearchIConditionsWorker:
             m_size = it.k_m_n[1]
             n_size = it.k_m_n[2]
 
-            se_iset_ids = it.meta_data.search_space_iset_ids
-            right_zone_isets = set(se_iset_ids)
+            right_zone_isets = set(it.meta_data.search_space_iset_ids)
             right_zone_isets = right_zone_isets.difference(left_zone_isets)
 
 
@@ -546,7 +545,7 @@ class DistributedSearchIConditionsWorker:
             end_time_str = end_time.strftime(time_fmt)[:-3]
 
             msg_text = "%s: %d-%d-%d isc task: nonempty iset number %d, left zone length %d, left isets {%s}, start time %s, end time %s, find %d se conditions (no semi-valid rules), find %d non-se conditions" % (
-                task_name, k_size, m_size, n_size, ne_iset_number, left_length, cls.join_list_data(left_iset_ids),
+                task_name, k_size, m_size, n_size, ne_iset_number, len(left_zone_isets), cls.join_list_data(left_iset_ids),
                 start_time_str, end_time_str, se_cdt_cnt, nse_cdt_cnt)
 
             logging.info(msg_text)
