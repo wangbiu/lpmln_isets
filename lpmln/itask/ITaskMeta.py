@@ -9,7 +9,6 @@
 
 
 from lpmln.iset.ISetConditionValidator import ISetConditionValidator
-import lpmln.iset.OptimizationISetsUtils as oisu
 import itertools
 import json
 import lpmln.config.GlobalConfig as cfg
@@ -28,11 +27,11 @@ class ITaskMeta:
     ASP valid rules: i3, or i6, or i7 \neq \emptyset
     real iset id = iset id + 1
     """
-    def __init__(self, kmn, lp_type, is_use_extended_rules):
-        print("%d-%d-%d %s itask meta (extended = %s):" % (*kmn, lp_type, str(is_use_extended_rules)))
-        self.kmn = kmn
-        self.lp_type = lp_type
-        self.is_use_extended_rules = is_use_extended_rules
+    def __init__(self):
+        self.kmn = ""
+        self.lp_type = ""
+        self.is_use_extended_rules = False
+
         self.i3_composed_iset_ids = set()
         self.i4_composed_iset_ids = set()
         self.i5_composed_iset_ids = set()
@@ -45,6 +44,55 @@ class ITaskMeta:
         self.search_i4_composed_iset_ids = set()
         self.minmal_i4_isets_tuples = list()
 
+    def to_map(self):
+        if self.is_use_extended_rules:
+            rs = 4
+        else:
+            rs = 3
+        key = "%d-%d-%d-%s-%d" % (*self.kmn, self.lp_type, rs)
+        data = dict()
+        non_list_vars = {"kmn", "lp_type", "is_use_extended_rules"}
+        self.minmal_i4_isets_tuples = [list(s) for s in self.minmal_i4_isets_tuples]
+        for v in vars(self):
+            if v not in non_list_vars:
+                data[v] = list(self.__getattribute__(v))
+            else:
+                data[v] = self.__getattribute__(v)
+
+        return key, data
+
+    @staticmethod
+    def load_data_from_json(data):
+        obj = ITaskMeta()
+        for k in data:
+            obj.__setattr__(k, set(data[k]))
+
+        minmal_i4_isets_tuples = list()
+        for tp in obj.minmal_i4_isets_tuples:
+            minmal_i4_isets_tuples.append(set(tp))
+        obj.minmal_i4_isets_tuples = minmal_i4_isets_tuples
+        return obj
+
+    @staticmethod
+    def load_itask_meta_data_from_file(file):
+        meta = dict()
+        with open(file, mode="r", encoding="utf-8") as f:
+            json_data = json.load(f)
+            for key in json_data:
+                data = json_data[key]
+                obj = ITaskMeta.load_data_from_json(data)
+                meta[key] = obj
+        return meta
+
+    @staticmethod
+    def save_itask_meta_data(file, meta_data):
+        json_obj = dict()
+        for m in meta_data:
+            key, data = m.to_map()
+            json_obj[key] = data
+        with open(file, encoding="utf-8", mode="w") as f:
+            json.dump(json_obj, f)
+
 
 class ITaskMetaGenerator:
     def __init__(self, kmn, lp_type, is_use_extended_rules):
@@ -52,7 +100,12 @@ class ITaskMetaGenerator:
         self.lp_type = lp_type
         self.is_use_extended_rules = is_use_extended_rules
 
-        self.meta_data = ITaskMeta(self.kmn, self.lp_type, self.is_use_extended_rules)
+        self.meta_data = ITaskMeta()
+        self.meta_data.kmn = kmn
+        self.meta_data.lp_type = lp_type
+        self.meta_data.is_use_extended_rules = is_use_extended_rules
+
+        print("%d-%d-%d %s itask meta (extended = %s):" % (*kmn, lp_type, str(is_use_extended_rules)))
 
         self.rule_number = sum(self.kmn)
 
@@ -198,7 +251,18 @@ class ITaskMetaGenerator:
         print("has %d min i4 iset tuple" % len(min_i4_iset_tuples), min_i4_iset_tuples)
 
 
+def generate_itask_meta_data():
+    kmns = [[0, 1, 1], [1, 1, 0], [0, 2, 1], [1, 1, 1], [1, 2, 0], [2, 1, 0]]
+    # kmns = [[0, 1, 1]]
+    meta = list()
+    for kmn in kmns:
+        generator = ITaskMetaGenerator(kmn, "lpmln", False)
+        meta.append(generator.meta_data)
+
+    ITaskMeta.save_itask_meta_data(config.isc_meta_data_file, meta)
+
 if __name__ == '__main__':
-    generator = ITaskMetaGenerator([0, 1, 1], "lpmln", False)
+    # generator = ITaskMetaGenerator([0, 1, 1], "lpmln", False)
+    generate_itask_meta_data()
     pass
     

@@ -13,10 +13,9 @@ import lpmln.config.GlobalConfig as cfg
 import json
 
 config = cfg.load_configuration()
-
+kmns = [[0, 1, 1], [1, 1, 0], [0, 2, 1], [1, 1, 1], [1, 2, 0], [2, 1, 0]]
 
 def test_generator():
-    kmns = [[0, 1, 1], [1, 1, 0], [0, 2, 1], [1, 1, 1], [1, 2, 0], [2, 1, 0]]
     for kmn in kmns[1:]:
         print("checking %d-%d-%d results..." % (kmn[0], kmn[1], kmn[2]))
         generator = ITaskMetaGenerator(kmn, "lpmln", False)
@@ -49,6 +48,8 @@ def test_generator():
             raise RuntimeWarning("wrong case ", kmn)
 
         print("\n")
+
+
 
 
 def load_i4_data(key):
