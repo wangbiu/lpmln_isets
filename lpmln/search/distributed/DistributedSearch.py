@@ -203,15 +203,15 @@ class DistributedSearchIConditionsMaster:
 
                 right_length = unknown_iset_number - left_length
 
-                left_iset_ids = search_iset_ids[0:left_length]
+                left_zone_isets = search_iset_ids[0:left_length]
                 for left_iset_number in range(ne_iset_number + 1):
                     right_iset_number = ne_iset_number - left_iset_number
                     if left_iset_number > left_length or right_iset_number > right_length:
                         continue
 
-                    task_iter = itertools.combinations(left_iset_ids, left_iset_number)
+                    task_iter = itertools.combinations(left_zone_isets, left_iset_number)
                     for left_ti in task_iter:
-                        task_item = (tid, (ne_iset_number, left_length, list(left_ti)))
+                        task_item = (tid, (ne_iset_number, set(left_zone_isets), list(left_ti)))
                         # print(task_item)
                         task_queue.put(task_item)
 
@@ -454,7 +454,7 @@ class DistributedSearchIConditionsWorker:
             isc_task_id = itask[0]
             task_params = itask[1]
             ne_iset_number = task_params[0]
-            left_length = task_params[1]
+            left_zone_isets = task_params[1]
             left_iset_ids = task_params[2]
 
             it = isc_tasks[isc_task_id]
@@ -481,14 +481,17 @@ class DistributedSearchIConditionsWorker:
             n_size = it.k_m_n[2]
 
             se_iset_ids = it.meta_data.search_space_iset_ids
-            right_iset_ids = se_iset_ids[left_length:]
+            right_zone_isets = set(se_iset_ids)
+            right_zone_isets = right_zone_isets.difference(left_zone_isets)
+
+
             right_iset_number = ne_iset_number - len(left_iset_ids)
             # unknown_iset_number = len(se_iset_ids)
 
             task_name = worker_name + ("-task-%d" % processed_task_slices_number)
 
             msg_text = "%s: %d-%d-%d isc task: nonempty iset number %d, left zone length %d, left isets {%s}" % (
-                task_name, k_size, m_size, n_size, ne_iset_number, left_length, cls.join_list_data(left_iset_ids))
+                task_name, k_size, m_size, n_size, ne_iset_number, len(left_zone_isets), cls.join_list_data(left_iset_ids))
             logging.info(msg_text)
 
             se_cdt_cnt = 0
@@ -501,7 +504,7 @@ class DistributedSearchIConditionsWorker:
             nse_conditions_cache = list()
             validator = ISetConditionValidator(lp_type=lp_type, is_use_extended_rules=is_use_extended_rules)
 
-            task_iter = itertools.combinations(right_iset_ids, right_iset_number)
+            task_iter = itertools.combinations(right_zone_isets, right_iset_number)
             task_number = 0
             for right_ti in task_iter:
                 non_ne_ids = list()
