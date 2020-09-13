@@ -13,7 +13,7 @@ import lpmln.config.GlobalConfig as cfg
 import os
 import copy
 import datetime
-import lpmln.config.ISCTasksMetaData as iscmeta
+import lpmln.config.deprecated.ISCTasksMetaData as iscmeta
 import lpmln.iset.ISetNonSEUtils as isnse
 from lpmln.utils.counter.CombinaryCounter import CombinaryCounter
 import lpmln.search.misc.ISCSearchingSlicesGenerator as isg

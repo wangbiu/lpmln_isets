@@ -14,16 +14,13 @@ import logging
 from datetime import datetime
 import time
 import pathlib
-import copy
-from lpmln.utils.counter.CombinaryCounter import CombinaryCounter
 
 from lpmln.iset.ISetConditionValidator import ISetConditionValidator
 import lpmln.message.Messager as msg
 import lpmln.config.GlobalConfig as cfg
-from lpmln.config.ITasksWithTerminationConfig import ISCTaskConfig
+from lpmln.config.deprecated.ITasksWithTerminationConfig import ISCTaskConfig
 import lpmln.iset.ISetNonSEUtils as isnse
 import lpmln.utils.SSHClient as ssh
-import lpmln.search.misc.ISCSearchingSlicesGenerator as isg
 import itertools
 
 config = cfg.load_configuration()

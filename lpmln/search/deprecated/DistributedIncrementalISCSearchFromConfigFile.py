@@ -18,7 +18,7 @@ import copy
 from lpmln.iset.ISetConditionValidator import ISetConditionValidator
 import lpmln.message.Messager as msg
 import lpmln.config.GlobalConfig as cfg
-from lpmln.config.IncrementalISCTaskConfig import IncrementalISCTaskConfig
+from lpmln.config.deprecated.IncrementalISCTaskConfig import IncrementalISCTaskConfig
 
 config = cfg.load_configuration()
 

@@ -11,7 +11,7 @@ import lpmln.iset.OptimizationISetsUtils as oisu
 from lpmln.utils.counter.CombinaryCounter import CombinaryCounter
 import copy
 import lpmln.config.GlobalConfig as cfg
-import lpmln.config.ISCTasksMetaData as meta
+import lpmln.config.deprecated.ISCTasksMetaData as meta
 
 config = cfg.load_configuration()
 

@@ -7,7 +7,7 @@
 @File    : ITaskTest.py
 """
 
-import lpmln.config.ISCTasksMetaData as im
+import lpmln.config.deprecated.ISCTasksMetaData as im
 from lpmln.itask.ITaskMeta import ITaskMetaGenerator
 import lpmln.config.GlobalConfig as cfg
 import json

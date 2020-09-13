@@ -13,7 +13,7 @@ import os
 import copy
 import datetime
 import lpmln.iset.OptimizationISetsUtils as oisu
-from lpmln.config.ISCTaskConfig import ISCTask, ISCTaskConfig
+from lpmln.config.deprecated.ISCTaskConfig import ISCTaskConfig
 from scipy.special import comb
 from lpmln.iset.ISetCondition import ISetCondition
 

@@ -9,7 +9,7 @@
 
 from lpmln.iset.ISetConditionValidator import ISetConditionValidator
 import lpmln.iset.OptimizationISetsUtils as oisu
-import lpmln.config.ISCTasksMetaData as meta
+import lpmln.config.deprecated.ISCTasksMetaData as meta
 import itertools
 import json
 import lpmln.config.GlobalConfig as cfg

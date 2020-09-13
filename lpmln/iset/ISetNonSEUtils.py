@@ -89,7 +89,7 @@ def get_nse_condition_file_name_prefix(k_size, m_size, n_size, lp_type, is_use_e
         rule_set_size = 4
     else:
         rule_set_size = 3
-    file_name_prefix = "%s-%d-kmn-%d%d%d" % (lp_type, rule_set_size, k_size, m_size, n_size)
+    file_name_prefix = "%s-%d-kmn-%d-%d-%d" % (lp_type, rule_set_size, k_size, m_size, n_size)
     return file_name_prefix
 
 

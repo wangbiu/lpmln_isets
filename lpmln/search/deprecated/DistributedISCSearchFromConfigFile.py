@@ -18,7 +18,7 @@ from lpmln.iset.ISetConditionValidator import ISetConditionValidator
 import lpmln.iset.ISetUtils as isu
 import lpmln.message.Messager as msg
 import lpmln.config.GlobalConfig as cfg
-import lpmln.config.ISCTaskConfig as isc_cfg
+import lpmln.config.deprecated.ISCTaskConfig as isc_cfg
 
 config = cfg.load_configuration()
 
