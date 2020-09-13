@@ -41,7 +41,8 @@ class ITaskMeta:
 
         self.empty_iset_ids = set()
         self.non_se_iset_ids = set()
-        self.search_space_isets = set()
+        self.search_space_iset_ids = set()
+        self.search_i4_composed_iset_ids = set()
         self.minmal_i4_isets_tuples = list()
 
 
@@ -67,6 +68,8 @@ class ITaskMetaGenerator:
         self.compute_empty_iset_ids()
         self.compute_nse_isets()
         self.compute_search_isets()
+        self.compute_search_i4_composed_isets()
+        self.compute_min_i4_isets_tuples()
 
     def init_i_n_composed_iset_ids(self):
         self.meta_data.i3_composed_iset_ids = self.get_i_n_composed_isets(3)
@@ -137,11 +140,65 @@ class ITaskMetaGenerator:
             if id not in self.meta_data.non_se_iset_ids and id not in self.meta_data.empty_iset_ids:
                 search_isets.add(id)
 
-        self.meta_data.search_space_isets = search_isets
+        self.meta_data.search_space_iset_ids = search_isets
         print("\t\t has %d search isets: " % len(search_isets), search_isets)
+
+    def check_contain_i4_semi_valid_rule(self, iset_ids):
+        rule_number = self.rule_number
+        flags = [0] * rule_number
+        for id in iset_ids:
+            id_bits = self.get_iset_composition(id + 1)
+            for i in range(rule_number):
+                if id_bits[i] == 4:
+                    flags[i] = 1
+
+        if sum(flags) < rule_number:
+            return True
+        else:
+            return False
+
+    def compute_search_i4_composed_isets(self):
+        isets = set()
+        print("\t\t compute search i4 composed isets ...")
+        isets = self.meta_data.search_space_iset_ids.intersection(self.meta_data.i4_composed_iset_ids)
+        self.meta_data.search_i4_composed_iset_ids = isets
+        print("\t\t has %d search i4 composed isets: " % (len(isets)), isets)
+
+    def compute_min_i4_isets_tuples(self):
+        i4_isets_tuples = list()
+        iset_ids = self.meta_data.search_i4_composed_iset_ids
+        for i in range(1, self.rule_number + 1):
+            if i > len(iset_ids):
+                break
+            counter = itertools.combinations(iset_ids, i)
+            for tp in counter:
+                tp = set(tp)
+                if not self.check_contain_i4_semi_valid_rule(tp):
+                    i4_isets_tuples.append(tp)
+
+        skip_tuple_ids = set()
+        i4_isets_tuples_ids = [i for i in range(len(i4_isets_tuples))]
+        subset_counter = itertools.combinations(i4_isets_tuples_ids, 2)
+        for pair in subset_counter:
+            pair = list(pair)
+            s1 = i4_isets_tuples[pair[0]]
+            s2 = i4_isets_tuples[pair[1]]
+
+            if s1.issubset(s2):
+                skip_tuple_ids.add(pair[1])
+            elif s2.issubset(s1):
+                skip_tuple_ids.add(pair[0])
+
+        min_i4_iset_tuples = list()
+        for i in i4_isets_tuples_ids:
+            if i not in skip_tuple_ids:
+                min_i4_iset_tuples.append(i4_isets_tuples[i])
+
+        self.meta_data.minmal_i4_isets_tuples = min_i4_iset_tuples
+        print("has %d min i4 iset tuple" % len(min_i4_iset_tuples), min_i4_iset_tuples)
 
 
 if __name__ == '__main__':
-    generator = ITaskMetaGenerator([1, 1, 0], "lpmln", False)
+    generator = ITaskMetaGenerator([0, 1, 1], "lpmln", False)
     pass
     
