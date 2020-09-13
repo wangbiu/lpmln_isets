@@ -80,9 +80,11 @@ class ITask:
     def complete_params(self):
         all_meta_data = ITaskMeta.load_itask_meta_data_from_file(config.isc_meta_data_file)
         self.meta_data = all_meta_data[self.meta_key]
-        self.iset_number = 2 ** (self.rule_set_size * self.rule_number) - 1
-        self.task_slice_file = config.get_task_slice_file_path_by_kmn(*self.k_m_n, self.min_ne, self.max_ne)
         self.unknown_iset_number = len(self.meta_data.search_space_iset_ids)
+        if self.max_ne == -1:
+            self.max_ne = self.unknown_iset_number
+
+        self.iset_number = 2 ** (self.rule_set_size * self.rule_number) - 1
         self.result_file = config.get_isc_results_file_path(*self.k_m_n, self.min_ne, self.max_ne)
         self.task_flag = self.task_flag % (*self.k_m_n, self.min_ne, self.max_ne, self.task_type)
 
@@ -104,7 +106,7 @@ class ITask:
         for nse in self.non_se_conditions_buffer:
             self.non_se_conditions.append(nse)
         self.non_se_condition_files.append(self.working_ne_iset_numbers)
-        self.non_se_conditions_buffer.clear()
+        self.non_se_conditions_buffer = list()
 
         return non_se_file
 
@@ -119,16 +121,6 @@ class ITask:
             return True
         else:
             return False
-
-    # def is_contain_non_se_condition(self, ne_iset_ids):
-    #     for ne in self.non_se_conditions:
-    #         if ne.issubset(ne_iset_ids):
-    #             return True
-    #     return False
-
-    def get_isc_task_load_message(self):
-        msg_text = "load %s, has %d isc task slices" % (self.task_flag, self.task_slice_number)
-        return msg_text
 
     def insert_se_condition(self, condition):
         ne_iset_number = len(condition.ne_iset_ids)

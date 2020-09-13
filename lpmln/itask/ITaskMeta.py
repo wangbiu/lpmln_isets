@@ -64,8 +64,12 @@ class ITaskMeta:
     @staticmethod
     def load_data_from_json(data):
         obj = ITaskMeta()
+        non_list_vars = {"kmn", "lp_type", "is_use_extended_rules"}
         for k in data:
-            obj.__setattr__(k, set(data[k]))
+            if k not in non_list_vars:
+                obj.__setattr__(k, list(data[k]))
+            else:
+                obj.__setattr__(k, data[k])
 
         minmal_i4_isets_tuples = list()
         for tp in obj.minmal_i4_isets_tuples:
