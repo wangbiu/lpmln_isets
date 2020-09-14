@@ -405,6 +405,110 @@ class DistributedSearchIConditionsWorker:
         logging.info("task worker host %s exit ..." % config.worker_host_name)
 
     @staticmethod
+    def search_kmn_itask_slice(cls, itask, task_slice, task_name, result_queue, lp_type, is_use_extended_rules, is_check_valid_rules):
+        time_fmt = "%Y-%m-%d %H:%M:%S.%f"
+
+        itask_id = task_slice[0]
+        task_params = task_slice[1]
+
+        ne_iset_number = task_params[0]
+        left_zone_isets = task_params[1]
+        left_iset_ids = task_params[2]
+
+        task_terminate_flag = isnse.get_task_early_terminate_flag_file(*itask.k_m_n)
+        nse_iset_number = ne_iset_number - 1
+
+        if nse_iset_number not in itask.loaded_non_se_condition_files:
+            load_complete = False
+            while not load_complete:
+                if pathlib.Path(task_terminate_flag).exists():
+                    itask.is_task_finish = True
+                    break
+                load_complete = cls.task_worker_load_nse_conditions(itask, nse_iset_number)
+
+        if itask.is_task_finish:
+            return True
+
+        start_time = datetime.now()
+        start_time_str = start_time.strftime(time_fmt)[:-3]
+
+        k_size = itask.k_m_n[0]
+        m_size = itask.k_m_n[1]
+        n_size = itask.k_m_n[2]
+
+        right_zone_isets = set(itask.meta_data.search_space_iset_ids)
+        right_zone_isets = right_zone_isets.difference(left_zone_isets)
+
+        right_iset_number = ne_iset_number - len(left_iset_ids)
+
+        msg_text = "%s: %d-%d-%d isc task: nonempty iset number %d, left zone length %d, left isets {%s}" % (
+            task_name, k_size, m_size, n_size, ne_iset_number, len(left_zone_isets), cls.join_list_data(left_iset_ids))
+        logging.info(msg_text)
+
+        se_cdt_cnt = 0
+        nse_cdt_cnt = 0
+        new_nse_cdt_cnt = 0
+        semi_valid_skip_cnt = 0
+        check_cdt_cnt = 0
+
+        se_conditions_cache = list()
+        nse_conditions_cache = list()
+        validator = ISetConditionValidator(lp_type=lp_type, is_use_extended_rules=is_use_extended_rules)
+
+        task_iter = itertools.combinations(right_zone_isets, right_iset_number)
+        task_number = 0
+        for right_ti in task_iter:
+            non_ne_ids = list()
+            non_ne_ids.extend(left_iset_ids)
+            non_ne_ids.extend(list(right_ti))
+            non_ne_ids = set(non_ne_ids)
+            task_number += 1
+
+            if cls.check_contain_nse_subparts(non_ne_ids, itask):
+                nse_cdt_cnt += 1
+                continue
+
+            if not cls.check_contain_i4_isets(non_ne_ids, itask):
+                semi_valid_skip_cnt += 1
+                continue
+
+            check_cdt_cnt += 1
+            is_contain_valid_rule, is_strongly_equivalent, condition = \
+                validator.validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids_return_icondition_obj(
+                    non_ne_ids, k_size, m_size, n_size, is_check_valid_rule=is_check_valid_rules)
+
+            # if not is_contain_valid_rule:
+            if is_strongly_equivalent:
+                se_conditions_cache.append(condition)
+                se_cdt_cnt += 1
+            else:
+                nse_conditions_cache.append(condition)
+                nse_cdt_cnt += 1
+                new_nse_cdt_cnt += 1
+
+        # for sec in se_conditions_cache:
+        if se_cdt_cnt > 0:
+            result_queue.put((se_condition_signal, itask_id, se_conditions_cache))
+
+        if new_nse_cdt_cnt > 0:
+            result_queue.put((nse_condition_signal, itask_id, nse_conditions_cache))
+
+        end_time = datetime.now()
+        end_time_str = end_time.strftime(time_fmt)[:-3]
+
+        msg_text = "%s: %d-%d-%d isc task: nonempty iset number %d, left zone length %d, left isets {%s}, start time %s, end time %s, find %d se conditions (no semi-valid rules), find %d non-se conditions" % (
+            task_name, k_size, m_size, n_size, ne_iset_number, len(left_zone_isets), cls.join_list_data(left_iset_ids),
+            start_time_str, end_time_str, se_cdt_cnt, nse_cdt_cnt)
+
+        logging.info(msg_text)
+        result_queue.put(
+            (stat_signal, itask_id, ne_iset_number, check_cdt_cnt, task_number, semi_valid_skip_cnt,
+             (start_time, end_time)))
+
+        return True
+
+
+    @staticmethod
     def kmn_isc_task_worker(cls, isc_config_file="isets-tasks.json", worker_id=1, lp_type="lpmln", is_check_valid_rules=True,
                             is_use_extended_rules=True):
 
@@ -420,7 +524,7 @@ class DistributedSearchIConditionsWorker:
         result_queue = manager.get_result_queue()
 
         worker_name = "worker-%d" % worker_id
-        time_fmt = "%Y-%m-%d %H:%M:%S.%f"
+
         worker_host_name = config.worker_host_name
         msg_text = "task worker %s start!" % (worker_name)
         logging.info(msg_text)
@@ -428,9 +532,9 @@ class DistributedSearchIConditionsWorker:
         isc_tasks = isc_tasks.isc_tasks
         processed_task_slices_number = 0
 
-        for it in isc_tasks:
-            it.loaded_non_se_condition_files.add(1)
-            it.loaded_non_se_condition_files.add(0)
+        for itask in isc_tasks:
+            itask.loaded_non_se_condition_files.add(1)
+            itask.loaded_non_se_condition_files.add(0)
 
         first_print_debug_log = True
         while True:
@@ -445,112 +549,17 @@ class DistributedSearchIConditionsWorker:
                 continue
 
             first_print_debug_log = True
-            itask = task_queue.get()
-            if itask[0] == kill_signal:
+
+            task_slice = task_queue.get()
+            if task_slice[0] == kill_signal:
                 msg_text = "%s:%s isc task worker terminate ..." % (worker_host_name, worker_name)
                 logging.info(msg_text)
                 break
 
-            isc_task_id = itask[0]
-            task_params = itask[1]
-            ne_iset_number = task_params[0]
-            left_zone_isets = task_params[1]
-            left_iset_ids = task_params[2]
-
-            it = isc_tasks[isc_task_id]
-
-            task_terminate_flag = isnse.get_task_early_terminate_flag_file(*it.k_m_n)
-            nse_iset_number = ne_iset_number - 1
-
-            if nse_iset_number not in it.loaded_non_se_condition_files:
-                load_complete = False
-                while not load_complete:
-                    if pathlib.Path(task_terminate_flag).exists():
-                        it.is_task_finish = True
-                        break
-                    load_complete = cls.task_worker_load_nse_conditions(it, nse_iset_number)
-
-            if it.is_task_finish:
-                continue
-
-            start_time = datetime.now()
-            start_time_str = start_time.strftime(time_fmt)[:-3]
-
-            k_size = it.k_m_n[0]
-            m_size = it.k_m_n[1]
-            n_size = it.k_m_n[2]
-
-            right_zone_isets = set(it.meta_data.search_space_iset_ids)
-            right_zone_isets = right_zone_isets.difference(left_zone_isets)
-
-
-            right_iset_number = ne_iset_number - len(left_iset_ids)
-            # unknown_iset_number = len(se_iset_ids)
-
+            itask = isc_tasks[task_slice[0]]
             task_name = worker_name + ("-task-%d" % processed_task_slices_number)
-
-            msg_text = "%s: %d-%d-%d isc task: nonempty iset number %d, left zone length %d, left isets {%s}" % (
-                task_name, k_size, m_size, n_size, ne_iset_number, len(left_zone_isets), cls.join_list_data(left_iset_ids))
-            logging.info(msg_text)
-
-            se_cdt_cnt = 0
-            nse_cdt_cnt = 0
-            new_nse_cdt_cnt = 0
-            semi_valid_skip_cnt = 0
-            check_cdt_cnt = 0
-
-            se_conditions_cache = list()
-            nse_conditions_cache = list()
-            validator = ISetConditionValidator(lp_type=lp_type, is_use_extended_rules=is_use_extended_rules)
-
-            task_iter = itertools.combinations(right_zone_isets, right_iset_number)
-            task_number = 0
-            for right_ti in task_iter:
-                non_ne_ids = list()
-                non_ne_ids.extend(left_iset_ids)
-                non_ne_ids.extend(list(right_ti))
-                non_ne_ids = set(non_ne_ids)
-                task_number += 1
-
-                if cls.check_contain_nse_subparts(non_ne_ids, it):
-                    nse_cdt_cnt += 1
-                    continue
-
-                if not cls.check_contain_i4_isets(non_ne_ids, it):
-                    semi_valid_skip_cnt += 1
-                    continue
-
-                check_cdt_cnt += 1
-                is_contain_valid_rule, is_strongly_equivalent, condition = \
-                    validator.validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids_return_icondition_obj(
-                        non_ne_ids, k_size, m_size, n_size, is_check_valid_rule=is_check_valid_rules)
-
-                # if not is_contain_valid_rule:
-                if is_strongly_equivalent:
-                    se_conditions_cache.append(condition)
-                    se_cdt_cnt += 1
-                else:
-                    nse_conditions_cache.append(condition)
-                    nse_cdt_cnt += 1
-                    new_nse_cdt_cnt += 1
-
-            # for sec in se_conditions_cache:
-            if se_cdt_cnt > 0:
-                result_queue.put((se_condition_signal, isc_task_id, se_conditions_cache))
-
-            if new_nse_cdt_cnt > 0:
-                result_queue.put((nse_condition_signal, isc_task_id, nse_conditions_cache))
-
-            end_time = datetime.now()
-            end_time_str = end_time.strftime(time_fmt)[:-3]
-
-            msg_text = "%s: %d-%d-%d isc task: nonempty iset number %d, left zone length %d, left isets {%s}, start time %s, end time %s, find %d se conditions (no semi-valid rules), find %d non-se conditions" % (
-                task_name, k_size, m_size, n_size, ne_iset_number, len(left_zone_isets), cls.join_list_data(left_iset_ids),
-                start_time_str, end_time_str, se_cdt_cnt, nse_cdt_cnt)
-
-            logging.info(msg_text)
-            result_queue.put(
-                (stat_signal, isc_task_id, ne_iset_number, check_cdt_cnt, task_number, semi_valid_skip_cnt, (start_time, end_time)))
+            cls.search_kmn_itask_slice(cls, itask, task_slice, task_name, result_queue,
+                                       lp_type, is_use_extended_rules, is_check_valid_rules)
             processed_task_slices_number += 1
 
             first_print_debug_log = True
