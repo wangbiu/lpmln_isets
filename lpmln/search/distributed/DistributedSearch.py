@@ -184,6 +184,10 @@ class DistributedSearchIConditionsMaster:
 
     @staticmethod
     def itask_slices_generator(cls, isc_config_file="isets-tasks.json"):
+        msg_text = "%s init task slices generator ..." % str(cls)
+        logging.info(msg_text)
+        msg.send_message(msg_text)
+
         SearchWorkerQueueManger.register("get_task_queue")
         SearchWorkerQueueManger.register("get_result_queue")
         manager = SearchWorkerQueueManger(address=(config.task_host, config.task_host_port),

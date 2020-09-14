@@ -42,7 +42,6 @@ def check_contain_rules_without_i_n_iset(iset_n, iset_ids, rule_number, is_use_e
         for i in range(rule_number):
             if id_bits[i] == iset_n:
                 flags[i] = 1
-                break
 
     if sum(flags) < rule_number:
         return True
@@ -51,5 +50,10 @@ def check_contain_rules_without_i_n_iset(iset_n, iset_ids, rule_number, is_use_e
 
 
 if __name__ == '__main__':
+    iset_ids = {35}
+    rule_number = 2
+    flag = check_contain_rules_without_i_n_iset(4, iset_ids, rule_number, False)
+    print(flag)
+
     pass
     
