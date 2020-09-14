@@ -13,6 +13,7 @@ import itertools
 import json
 import lpmln.config.GlobalConfig as cfg
 config = cfg.load_configuration()
+import lpmln.iset.ISetCompositionUtils as iscm
 
 
 class ITaskMeta:

@@ -44,8 +44,8 @@ class ITask:
         self.task_type = "%s-%s" % (str(self.lp_type), "elp" if self.is_use_extended_rules else "dlp")
         self.task_flag = "**%d-%d-%d (%d ~ %d) %s isc tasks**"
 
-        self.task_start_time = 0
-        self.task_end_time = 0
+        self.task_start_time = None
+        self.task_end_time = None
 
         self.task_total_number = 0
         self.se_condition_number = 0
@@ -96,7 +96,7 @@ class ITask:
             self.hierarchical_nse_condition_number[i] = 0
             self.hierarchical_new_non_se_condition_number[i] = 0
             self.hierarchical_se_conditions[i] = list()
-            self.hierarchical_running_time[i] = [0, 0]
+            self.hierarchical_running_time[i] = [None, None]
 
     def flush_non_se_condition(self):
         non_se_file = isnse.save_kmn_non_se_results(self.k_m_n[0], self.k_m_n[1], self.k_m_n[2],
@@ -156,7 +156,7 @@ class ITask:
 
     def get_final_detail_progress_info(self):
         self.task_progress_rate = 100.0 * self.task_complete_number / self.task_total_number
-        task_running_time = self.task_end_time - self.task_start_time
+        task_running_time = self.get_running_time(-1)
         details = self.get_itask_detail_status()
         prg_info = ":rocket: %s: total tasks: %d, complete tasks: %d (%.3f%%, running time: %s), find %d se conditions,  dumped to %s details: \n %s" % (
             self.task_flag, self.task_total_number, self.task_complete_number, self.task_progress_rate,
@@ -164,13 +164,13 @@ class ITask:
         return prg_info
 
     def get_progress_info(self):
+        task_running_time = self.get_running_time(-1)
         if not self.is_task_finish:
             if self.task_complete_number == 0:
                 prg_info = ":timer_clock:  %s: total tasks: %d, waiting for resources !" % (
                 self.task_flag, self.task_total_number)
             else:
                 self.task_progress_rate = 100.0 * self.task_complete_number / self.task_total_number
-                task_running_time = self.task_end_time - self.task_start_time
                 details = self.get_itask_detail_status()
                 if self.se_condition_number == 0:
                     prg_info = ":mag_right: %s: total tasks: %d, complete tasks: %d (%.3f%%, running time: %s), find 0 se conditions. details: \n %s" % (
@@ -182,7 +182,6 @@ class ITask:
                         str(task_running_time), self.se_condition_number, self.se_condition_dump_file, details)
         else:
             task_check_number = 0
-            task_running_time = self.task_end_time - self.task_start_time
             for i in range(self.min_ne, self.max_ne + 1):
                 task_check_number += self.hierarchical_task_check_number[i]
             prg_info = ":rocket: %s finish: total tasks: %d, check tasks: %d, complete tasks: %d (%.3f%% (c/t), running time: %s), find %d se conditions,  dumped to %s" % (
@@ -206,9 +205,9 @@ class ITask:
             nse_number = self.hierarchical_nse_condition_number[i]
             se_number = len(self.hierarchical_se_conditions[i])
             sk_number = self.hierarchical_task_valid_rule_skip_number[i]
-            times = self.hierarchical_running_time[i]
+            task_running_time = self.get_running_time(i)
             st = tmpl % (i, complete_number, check_number, sk_number,
-                         task_number, speed_up_ratio, str(times[1] - times[0]), se_number, nse_number, new_nse_number)
+                         task_number, speed_up_ratio, str(task_running_time), se_number, nse_number, new_nse_number)
             status.append(st)
 
         return "\n".join(status)
@@ -235,18 +234,18 @@ class ITask:
 
     def update_running_time(self, old_time, new_time):
         updated_time = [0, 0]
-        if old_time[0] == 0:
+        if old_time[0] is None:
             updated_time[0] = new_time[0]
         else:
-            if old_time[0].__gt__(new_time[0]):
+            if old_time[0] > new_time[0]:
                 updated_time[0] = new_time[0]
             else:
                 updated_time[0] = old_time[0]
 
-        if old_time[1] == 0:
+        if old_time[1] is None:
             updated_time[1] = new_time[1]
         else:
-            if old_time[1].__lt__(new_time[1]):
+            if old_time[1] < new_time[1]:
                 updated_time[1] = new_time[1]
             else:
                 updated_time[1] = old_time[1]
@@ -256,9 +255,26 @@ class ITask:
         self.hierarchical_task_complete_number[ne_iset_number] += task_complete_number
         self.task_complete_number += task_complete_number
 
+    def get_running_time(self, ne_iset_number):
+        if ne_iset_number == -1:
+            start = self.task_start_time
+            end = self.task_end_time
+        else:
+            times = self.hierarchical_running_time[ne_iset_number]
+            start = times[0]
+            end = times[1]
+
+        if start is None or end is None:
+            task_running_time = 0
+        else:
+            task_running_time = end - start
+
+        return task_running_time
+
+
     def save_progress_info(self):
         file_path = config.get_itask_progress_info_file(*self.k_m_n, self.min_ne, self.max_ne, self.lp_type, self.rule_set_size)
-        task_running_time = self.task_end_time - self.task_start_time
+        task_running_time = self.get_running_time(-1)
         prg_info = " %s: total tasks: %d, complete tasks: %d, running time: %s, find %d se conditions." % (
             self.task_flag, self.task_total_number, self.task_complete_number, str(task_running_time), self.se_condition_number)
 
@@ -271,7 +287,7 @@ class ITask:
             check = self.hierarchical_task_check_number[i]
             total = self.hierarchical_task_number[i]
             skip = self.hierarchical_task_valid_rule_skip_number[i]
-            times = self.hierarchical_running_time[i]
+            task_running_time = self.get_running_time(i)
 
             if check == 0:
                 check_c = total
@@ -283,7 +299,7 @@ class ITask:
             nse = self.hierarchical_nse_condition_number[i]
             new_nse = self.hierarchical_new_non_se_condition_number[i]
 
-            data_item = "%d,%s,%d,%d,%d,%d,%.3f,%d,%d,%d" % (i, str(times[1]-times[0]), complete, check, skip, total, ratio, se, nse, new_nse)
+            data_item = "%d,%s,%d,%d,%d,%d,%.3f,%d,%d,%d" % (i, str(task_running_time), complete, check, skip, total, ratio, se, nse, new_nse)
             data.append(data_item)
 
         with open(file_path, mode="w", encoding="utf-8") as f:
@@ -291,12 +307,25 @@ class ITask:
                 f.write(d)
                 f.write("\n")
 
+    def check_contain_nse_subparts(self, iset_ids):
+        for nse in self.non_se_conditions:
+            if nse.issubset(iset_ids):
+                return True
+        return False
+
+    def check_contain_i4_isets(self, iset_ids):
+        min_i4_iset_tuples = self.meta_data.minmal_i4_isets_tuples
+        for i4_isets in min_i4_iset_tuples:
+            if i4_isets.issubset(iset_ids):
+                return True
+        return False
+
 
 class ITaskConfig:
-    def __init__(self, config_file, is_use_extended_rules):
+    def __init__(self, config_file):
         self.config_file = os.path.join(config.project_base_dir, config_file)
         self.isc_tasks = list()
-        self.is_use_extended_rules = is_use_extended_rules
+        self.is_use_extended_rules_key = "is_use_extended_rules"
         self.load_isc_config_file()
 
     def load_isc_config_file(self):
@@ -306,15 +335,21 @@ class ITaskConfig:
                 if task["is_skip"]:
                     continue
 
-                rule_number = task["rule_number"]
-                min_ne = task["min_ne"]
-                max_ne = task["max_ne"]
+                is_use_extended_rules_key = "is_use_extended_rules"
+                if is_use_extended_rules_key in task:
+                    is_use_extended_rules = task[is_use_extended_rules_key]
+                else:
+                    is_use_extended_rules = False
 
                 lp_type_key = "lp_type"
                 if lp_type_key in task:
                     lp_type = task[lp_type_key]
                 else:
                     lp_type = "lpmln"
+
+                rule_number = task["rule_number"]
+                min_ne = task["min_ne"]
+                max_ne = task["max_ne"]
 
                 kmns_key = "kmns"
                 if kmns_key in task:
@@ -323,7 +358,7 @@ class ITaskConfig:
                     kmns = self.get_kmn_by_rule_number(rule_number)
 
                 for kmn in kmns:
-                    itask = ITask(min_ne, max_ne, kmn, self.is_use_extended_rules, lp_type)
+                    itask = ITask(min_ne, max_ne, kmn, is_use_extended_rules, lp_type)
                     self.isc_tasks.append(itask)
 
     def get_kmn_by_rule_number(self, rule_number):
