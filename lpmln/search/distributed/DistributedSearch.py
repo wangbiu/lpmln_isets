@@ -543,8 +543,8 @@ class DistributedSearchIConditionsWorker:
             itask.loaded_non_se_condition_files.add(1)
             itask.loaded_non_se_condition_files.add(0)
 
+        first_print_debug_log = True
         while True:
-            first_print_debug_log = True
             if not pathlib.Path(config.task_host_lock_file).exists():
                 break
 
@@ -554,6 +554,8 @@ class DistributedSearchIConditionsWorker:
                     first_print_debug_log = False
                 time.sleep(2)
                 continue
+
+            first_print_debug_log = True
 
             task_slice = task_queue.get()
             if task_slice[0] == ITaskSignal.kill_signal:
