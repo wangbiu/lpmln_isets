@@ -31,14 +31,14 @@ config = cfg.load_configuration()
 class AugumentedPreSkipI4DistributedSearchMaster(PreSkipI4DistributedSearchMaster):
 
     @staticmethod
-    def itask_slices_second_phase_generator(cls, task_id, ne_iset_number, all_left_zone_isets, first_phase_isets, phase2_left_zone_isets, task_queue):
+    def itask_slices_second_phase_generator(cls, task_id, ne_iset_number, total_zone_length, all_left_zone_isets, first_phase_isets, phase2_left_zone_isets, task_queue):
         phase2_ne_iset_number = ne_iset_number - len(first_phase_isets)
         phase2_left_zone_length = len(phase2_left_zone_isets)
-        phase2_right_zone_length = phase2_ne_iset_number - phase2_left_zone_length
+        phase2_right_zone_length = total_zone_length - len(all_left_zone_isets)
 
         for phase2_left_iset_number in range(phase2_ne_iset_number + 1):
             phase2_right_iset_number = phase2_ne_iset_number - phase2_left_iset_number
-            if phase2_left_iset_number > phase2_left_zone_length or phase2_right_iset_number >  phase2_right_zone_length:
+            if phase2_left_iset_number > phase2_left_zone_length or phase2_right_iset_number > phase2_right_zone_length:
                 continue
 
             task_iter = itertools.combinations(phase2_left_zone_isets, phase2_left_iset_number)
@@ -69,17 +69,17 @@ class AugumentedPreSkipI4DistributedSearchMaster(PreSkipI4DistributedSearchMaste
             min_ne = it.min_ne
             max_ne = it.max_ne
             search_isets = set(it.meta_data.search_space_iset_ids)
-            unknown_iset_number = len(search_isets)
+            search_isets_number = len(search_isets)
             rule_number = it.rule_number
 
-            fixed_left_zone_length = int(unknown_iset_number / 2)
+            fixed_left_zone_length = int(search_isets_number / 2)
             if fixed_left_zone_length > 12:
                 fixed_left_zone_length = 12
 
             left_zone_iset_ids = set(it.meta_data.search_i4_composed_iset_ids)
 
             left_zone_length = len(left_zone_iset_ids)
-            right_zone_length = unknown_iset_number - left_zone_length
+            right_zone_length = search_isets_number - left_zone_length
             is_use_extended_rules = it.is_use_extended_rules
 
             second_phase_flag = False
@@ -123,7 +123,7 @@ class AugumentedPreSkipI4DistributedSearchMaster(PreSkipI4DistributedSearchMaste
                                 # print(task_item)
                                 task_queue.put(task_item)
                             else:
-                                cls.itask_slices_second_phase_generator(cls, tid, ne_iset_number, all_left_zone_isets, left_iset_ids, second_phase_zone_isets, task_queue)
+                                cls.itask_slices_second_phase_generator(cls, tid, ne_iset_number, search_isets_number, all_left_zone_isets, left_iset_ids, second_phase_zone_isets, task_queue)
 
         working_hosts_number = 5
         for i in range(working_hosts_number * 200):
