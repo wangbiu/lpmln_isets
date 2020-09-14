@@ -19,6 +19,14 @@ def get_iset_compositions(iset_id, rule_number, is_use_extended_rules):
     return id_bits
 
 
+def get_iset_binary_bits(iset_id, tuple_set_number):
+    id_bits = bin(iset_id)[2:]
+    id_bits = "0" * (tuple_set_number - len(id_bits)) + id_bits
+    id_bits = [int(b) for b in id_bits]
+
+    return id_bits
+
+
 def get_i_n_composed_isets(n, rule_number, is_use_extended_rules):
     print("\t\t compute i%d composed iset ids ..." % n)
     isets = set()

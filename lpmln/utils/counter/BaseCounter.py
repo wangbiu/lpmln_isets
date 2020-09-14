@@ -75,10 +75,13 @@ if __name__ == '__main__':
     boundary = [3] * 4
     counter = BaseCounter(4, boundary)
     indicator = []
-
+    cnt = 0
     while indicator is not None:
         indicator = counter.get_current_indicator()
+        cnt += 1
         print(indicator)
+
+    print("has %d counter index" % cnt )
 
 
 
