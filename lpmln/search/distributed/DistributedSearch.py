@@ -22,14 +22,17 @@ import lpmln.iset.ISetNonSEUtils as isnse
 import lpmln.utils.SSHClient as ssh
 import itertools
 
+
 config = cfg.load_configuration()
 
-add_worker_signal = "--a-worker--"
-kill_signal = "--over--"
-stat_signal = "--stat--"
-se_condition_signal = "--cdt--"
-nse_condition_signal = "--nse--"
-nse_condition_ready_signal = "--nse-ready--"
+
+class ITaskSignal:
+    add_worker_signal = "--a-worker--"
+    kill_signal = "--over--"
+    stat_signal = "--stat--"
+    se_condition_signal = "--cdt--"
+    nse_condition_signal = "--nse--"
+    nse_condition_ready_signal = "--nse-ready--"
 
 
 from multiprocessing.managers import BaseManager
@@ -164,15 +167,15 @@ class DistributedSearchIConditionsMaster:
         result_state = result[0]
         isc_task_id = result[1]
 
-        if result_state == kill_signal:
+        if result_state == ITaskSignal.kill_signal:
             working_hosts_diff = cls.process_working_host_change(result, False)
-        elif result_state == add_worker_signal:
+        elif result_state == ITaskSignal.add_worker_signal:
             working_hosts_diff = cls.process_working_host_change(result, True)
-        elif result_state == stat_signal:
+        elif result_state == ITaskSignal.stat_signal:
             cls.update_itask_running_info(isc_tasks[isc_task_id], result)
-        elif result_state == se_condition_signal:
+        elif result_state == ITaskSignal.se_condition_signal:
             cls.insert_found_conditions(isc_tasks[isc_task_id], result[2], True)
-        elif result_state == nse_condition_signal:
+        elif result_state == ITaskSignal.nse_condition_signal:
             cls.insert_found_conditions(isc_tasks[isc_task_id], result[2], False)
 
         return working_hosts_diff
@@ -217,7 +220,7 @@ class DistributedSearchIConditionsMaster:
 
         working_hosts_number = 5
         for i in range(working_hosts_number * 200):
-            task_queue.put((kill_signal, -1))
+            task_queue.put((ITaskSignal.kill_signal, -1))
         logging.info("all itasks has been dispatched")
 
     @staticmethod
@@ -386,7 +389,7 @@ class DistributedSearchIConditionsWorker:
         result_queue = manager.get_result_queue()
         host_ip = ssh.get_host_ip()
 
-        result_queue.put((add_worker_signal, config.worker_host_name, host_ip))
+        result_queue.put((ITaskSignal.add_worker_signal, config.worker_host_name, host_ip))
         logging.info("task worker host %s start ..." % config.worker_host_name)
 
         # 初始化不等价条件目录文件
@@ -400,7 +403,7 @@ class DistributedSearchIConditionsWorker:
         worker_pool.close()
         worker_pool.join()
         # if pathlib.Path(task_worker_host_lock_file).exists():
-        result_queue.put((kill_signal, config.worker_host_name, host_ip))
+        result_queue.put((ITaskSignal.kill_signal, config.worker_host_name, host_ip))
         logging.info("task worker host %s send kill signal ..." % config.worker_host_name)
         logging.info("task worker host %s exit ..." % config.worker_host_name)
 
@@ -488,10 +491,10 @@ class DistributedSearchIConditionsWorker:
 
         # for sec in se_conditions_cache:
         if se_cdt_cnt > 0:
-            result_queue.put((se_condition_signal, itask_id, se_conditions_cache))
+            result_queue.put((ITaskSignal.se_condition_signal, itask_id, se_conditions_cache))
 
         if new_nse_cdt_cnt > 0:
-            result_queue.put((nse_condition_signal, itask_id, nse_conditions_cache))
+            result_queue.put((ITaskSignal.nse_condition_signal, itask_id, nse_conditions_cache))
 
         end_time = datetime.now()
         end_time_str = end_time.strftime(time_fmt)[:-3]
@@ -502,7 +505,7 @@ class DistributedSearchIConditionsWorker:
 
         logging.info(msg_text)
         result_queue.put(
-            (stat_signal, itask_id, ne_iset_number, check_cdt_cnt, task_number, semi_valid_skip_cnt,
+            (ITaskSignal.stat_signal, itask_id, ne_iset_number, check_cdt_cnt, task_number, semi_valid_skip_cnt,
              (start_time, end_time)))
 
         return True
@@ -551,7 +554,7 @@ class DistributedSearchIConditionsWorker:
             first_print_debug_log = True
 
             task_slice = task_queue.get()
-            if task_slice[0] == kill_signal:
+            if task_slice[0] == ITaskSignal.kill_signal:
                 msg_text = "%s:%s isc task worker terminate ..." % (worker_host_name, worker_name)
                 logging.info(msg_text)
                 break
