@@ -4,7 +4,7 @@
 @Time    : 2020-09-13 14:35
 @Author  : 王彬
 @Email   : wangbiu@foxmail.com
-@File    : DistributedSearch.py
+@File    : AllDistributedSearch.py
 """
 
 from multiprocessing import Pool, Queue
