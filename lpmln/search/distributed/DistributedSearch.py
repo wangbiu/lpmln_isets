@@ -373,7 +373,7 @@ class DistributedSearchIConditionsWorker:
                         transport_complete = True
                     else:
                         sleep_cnt += 1
-                        time.sleep(5)
+                        time.sleep(2)
                 nse_conditions = isnse.load_kmn_non_se_results(*itask.k_m_n, i, itask.lp_type,
                                                                itask.is_use_extended_rules)
                 itask.non_se_conditions.extend(nse_conditions)
@@ -552,7 +552,7 @@ class DistributedSearchIConditionsWorker:
                 if first_print_debug_log:
                     logging.info("waiting for isc task slices")
                     first_print_debug_log = False
-                time.sleep(20)
+                time.sleep(2)
                 continue
 
             first_print_debug_log = True
