@@ -62,6 +62,24 @@ class ITaskMeta:
 
         return key, data
 
+    def __str__(self):
+        if self.is_use_extended_rules:
+            rs = 4
+        else:
+            rs = 3
+        key = "%d-%d-%d-%s-%d" % (*self.kmn, self.lp_type, rs)
+        string_buffer = list()
+        string_buffer.append(key)
+        non_list_vars = {"kmn", "lp_type", "is_use_extended_rules"}
+        for v in vars(self):
+            if v not in non_list_vars:
+                string_buffer.append("\t %s has %d elememts " % (v, len(self.__getattribute__(v))))
+
+        return "\n".join(string_buffer)
+
+
+
+
     @staticmethod
     def load_data_from_json(data):
         obj = ITaskMeta()

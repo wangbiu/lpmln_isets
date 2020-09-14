@@ -8,7 +8,7 @@
 """
 
 import lpmln.config.deprecated.ISCTasksMetaData as im
-from lpmln.itask.ITaskMeta import ITaskMetaGenerator
+from lpmln.itask.ITaskMeta import ITaskMetaGenerator, ITaskMeta
 import lpmln.config.GlobalConfig as cfg
 import json
 
@@ -76,6 +76,14 @@ def stringfy_i4_isets(i4_isets):
     i4_isets.sort()
     i4_isets = [str(s) for s in i4_isets]
     return "-".join(i4_isets)
+
+
+def test_check_itask_meta():
+    file = config.isc_meta_data_file
+    meta = ITaskMeta.load_itask_meta_data_from_file(file)
+    for key in meta:
+        print(meta[key])
+        print("\n")
 
 
 if __name__ == '__main__':
