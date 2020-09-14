@@ -16,11 +16,11 @@ algorithms = [alg1, alg2, alg3]
 
 
 def get_distributed_search_algorithm(alg_id):
-    alg_id += 1
-    if alg_id <= 0:
+    alg_id -= 1
+    if alg_id < 0:
         return algorithms[-1]
     else:
-        return algorithms[alg_id - 1]
+        return algorithms[alg_id]
 
 
 def init_task_master(isc_config_file="isets-tasks.json", sleep_time=30, alg_id=-2):
