@@ -15,8 +15,6 @@ if config.mattermost_open:
 import logging
 
 
-
-
 def send_message(msg, attached_files=list()):
     if config.mattermost_open:
         mm_server = config.mattermost_server
@@ -31,7 +29,8 @@ def send_message(msg, attached_files=list()):
             driver = mm.login(mm_server, mm_port, user, pwd, api_token)
             mm.post_message(driver, msg=msg, channel_id=channel_id, files=attached_files)
             driver.logout()
-        except:
+        except Exception as e:
+            logging.error(e)
             logging.error("cannot send messages to mattermost sever %s" % mm_server)
 
 
