@@ -13,6 +13,11 @@ import copy
 from lpmln.sat.LPMLNSAT import LPMLNSAT
 from lpmln.sat.ASPSAT import ASPSAT
 
+"""
+枚举计算结果的问题在与未考虑原始规则的I_k独立集可能不为空，
+在枚举计算程序中由于只枚举一条规则，导致I_k(r)为空时整个规则的I_k独立集必须为空。
+"""
+
 
 def get_rule_universe(rule):
     universe = set()
@@ -46,6 +51,8 @@ def get_all_s_ex_0_rules(rule_isets):
             new_rule_isets[iset_id].add(new_atom)
             rule = ig.construct_rule_from_isets(new_rule_isets)
             rules.append((iset_id, rule))
+            # if iset_id == 0:
+            #     print(rule)
     return rules, new_atom
 
 
