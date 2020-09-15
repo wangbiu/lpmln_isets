@@ -35,9 +35,6 @@ class ITaskSignal:
     nse_condition_ready_signal = "--nse-ready--"
 
 
-from multiprocessing.managers import BaseManager
-
-
 class SearchMasterQueueManger(BaseManager):
     pass
 

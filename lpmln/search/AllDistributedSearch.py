@@ -10,9 +10,10 @@
 import lpmln.search.distributed.DistributedSearch as alg1
 import lpmln.search.distributed.PreSkipI4DistributedSearch as alg2
 import lpmln.search.distributed.AugumentedPreSkipI4DistributedSearch as alg3
+import lpmln.search.distributed.NoWaitNSEAugPreSkipI4DSearch as alg4
 
 
-algorithms = [alg1, alg2, alg3]
+algorithms = [alg1, alg2, alg3, alg4]
 
 
 def get_distributed_search_algorithm(alg_id):
@@ -34,7 +35,7 @@ def init_task_worker(isc_config_file="isets-tasks.json", is_check_valid_rules=Tr
 
 
 if __name__ == '__main__':
-    # init_task_worker()
-    init_task_master(sleep_time=2)
+    init_task_worker()
+    # init_task_master(sleep_time=2)
     pass
     
