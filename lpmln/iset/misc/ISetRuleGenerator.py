@@ -9,6 +9,7 @@
 
 from lpmln.utils.counter.BaseCounter import BaseCounter
 import lpmln.iset.ISetCompositionUtils as iscm
+import math
 
 
 def generate_all_rules(max_iset_atom_size=1, is_use_extended_rules=False):
@@ -71,8 +72,12 @@ def construct_rule_from_isets_atom_sizes(rule_set_size, isets_atom_sizes):
     return rule
 
 
-def construct_rule_from_isets(rule_set_size, isets):
+def construct_rule_from_isets(isets):
     rule = list()
+    isets_size = len(isets)
+    rule_set_size = int(math.log2(isets_size + 1))
+
+
     for i in range(rule_set_size):
         rule.append(set())
     iset_number = len(isets)
@@ -92,6 +97,6 @@ if __name__ == '__main__':
     cnt = 0
     for r in rules:
         cnt += 1
-        print(cnt, " : ", r, construct_rule_from_isets(3, r))
+        print(cnt, " : ", r, construct_rule_from_isets(r))
     pass
     

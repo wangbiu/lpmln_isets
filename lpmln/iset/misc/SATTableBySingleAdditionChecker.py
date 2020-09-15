@@ -103,6 +103,6 @@ class SATTableBySingleAdditionChecker(BaseSATTableChecker):
 
 if __name__ == '__main__':
     checker = SATTableBySingleAdditionChecker()
-    checker.se_rule_relation_checker(atom_size=5)
+    checker.se_rule_relation_checker(atom_size=3)
     pass
     
