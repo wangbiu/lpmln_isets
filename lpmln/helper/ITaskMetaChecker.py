@@ -51,6 +51,7 @@ def check_itask(k_size, m_size, n_size, lp_type="lpmln", is_use_extended_rules=F
     print("has %d search i4 isets: " % len(search_i4_isets), search_i4_isets)
     print("nse condition has %d isets: " % len(nse_condition_isets), nse_condition_isets)
     print("nse condition has %d non-i4 isets: " % len(non_i4_nse_condition_isets), non_i4_nse_condition_isets)
+    print("minimal i4 tuples: ", data.minmal_i4_isets_tuples)
 
     freq = compute_iset_in_icondition_frequency(non_i4_nse_condition_isets, nse_conditions)
     print("nse condition non-i4 iset frequency: ")
@@ -71,8 +72,17 @@ def compute_iset_in_icondition_frequency(isets, conditions):
     return freq
 
 
+def check_itask_meta(k_size, m_size, n_size, lp_type="lpmln", is_use_extended_rules=False):
+    data = load_itask_meta_data(k_size, m_size, n_size, lp_type, is_use_extended_rules)
+    print(data)
+
+    search_i4_isets = set(data.search_i4_composed_iset_ids)
+    print("has %d search i4 isets: " % len(search_i4_isets), search_i4_isets)
+    print("minimal i4 tuples: ", data.minmal_i4_isets_tuples)
+
 
 if __name__ == '__main__':
-    check_itask(0, 2, 1)
+    # check_itask(0, 2, 1)
+    check_itask_meta(0, 1, 1)
     pass
     
