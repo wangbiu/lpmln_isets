@@ -42,7 +42,7 @@ class CombinaryCounter(BaseCounter):
     def compute_comb(n, m):
         part1 = CombinaryCounter.product(n - m + 1, n)
         part2 = CombinaryCounter.product(1, m)
-        return part1 / part2
+        return part1 // part2
 
     @staticmethod
     def product(i, j):

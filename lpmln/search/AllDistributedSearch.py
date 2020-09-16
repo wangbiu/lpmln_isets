@@ -12,9 +12,10 @@ import lpmln.search.distributed.PreSkipI4DistributedSearch as alg2
 import lpmln.search.distributed.AugumentedPreSkipI4DistributedSearch as alg3
 import lpmln.search.distributed.NoWaitNSEAugPreSkipI4DSearch as alg4
 import lpmln.search.distributed.EarlyTerminationPreSkipI4DSearch as alg5
+import lpmln.search.distributed.AfterSkipNSEEarlyTPreSI4DSearch as alg6
 
 
-algorithms = [alg1, alg2, alg3, alg4, alg5]
+algorithms = [alg1, alg2, alg3, alg4, alg5, alg6]
 
 
 def get_distributed_search_algorithm(alg_id):
