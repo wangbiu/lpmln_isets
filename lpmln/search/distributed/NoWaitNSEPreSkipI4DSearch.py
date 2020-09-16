@@ -1,27 +1,30 @@
 
 # -*- encoding: utf-8 -*-
 """
-@Time    : 2020-09-15 16:25
+@Time    : 2020-09-16 19:51
 @Author  : 王彬
 @Email   : wangbiu@foxmail.com
-@File    : NoWaitNSEAugPreSkipI4DSearch.py
+@File    : NoWaitNSEPreSkipI4DSearch.py
 """
 
+from lpmln.search.distributed.PreSkipI4DistributedSearch import PreSkipI4DistributedSearchWorker, PreSkipI4DistributedSearchMaster
 from lpmln.search.distributed.AugumentedPreSkipI4DistributedSearch import AugumentedPreSkipI4DistributedSearchMaster, AugumentedPreSkipI4DistributedSearchWorker
 from lpmln.search.distributed.DistributedSearch import SearchWorkerQueueManger, SearchMasterQueueManger, ITaskSignal
 import logging
 import lpmln.config.GlobalConfig as cfg
 
+
 import lpmln.iset.ISetNonSEUtils as isnse
 from datetime import datetime
 import pathlib
 
+import lpmln.utils.SSHClient as ssh
+import itertools
 
 config = cfg.load_configuration()
 
 
-class NoWaitNSEAugPreSkipI4DSearchMaster(AugumentedPreSkipI4DistributedSearchMaster):
-
+class NoWaitNSEPreSkipI4DSearchMaster(PreSkipI4DistributedSearchMaster):
     @staticmethod
     def check_itasks_status(cls, itasks, host_ips, task_queue, working_host_number):
         is_finish = True
@@ -58,8 +61,7 @@ class NoWaitNSEAugPreSkipI4DSearchMaster(AugumentedPreSkipI4DistributedSearchMas
         return is_finish
 
 
-class NoWaitNSEAugPreSkipI4DSearchWorker(AugumentedPreSkipI4DistributedSearchWorker):
-
+class NoWaitNSEPreSkipI4DSearchWorker(PreSkipI4DistributedSearchWorker):
     @staticmethod
     def process_kmn_itask_slice(cls, itask, task_slice, task_name, result_queue, is_check_valid_rules):
         time_fmt = "%Y-%m-%d %H:%M:%S.%f"
@@ -123,12 +125,14 @@ class NoWaitNSEAugPreSkipI4DSearchWorker(AugumentedPreSkipI4DistributedSearchWor
         return True
 
 
+
 def init_task_master(isc_config_file="isets-tasks.json", sleep_time=30):
-    NoWaitNSEAugPreSkipI4DSearchMaster.init_kmn_isc_task_master_from_config(NoWaitNSEAugPreSkipI4DSearchMaster, isc_config_file, sleep_time)
+    NoWaitNSEPreSkipI4DSearchMaster.init_kmn_isc_task_master_from_config(NoWaitNSEPreSkipI4DSearchMaster, isc_config_file, sleep_time)
 
 
 def init_task_worker(isc_config_file="isets-tasks.json", is_check_valid_rules=True):
-    NoWaitNSEAugPreSkipI4DSearchWorker.init_kmn_isc_task_workers(NoWaitNSEAugPreSkipI4DSearchWorker, isc_config_file, is_check_valid_rules)
+    NoWaitNSEPreSkipI4DSearchWorker.init_kmn_isc_task_workers(NoWaitNSEPreSkipI4DSearchWorker, isc_config_file, is_check_valid_rules)
+
 
 
 
