@@ -122,6 +122,16 @@ class ITask:
         else:
             return False
 
+    def is_no_new_se_condition(self):
+        task_complete_number = self.hierarchical_task_complete_number[self.working_ne_iset_numbers]
+        task_number = self.hierarchical_task_number[self.working_ne_iset_numbers]
+        se_condition_number = len(self.hierarchical_se_conditions[self.working_ne_iset_numbers])
+
+        if task_complete_number == task_number and se_condition_number == 0:
+            return True
+        else:
+            return False
+
     def insert_se_condition(self, condition):
         ne_iset_number = len(condition.ne_iset_ids)
         self.hierarchical_se_conditions[ne_iset_number].append(condition)
@@ -215,6 +225,8 @@ class ITask:
     def task_finish(self):
         self.save_se_condition(self.result_file)
         self.se_condition_dump_file = self.result_file
+        self.save_progress_info()
+
         return self.get_progress_info()
 
     def save_se_condition(self, file_name):
