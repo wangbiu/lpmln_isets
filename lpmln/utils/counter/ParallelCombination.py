@@ -11,6 +11,9 @@ from scipy.special import comb
 
 
 def combination(n, m, k):
+    """
+    范德蒙恒等式实现例 1
+    """
     answer = int(comb(n, m))
     compute = 0
     for i in range(m+1):
@@ -27,6 +30,9 @@ def combination(n, m, k):
 
 
 def combination2(unknown_iset_number, ne_iset_number):
+    """
+    范德蒙恒等式实现例 2
+    """
     # answer = comb(unknown_iset_number, ne_iset_number)
     answer = compute_comb(unknown_iset_number, ne_iset_number)
     compute = 0
@@ -74,12 +80,23 @@ def product(i, j):
     return result
 
 
+def yanghui_triangle_numer(n, m):
+    real = compute_comb(n, m)
+    part1 = compute_comb(n-1, m)
+    part2 = compute_comb(n-1, m-1)
+    add = part2 + part1
+    print("C(%d, %d) = C(%d, %d) + C(%d, %d) \n\t = %d + %d = %d \n\t %s" % (n, m, n-1, m, n-1, m-1, part1, part2, add, str(add == real)))
+    if real != add:
+        raise RuntimeError("compute error: C(%d, %d)" % (n, m))
+
 
 if __name__ == '__main__':
     iset_number = 33
-    for iset_number in range(33, 55):
-        for i in range(1, iset_number):
-            combination2(iset_number, i)
-    # combination2(iset_number, 16)
+    # for iset_number in range(33, 55):
+    #     for i in range(1, iset_number):
+    #         combination2(iset_number, i)
+    # # combination2(iset_number, 16)
+    for i in range(1, iset_number + 1):
+        yanghui_triangle_numer(iset_number, i)
     pass
     
