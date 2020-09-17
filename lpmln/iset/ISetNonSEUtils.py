@@ -35,7 +35,7 @@ def get_task_early_terminate_flag_file(k_size, m_size, n_size):
 def create_task_early_terminate_flag_file(k_size, m_size, n_size, working_ne_iset_number):
     path = get_task_early_terminate_flag_file(k_size, m_size, n_size)
     pathlib.Path(path).touch()
-    pathlib.Path(path).write_text(working_ne_iset_number, encoding="utf-8")
+    pathlib.Path(path).write_text(str(working_ne_iset_number), encoding="utf-8")
     return path
 
 
