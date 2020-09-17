@@ -32,7 +32,7 @@ class CombinationSearchingSpaceSplitter:
     @staticmethod
     def yanghui_split(all_elements, choice_number, split_elements):
         searching_slices = list()
-
+        all_elements = copy.deepcopy(all_elements)
         if choice_number < len(split_elements):
             ts = (set(), all_elements, choice_number)
             searching_slices.append(ts)
@@ -76,13 +76,13 @@ def vandermonde_split_checker(max_elements_size=10):
 
 
 def yanghui_split_checker(max_elements_size=10):
-    elements = {i for i in range(max_elements_size)}
+    all_elements = {i for i in range(max_elements_size)}
     choice_elements = {random.randint(0, max_elements_size-1) for i in range(4)}
     print(choice_elements)
     for choice_number in range(max_elements_size + 1):
         total_search_number = CombinaryCounter.compute_comb(max_elements_size, choice_number)
         slices_search_number = 0
-        all_elements = copy.deepcopy(elements)
+        # all_elements = copy.deepcopy(elements)
         searching_slices = CombinationSearchingSpaceSplitter.yanghui_split(all_elements, choice_number, choice_elements)
         for ts in searching_slices:
             slices_search_number += CombinaryCounter.compute_comb(len(ts[1]), ts[2])
