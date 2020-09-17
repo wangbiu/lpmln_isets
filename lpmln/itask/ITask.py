@@ -75,6 +75,8 @@ class ITask:
         self.non_se_conditions = list()
         self.loaded_non_se_condition_files = set()
         self.is_task_finish = False
+        self.terminate_working_ne_iset_number = 0
+
         self.complete_params()
 
     def complete_params(self):

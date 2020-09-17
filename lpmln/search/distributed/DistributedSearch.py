@@ -93,7 +93,7 @@ class DistributedSearchIConditionsMaster:
                     it.save_progress_info()
 
                     if it.is_early_terminate():
-                        isnse.create_and_send_task_early_terminate_flag_file(*it.k_m_n, host_ips)
+                        isnse.create_and_send_task_early_terminate_flag_file(*it.k_m_n, current_ne_number, host_ips)
                         it.save_progress_info()
                         continue
 

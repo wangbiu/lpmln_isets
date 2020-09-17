@@ -33,12 +33,12 @@ class EarlyTerminationPreSkipI4DSearchMaster(PreSkipI4DistributedSearchMaster):
             it = itasks[tid]
             if not it.is_task_finish:
 
+                current_ne_number = it.working_ne_iset_numbers
                 if it.is_no_new_se_condition():
-                    isnse.create_and_send_task_early_terminate_flag_file(*it.k_m_n, host_ips)
+                    isnse.create_and_send_task_early_terminate_flag_file(*it.k_m_n, current_ne_number, host_ips)
                     it.is_task_finish = True
                     continue
 
-                current_ne_number = it.working_ne_iset_numbers
                 task_complete = it.hierarchical_task_complete_number[current_ne_number]
                 task_total = it.hierarchical_task_number[current_ne_number]
                 if task_complete == task_total:

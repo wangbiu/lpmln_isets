@@ -32,14 +32,15 @@ def get_task_early_terminate_flag_file(k_size, m_size, n_size):
     return path
 
 
-def create_task_early_terminate_flag_file(k_size, m_size, n_size):
+def create_task_early_terminate_flag_file(k_size, m_size, n_size, working_ne_iset_number):
     path = get_task_early_terminate_flag_file(k_size, m_size, n_size)
     pathlib.Path(path).touch()
+    pathlib.Path(path).write_text(working_ne_iset_number, encoding="utf-8")
     return path
 
 
-def create_and_send_task_early_terminate_flag_file(k_size, m_size, n_size, host_ips):
-    path = create_task_early_terminate_flag_file(k_size, m_size, n_size)
+def create_and_send_task_early_terminate_flag_file(k_size, m_size, n_size, working_ne_iset_number, host_ips):
+    path = create_task_early_terminate_flag_file(k_size, m_size, n_size, working_ne_iset_number)
     transport_non_se_results([path], host_ips)
 
 
