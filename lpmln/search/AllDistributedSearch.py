@@ -16,7 +16,7 @@ import lpmln.search.distributed.AfterSkipNSEEarlyTPreSI4DSearch as alg6
 import lpmln.search.distributed.FinalIConditionSearch as alg7
 
 
-algorithms = [alg1, alg2, alg3, alg4, alg5, alg6, alg7]
+algorithms = [alg1, alg2, alg3, alg4, alg5, alg6]
 
 
 def get_distributed_search_algorithm(alg_id):

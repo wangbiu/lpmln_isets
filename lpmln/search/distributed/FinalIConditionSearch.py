@@ -21,6 +21,8 @@ from lpmln.itask.ITask import ITaskConfig
 import lpmln.iset.ISetNonSEUtils as isnse
 import lpmln.utils.SSHClient as ssh
 import itertools
+import copy
+from lpmln.utils.CombinationSpaceUtils import CombinationSearchingSpaceSplitter
 
 
 config = cfg.load_configuration()
@@ -43,10 +45,14 @@ class SearchWorkerQueueManger(BaseManager):
     pass
 
 
-class FinalIConditionsSearchMaster:
+class SearchQueueManager:
     global_task_queue = Queue()
     global_ht_task_queue = Queue()
     global_result_queue = Queue()
+
+    task_queue_func = "get_task_queue"
+    result_queue_func = "get_result_queue"
+    ht_task_queue_func = "get_ht_task_queue"
 
     @staticmethod
     def get_global_task_queue():
@@ -60,6 +66,34 @@ class FinalIConditionsSearchMaster:
     def get_global_ht_task_queue():
         return FinalIConditionsSearchMaster.global_ht_task_queue
 
+    @staticmethod
+    def init_task_master_queue_manager():
+        SearchMasterQueueManger.register(SearchQueueManager.task_queue_func, callable=SearchQueueManager.get_global_task_queue)
+        SearchMasterQueueManger.register(SearchQueueManager.result_queue_func, callable=SearchQueueManager.get_global_result_queue)
+        SearchMasterQueueManger.register(SearchQueueManager.ht_task_queue_func, callable=SearchQueueManager.get_global_ht_task_queue)
+        manager = SearchMasterQueueManger(address=(config.task_host, config.task_host_port),
+                                          authkey=bytes(config.task_host_key, encoding="utf-8"))
+        manager.start()
+        task_queue = manager.get_task_queue()
+        ht_task_queue = manager.get_ht_task_queue()
+        result_queue = manager.get_result_queue()
+        return manager, task_queue, ht_task_queue, result_queue
+
+    @staticmethod
+    def init_task_worker_queue_manager():
+        SearchWorkerQueueManger.register(SearchQueueManager.task_queue_func)
+        SearchWorkerQueueManger.register(SearchQueueManager.result_queue_func)
+        SearchWorkerQueueManger.register(SearchQueueManager.ht_task_queue_func)
+        manager = SearchWorkerQueueManger(address=(config.task_host, config.task_host_port),
+                                          authkey=bytes(config.task_host_key, encoding="utf-8"))
+        manager.connect()
+        task_queue = manager.get_task_queue()
+        ht_task_queue = manager.get_ht_task_queue()
+        result_queue = manager.get_result_queue()
+        return manager, task_queue, ht_task_queue, result_queue
+
+
+class FinalIConditionsSearchMaster:
     @staticmethod
     def dump_isc_task_results(itasks):
         msg_texts = []
@@ -86,28 +120,27 @@ class FinalIConditionsSearchMaster:
         for tid in range(len(itasks)):
             it = itasks[tid]
             if not it.is_task_finish:
+
                 current_ne_number = it.working_ne_iset_numbers
+                if it.is_no_new_se_condition():
+                    isnse.create_and_send_task_early_terminate_flag_file(*it.k_m_n, current_ne_number, host_ips)
+                    it.is_task_finish = True
+                    continue
+
                 task_complete = it.hierarchical_task_complete_number[current_ne_number]
                 task_total = it.hierarchical_task_number[current_ne_number]
                 if task_complete == task_total:
+                    it.save_progress_info()
                     nse_file = it.flush_non_se_condition()
                     isnse.transport_non_se_results([nse_file], host_ips)
                     isnse.create_and_send_transport_complete_flag_file(*it.k_m_n, current_ne_number, host_ips)
-
                     cls.send_itasks_progress_info(cls, itasks, task_queue, working_host_number, False)
-                    it.save_progress_info()
-
-                    if it.is_early_terminate():
-                        isnse.create_and_send_task_early_terminate_flag_file(*it.k_m_n, current_ne_number, host_ips)
-                        it.save_progress_info()
-                        continue
 
                     if current_ne_number < it.max_ne:
                         it.working_ne_iset_numbers += 1
                         is_finish = False
                     else:
                         it.is_task_finish = True
-                        it.save_progress_info()
                 else:
                     is_finish = False
         return is_finish
@@ -185,17 +218,13 @@ class FinalIConditionsSearchMaster:
         return working_hosts_diff
 
     @staticmethod
-    def itask_slices_generator(cls, isc_config_file="isets-tasks.json"):
+    def itask_slices_generator(cls, isc_config_file):
         msg_text = "%s init task slices generator ..." % str(cls)
         logging.info(msg_text)
         msg.send_message(msg_text)
 
-        SearchWorkerQueueManger.register("get_task_queue")
-        SearchWorkerQueueManger.register("get_result_queue")
-        manager = SearchWorkerQueueManger(address=(config.task_host, config.task_host_port),
-                                                           authkey=bytes(config.task_host_key, encoding="utf-8"))
-        manager.connect()
-        task_queue = manager.get_task_queue()
+        manager, task_queue, ht_task_queue, result_queue = \
+            SearchQueueManager.init_task_worker_queue_manager()
 
         isc_tasks_cfg = ITaskConfig(isc_config_file)
         isc_tasks = isc_tasks_cfg.isc_tasks
@@ -204,27 +233,23 @@ class FinalIConditionsSearchMaster:
             it = isc_tasks[tid]
             min_ne = it.min_ne
             max_ne = it.max_ne
-            search_iset_ids = it.meta_data.search_space_iset_ids
-            unknown_iset_number = len(search_iset_ids)
-            left_length = int(unknown_iset_number / 2)
-            if left_length > 12:
-                left_length = 12
 
-            right_length = unknown_iset_number - left_length
-            left_zone_isets = search_iset_ids[0:left_length]
+            right_zone_iset_ids = copy.deepcopy(it.meta_data.search_space_iset_ids)
+            left_zone_iset_ids = it.meta_data.search_i4_composed_iset_ids
+
+            max_left_zone_length = 12
+            if len(left_zone_iset_ids) > max_left_zone_length:
+                left_zone_iset_ids = list(left_zone_iset_ids)[0:max_left_zone_length]
+                left_zone_iset_ids = set(left_zone_iset_ids)
+
+            right_zone_iset_ids = right_zone_iset_ids.difference(left_zone_iset_ids)
 
             for i in range(min_ne, max_ne+1):
                 ne_iset_number = i
                 for left_iset_number in range(ne_iset_number + 1):
-                    right_iset_number = ne_iset_number - left_iset_number
-                    if left_iset_number > left_length or right_iset_number > right_length:
-                        continue
-
-                    task_iter = itertools.combinations(left_zone_isets, left_iset_number)
-                    for left_ti in task_iter:
-                        task_item = (tid, (ne_iset_number, set(left_zone_isets), list(left_ti)))
-                        # print(task_item)
-                        task_queue.put(task_item)
+                    task_slices = CombinationSearchingSpaceSplitter.vandermonde_generator(left_zone_iset_ids, right_zone_iset_ids, ne_iset_number)
+                    for ts in task_slices:
+                        task_queue.put((tid, ts))
 
         working_hosts_number = 5
         for i in range(working_hosts_number * 200):
@@ -232,20 +257,19 @@ class FinalIConditionsSearchMaster:
         logging.info("all itasks has been dispatched")
 
     @staticmethod
-    def init_kmn_isc_task_master_from_config(cls, isc_config_file="isets-tasks.json", sleep_time=30):
-        start_time = datetime.now()
-        SearchMasterQueueManger.register("get_task_queue", callable=cls.get_global_task_queue)
-        SearchMasterQueueManger.register("get_result_queue", callable=cls.get_global_result_queue)
-        manager = SearchMasterQueueManger(address=(config.task_host, config.task_host_port),
-                                                           authkey=bytes(config.task_host_key, encoding="utf-8"))
-        manager.start()
-        task_queue = manager.get_task_queue()
-        result_queue = manager.get_result_queue()
-        localhost_ip = ssh.get_host_ip()
+    def init_task_slices_generator_pool(cls, isc_config_file):
+        task_generator_pool = Pool(2)
+        task_generator_pool.apply_async(cls.itask_slices_generator, args=(cls, isc_config_file))
+        task_generator_pool.close()
+        return task_generator_pool
 
-        task_generator = Pool(2)
-        task_generator.apply_async(cls.itask_slices_generator, args=(cls, isc_config_file))
-        task_generator.close()
+    @staticmethod
+    def init_kmn_isc_task_master_from_config(cls, isc_config_file="isets-tasks.json", sleep_time=30):
+        manager, task_queue, ht_task_queue, result_queue = \
+            SearchQueueManager.init_task_master_queue_manager()
+
+        localhost_ip = ssh.get_host_ip()
+        ts_generator_pool = cls.init_task_slices_generator_pool(cls, isc_config_file)
 
         working_hosts_number = 0
         msg_text = "isc task master start, load isc tasks from %s" % (isc_config_file)
@@ -297,7 +321,7 @@ class FinalIConditionsSearchMaster:
                 if host_ip != localhost_ip:
                     online_hosts.remove(host_ip)
 
-        task_generator.join()
+        ts_generator_pool.join()
 
         while working_hosts_number > 0:
             if sleep_cnt == 10:

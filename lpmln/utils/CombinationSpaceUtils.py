@@ -30,6 +30,27 @@ class CombinationSearchingSpaceSplitter:
         return searching_slices
 
     @staticmethod
+    def vandermonde_generator(left_zone_elements, right_zone_elements, choice_number):
+        searching_slices = list()
+        left_zone_length = len(left_zone_elements)
+        right_zone_length = len(right_zone_elements)
+
+        if choice_number > left_zone_length + right_zone_length:
+            raise RuntimeError("choice_number > left_zone_length + right_zone_length")
+
+        for left_choice_number in range(choice_number + 1):
+            right_choice_number = choice_number - left_choice_number
+            if left_choice_number > left_zone_length or right_choice_number > right_zone_length:
+                continue
+
+            split_iter = itertools.combinations(left_zone_elements, left_choice_number)
+            for lce in split_iter:
+                left_choice = copy.deepcopy(lce)
+                slice = (left_choice, right_zone_elements, right_choice_number)
+                yield slice
+        return True
+
+    @staticmethod
     def yanghui_split(all_elements, choice_number, split_elements):
         searching_slices = list()
         all_elements = copy.deepcopy(all_elements)
@@ -74,6 +95,30 @@ def vandermonde_split_checker(max_elements_size=10):
         if total_search_number != slices_search_number:
             raise RuntimeError(msg_text)
 
+def vandermonde_generator_checker(max_elements_size=10):
+    elements = [i for i in range(max_elements_size)]
+    left_length = max_elements_size // 3
+    if left_length > 12:
+        left_length = 12
+    left_zone = elements[0:left_length]
+    right_zone = elements[left_length:]
+    for choice_number in range(max_elements_size + 1):
+        total_search_number = CombinaryCounter.compute_comb(max_elements_size, choice_number)
+        slices_search_number = 0
+        searching_slices = CombinationSearchingSpaceSplitter.vandermonde_generator(left_zone, right_zone, choice_number)
+        slice_cnt = 0
+        for ts in searching_slices:
+            slice_cnt += 1
+            slices_search_number += CombinaryCounter.compute_comb(len(ts[1]), ts[2])
+
+        msg_text = "C(%d, %d), search slices number %d: real = %d, slices sum = %d, is same %s" % (
+            max_elements_size, choice_number, slice_cnt, total_search_number, slices_search_number,
+            str(total_search_number == slices_search_number))
+        print(msg_text)
+
+        if total_search_number != slices_search_number:
+            raise RuntimeError(msg_text)
+
 
 def yanghui_split_checker(max_elements_size=10):
     all_elements = {i for i in range(max_elements_size)}
@@ -103,6 +148,8 @@ if __name__ == '__main__':
     import random
 
     # vandermonde_split_checker(60)
-    yanghui_split_checker(60)
+    # yanghui_split_checker(60)
+    vandermonde_generator_checker(60)
+
     pass
     
