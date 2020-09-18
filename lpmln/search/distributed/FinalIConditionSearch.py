@@ -150,6 +150,7 @@ class FinalIConditionsSearchMaster:
                         is_finish = False
                     else:
                         it.is_task_finish = True
+                        isnse.create_and_send_task_early_terminate_flag_file(*it.k_m_n, current_ne_number, host_ips)
                 else:
                     is_finish = False
         return is_finish
@@ -462,7 +463,7 @@ class FinalIConditionsSearchWorker:
                 task_slice_cache = task_queue.get()
                 is_task_queue_empty = False
 
-            logging.debug(task_slice_cache)
+            # logging.debug(task_slice_cache)
 
             itask_id = task_slice_cache[0]
 
@@ -533,20 +534,28 @@ class FinalIConditionsSearchWorker:
                 right_zone_isets = set(ts[1])
                 nse_remained_isets = nse.difference(left_iset_ids)
 
-                yang_task_slices = CombinationSearchingSpaceSplitter.yanghui_split(
-                    right_zone_isets, ts[2], nse_remained_isets)
+                if len(nse_remained_isets) == 0:
+                    skip_number += CombinaryCounter.compute_comb(len(right_zone_isets), ts[2])
+                else:
+                    if not nse_remained_isets.issubset(right_zone_isets):
+                        nse_new_task_slices.append(ts)
+                    else:
+                        if ts[2] == 0:
+                            nse_new_task_slices.append(ts)
+                        else:
+                            yang_task_slices = CombinationSearchingSpaceSplitter.yanghui_split(
+                                right_zone_isets, ts[2], nse_remained_isets)
 
-                if nse_remained_isets.issubset(right_zone_isets):
-                    skip_ts = yang_task_slices[-1]
-                    yang_task_slices = yang_task_slices[0:-1]
-                    skip_number += CombinaryCounter.compute_comb(len(skip_ts[1]), skip_ts[2])
+                            skip_ts = yang_task_slices[-1]
+                            yang_task_slices = yang_task_slices[0:-1]
+                            for yts in yang_task_slices:
+                                for iset in left_iset_ids:
+                                    yts[0].add(iset)
+                                # print("\t\t", yts)
 
-                for yts in yang_task_slices:
-                    for iset in left_iset_ids:
-                        yts[0].add(iset)
-                    # print("\t\t", yts)
-
-                nse_new_task_slices.extend(yang_task_slices)
+                            skip_number += CombinaryCounter.compute_comb(len(skip_ts[1]), skip_ts[2])
+                            nse_new_task_slices.extend(yang_task_slices)
+                # print("\n")
             processed_task_slices = nse_new_task_slices
 
 

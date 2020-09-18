@@ -42,6 +42,6 @@ if __name__ == '__main__':
         init_task_worker()
         # init_task_master(sleep_time=6)
     except Exception as e:
-        print(e.with_traceback())
+        print(e)
     pass
     
