@@ -451,7 +451,7 @@ class FinalIConditionsSearchWorker:
         """
 
         task_queue = manager_tuple[1]
-        is_kill_task_worker = False
+        is_task_queue_complete = False
         is_task_queue_empty = True
         processed_task_slices_number = worker_info[2]
 
@@ -462,10 +462,13 @@ class FinalIConditionsSearchWorker:
                 task_slice_cache = task_queue.get()
                 is_task_queue_empty = False
 
+            logging.debug(task_slice_cache)
+
             itask_id = task_slice_cache[0]
 
+
             if itask_id == ITaskSignal.kill_signal:
-                is_kill_task_worker = True
+                is_task_queue_complete = True
                 break
 
             processed_task_slices_number += 1
@@ -475,13 +478,6 @@ class FinalIConditionsSearchWorker:
                 task_slice_cache = None
                 continue
 
-
-            task_terminate_flag = isnse.get_task_early_terminate_flag_file(*itask.k_m_n)
-            if pathlib.Path(task_terminate_flag).exists():
-                logging.info("%s:%s found task terminate flag file %s" % (worker_info[0], worker_info[1], task_terminate_flag))
-                itask.is_task_finish = True
-                break
-
             load_nse_complete = cls.task_worker_load_nse_conditions(itask, task_slice_cache[1])
             if not load_nse_complete:
                 break
@@ -489,7 +485,7 @@ class FinalIConditionsSearchWorker:
             cls.process_task_slice(cls, itask_id, itask, task_slice_cache[1], manager_tuple)
             task_slice_cache = None
 
-        return is_kill_task_worker, is_task_queue_empty, processed_task_slices_number, task_slice_cache
+        return is_task_queue_complete, is_task_queue_empty, processed_task_slices_number, task_slice_cache
 
 
     @staticmethod
@@ -530,27 +526,29 @@ class FinalIConditionsSearchWorker:
 
         for nse in itask.non_se_conditions:
             nse_new_task_slices = list()
+            # print(nse)
             for ts in processed_task_slices:
+                # print(ts)
                 left_iset_ids = set(ts[0])
                 right_zone_isets = set(ts[1])
-                right_zone_choice_number = ts[2]
                 nse_remained_isets = nse.difference(left_iset_ids)
 
                 yang_task_slices = CombinationSearchingSpaceSplitter.yanghui_split(
-                    right_zone_isets, right_zone_choice_number, nse_remained_isets)
+                    right_zone_isets, ts[2], nse_remained_isets)
 
                 if nse_remained_isets.issubset(right_zone_isets):
                     skip_ts = yang_task_slices[-1]
-                    nse_new_task_slices.extend(yang_task_slices[0:-1])
+                    yang_task_slices = yang_task_slices[0:-1]
                     skip_number += CombinaryCounter.compute_comb(len(skip_ts[1]), skip_ts[2])
-                else:
-                    nse_new_task_slices.extend(yang_task_slices)
 
+                for yts in yang_task_slices:
+                    for iset in left_iset_ids:
+                        yts[0].add(iset)
+                    # print("\t\t", yts)
+
+                nse_new_task_slices.extend(yang_task_slices)
             processed_task_slices = nse_new_task_slices
 
-        for ts in processed_task_slices:
-            for iset in original_left_isets:
-                ts[0].add(iset)
 
         if skip_number > 0:
             result_item = (ITaskSignal.stat_signal, itask_id, ne_iset_number, 0, skip_number, 0, None)
@@ -564,31 +562,26 @@ class FinalIConditionsSearchWorker:
         right_zone_isets = task_slice[1]
         right_zone_choice_number = task_slice[2]
         ne_iset_number = len(left_isets) + right_zone_choice_number
-        search_i4_isets = itask.meta_data.search_i4_composed_iset_ids
+        search_i4_isets = set(itask.meta_data.search_i4_composed_iset_ids)
         skip_number = 0
         new_task_slices = list()
 
-        is_contain_semi_valid_rule = iscm.check_contain_rules_without_i_n_iset(
-            4, left_isets, itask.rule_number, itask.is_use_extended_rules)
-
-        if is_contain_semi_valid_rule:
-            skip_number = CombinaryCounter.compute_comb(len(right_zone_isets), right_zone_choice_number)
+        right_zone_i4_isets = right_zone_isets.intersection(search_i4_isets)
+        if len(right_zone_i4_isets) == 0:
+            v_generator = [task_slice]
         else:
-            right_zone_i4_isets = right_zone_isets.intersection(search_i4_isets)
-            if len(right_zone_i4_isets) == 0:
-                new_task_slices.append(task_slice)
+            right_zone_non_i4_isets = right_zone_isets.difference(right_zone_i4_isets)
+            v_generator = CombinationSearchingSpaceSplitter.vandermonde_generator(
+                right_zone_i4_isets, right_zone_non_i4_isets, right_zone_choice_number)
+
+        for ts in v_generator:
+            new_left_ids = left_isets.union(ts[0])
+            is_contain_semi_valid_rule = iscm.check_contain_rules_without_i_n_iset(
+                4, new_left_ids, itask.rule_number, itask.is_use_extended_rules)
+            if is_contain_semi_valid_rule:
+                skip_number += CombinaryCounter.compute_comb(len(ts[1]), ts[2])
             else:
-                right_zone_non_i4_isets = right_zone_isets.difference(right_zone_i4_isets)
-                v_generator = CombinationSearchingSpaceSplitter.vandermonde_generator(
-                    right_zone_i4_isets, right_zone_non_i4_isets, right_zone_choice_number)
-                for ts in v_generator:
-                    new_left_ids = left_isets.union(ts[0])
-                    is_contain_semi_valid_rule = iscm.check_contain_rules_without_i_n_iset(
-                        4, new_left_ids, itask.rule_number, itask.is_use_extended_rules)
-                    if is_contain_semi_valid_rule:
-                        skip_number += CombinaryCounter.compute_comb(len(ts[1]), ts[2])
-                    else:
-                        new_task_slices.append((new_left_ids, ts[1], ts[2]))
+                new_task_slices.append((new_left_ids, ts[1], ts[2]))
 
         if skip_number > 0:
             result_tuple = (ITaskSignal.stat_signal, itask_id, ne_iset_number, 0, skip_number, skip_number, None)
@@ -635,24 +628,28 @@ class FinalIConditionsSearchWorker:
             itask.loaded_non_se_condition_files.add(0)
 
         task_slice_cache = None
+        is_task_queue_finish = False
+        is_kill_task_worker = False
+        is_task_queue_empty = False
 
         while True:
             if not pathlib.Path(config.task_host_lock_file).exists():
                 break
 
-            is_kill_task_worker, is_task_queue_empty, processed_task_slices_number, task_slice_cache = \
-                cls.get_and_process_task_queue(cls, isc_tasks, task_slice_cache, worker_info, manager_tuple)
+            if not is_task_queue_finish:
+                is_task_queue_finish, is_task_queue_empty, processed_task_slices_number, task_slice_cache = \
+                    cls.get_and_process_task_queue(cls, isc_tasks, task_slice_cache, worker_info, manager_tuple)
 
-            if is_kill_task_worker:
-                msg_text = "%s:%s isc task worker terminate, process %d task slices %d ht task slices ..." % (
-                    worker_info[0], worker_info[1], worker_info[2], worker_info[3])
-                logging.info(msg_text)
-                break
-
-            if not is_task_queue_empty and task_slice_cache is not None:
-                ne_iset_number = len(task_slice_cache[1][0]) + task_slice_cache[1][2]
-                msg_text = "%s waiting for nse condition completer file: %d" % (worker_name, ne_iset_number)
-                logging.info(msg_text)
+                if is_task_queue_finish:
+                    msg_text = "%s:%s isc task queue finish, process %d task slices %d ht task slices ..." % (
+                        worker_info[0], worker_info[1], worker_info[2], worker_info[3])
+                    logging.info(msg_text)
+                    is_task_queue_empty = False
+                else:
+                    if not is_task_queue_empty and task_slice_cache is not None:
+                        ne_iset_number = len(task_slice_cache[1][0]) + task_slice_cache[1][2] - 1
+                        msg_text = "%s waiting for nse condition complete file: %d" % (worker_name, ne_iset_number)
+                        logging.info(msg_text)
 
             is_ht_task_queue_empty, processed_ht_task_slices_number = \
                 cls.get_and_process_ht_task_queue(cls, isc_tasks, worker_info, manager_tuple)
@@ -666,10 +663,28 @@ class FinalIConditionsSearchWorker:
                 logging.info(msg_text)
 
                 logging.info("%s waiting for task queue and ht task queue ..." % worker_name)
-            time.sleep(2)
+
+            is_task_finish = cls.check_itasks_finish_status(isc_tasks)
+            if is_task_finish:
+                break
+
+            time.sleep(1)
 
         logging.info("%s processes %d isc task slices %d ht itask slices" % (
             worker_name, processed_task_slices_number, processed_ht_task_slices_number))
+
+    @staticmethod
+    def check_itasks_finish_status(itasks):
+        task_finish = True
+        for itask in itasks:
+            if not itask.is_task_finish:
+                task_terminate_flag = isnse.get_task_early_terminate_flag_file(*itask.k_m_n)
+                if pathlib.Path(task_terminate_flag).exists():
+                    itask.is_task_finish = True
+                else:
+                    task_finish = False
+                    break
+        return task_finish
 
     @staticmethod
     def init_kmn_isc_task_workers(cls, isc_config_file="isets-tasks.json", is_check_valid_rules=True):

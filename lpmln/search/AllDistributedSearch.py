@@ -38,7 +38,10 @@ def init_task_worker(isc_config_file="isets-tasks.json", is_check_valid_rules=Tr
 
 
 if __name__ == '__main__':
-    init_task_worker()
-    # init_task_master(sleep_time=6)
+    try:
+        init_task_worker()
+        # init_task_master(sleep_time=6)
+    except Exception as e:
+        print(e.with_traceback())
     pass
     

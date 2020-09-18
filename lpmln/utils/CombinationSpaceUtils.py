@@ -55,7 +55,7 @@ class CombinationSearchingSpaceSplitter:
         searching_slices = list()
         all_elements = copy.deepcopy(all_elements)
 
-        if 0 < len(split_elements) <= choice_number and split_elements.issubset(all_elements):
+        if 0 < len(split_elements) <= choice_number < len(all_elements) and split_elements.issubset(all_elements):
             eliminate_elements = set()
             for ele in split_elements:
                 choice_elements = copy.deepcopy(eliminate_elements)
@@ -77,7 +77,7 @@ class CombinationSearchingSpaceSplitter:
     @staticmethod
     def yanghui_generator(all_elements, choice_number, split_elements):
         all_elements = copy.deepcopy(all_elements)
-        if 0 < len(split_elements) <= choice_number and split_elements.issubset(all_elements):
+        if 0 < len(split_elements) <= choice_number < len(all_elements) and split_elements.issubset(all_elements):
             eliminate_elements = set()
             for ele in split_elements:
                 choice_elements = copy.deepcopy(eliminate_elements)
