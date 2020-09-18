@@ -473,6 +473,7 @@ class FinalIConditionsSearchWorker:
 
             if itask.is_task_finish:
                 task_slice_cache = None
+                continue
 
 
             task_terminate_flag = isnse.get_task_early_terminate_flag_file(*itask.k_m_n)
