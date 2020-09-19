@@ -7,10 +7,13 @@
 @File    : FinalIConditionSearchTest.py
 """
 
-from lpmln.search.distributed.FinalIConditionSearch import FinalIConditionsSearchHTWorker, FinalIConditionsSearchMaster, SearchQueueManager
+from lpmln.search.distributed.final import FinalIConditionsSearchHTWorker, FinalSearchMaster
+from lpmln.search.distributed.final.FinalSearchPreWorker import FinalIConditionsSearchPreWorker
+from lpmln.search.distributed.final.FinalSearchBase import SearchQueueManager
 from lpmln.itask.ITask import ITaskConfig
-master = FinalIConditionsSearchMaster
+master = FinalSearchMaster
 worker = FinalIConditionsSearchHTWorker
+pre_worker = FinalIConditionsSearchPreWorker
 import lpmln.config.GlobalConfig as cfg
 config = cfg.load_configuration()
 import os
@@ -31,10 +34,19 @@ def test_load_nse_condition():
     task_id = task_slice[0]
     isc_tasks = load_itasks()
     print(isc_tasks[task_id].k_m_n)
-    load_complete = worker.task_worker_load_nse_conditions(isc_tasks[task_id], task_slice[1])
-    print("load nse conditions complete", load_complete)
-    processed_task_slices = worker.process_task_slice(worker, task_id, isc_tasks[task_id], task_slice[1], manager_tuple)
-    print(processed_task_slices)
+    # load_complete = worker.task_worker_load_nse_conditions(isc_tasks[task_id], task_slice[1])
+    # print("load nse conditions complete", load_complete)
+    # processed_task_slices = worker.process_task_slice(worker, task_id, isc_tasks[task_id], task_slice[1], manager_tuple)
+    # print(processed_task_slices)
+
+
+def test_nse_process():
+    task_slice =  ({32, 35, 36}, {0, 1, 4, 7, 8, 9, 39, 40, 12, 41, 44, 15, 16, 17, 20}, 0)
+    nse = {35, 7}
+    skip, new_ts = pre_worker.process_one_nse_subpart_task_slice(pre_worker, nse, task_slice)
+    print(skip)
+    print(new_ts)
+
 
 
 

@@ -55,7 +55,6 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
     @staticmethod
     def process_one_nse_subpart_task_slice(cls, nse_isets, task_slice):
         """
-
         :param cls:
         :param nse_isets:
         :param task_slice: (left_iset_ids, right_zone_iset_ids, right_zone_choice_number)
@@ -69,22 +68,25 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
 
         if nse_size == 0:
             skip_number = CombinaryCounter.compute_comb(len(task_slice[1]), task_slice[2])
-            return skip_number, processed_task_slices
+            return skip_number, list()
 
         if not remained_nse_isets.issubset(task_slice[1]):
             processed_task_slices.append(task_slice)
-            return skip_number, processed_task_slices
+            return 0, processed_task_slices
 
         if len(task_slice[1]) == task_slice[2]:
-            skip_number = CombinaryCounter.compute_comb(len(task_slice[1]), task_slice[2])
-            return skip_number, processed_task_slices
+            return 1, list()
+
+        if task_slice[2] == 0:
+            processed_task_slices.append(task_slice)
+            return 0, processed_task_slices
 
         eliminate_isets = set()
         right_zone_isets = copy.deepcopy(task_slice[1])
         remained_nse_isets = list(remained_nse_isets)
         for i in range(nse_size + 1):
             if i == nse_size:
-                skip_number = CombinaryCounter.compute_comb(len(task_slice[1]), task_slice[2] - nse_size)
+                skip_number = CombinaryCounter.compute_comb(len(right_zone_isets), task_slice[2] - nse_size)
             else:
                 left_isets = copy.deepcopy(eliminate_isets)
                 eliminate_isets.add(remained_nse_isets[i])
@@ -107,10 +109,19 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
             nse_new_task_slices = list()
             for ts in processed_task_slices:
                 ts_skip_number, ts_new_task_slices = cls.process_one_nse_subpart_task_slice(cls, nse, ts)
+                print("nse: ", nse, ", task slice: ", ts, ", skip ", ts_skip_number)
                 skip_number += ts_skip_number
                 nse_new_task_slices.extend(ts_new_task_slices)
 
             processed_task_slices = nse_new_task_slices
+
+        remain_task = 0
+        for ts in processed_task_slices:
+            remain_task += CombinaryCounter.compute_comb(len(ts[1]), ts[2])
+        total_task = CombinaryCounter.compute_comb(len(task_slice[1]), task_slice[2])
+        print("task slice ", task_slice, "has task ", total_task, "total skip ", skip_number, "remian ", remain_task)
+        print("total = skip + remain ", remain_task + skip_number == total_task, "\n")
+
 
         if skip_number > 0:
             result_item = (ITaskSignal.stat_signal, itask_id, ne_iset_number, 0, skip_number, 0, None)
