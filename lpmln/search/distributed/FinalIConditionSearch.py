@@ -363,8 +363,8 @@ class FinalIConditionsSearchWorker:
     def init_worker_host_nse_envs(isc_tasks):
         for it in isc_tasks:
             isnse.clear_transport_complete_flag_files(*it.k_m_n, it.min_ne, it.max_ne)
-            isnse.create_transport_complete_flag_file(*it.k_m_n, 1)
-            nse_1_path = isnse.get_nse_condition_file_path(*it.k_m_n, 1, it.lp_type,
+            isnse.create_transport_complete_flag_file(*it.k_m_n, 0)
+            nse_1_path = isnse.get_nse_condition_file_path(*it.k_m_n, 0, it.lp_type,
                                                            it.is_use_extended_rules)
             pathlib.Path(nse_1_path).touch()
             isnse.clear_task_terminate_flag_files(*it.k_m_n)
@@ -633,7 +633,7 @@ class FinalIConditionsSearchWorker:
         isc_tasks = isc_tasks.isc_tasks
 
         for itask in isc_tasks:
-            itask.loaded_non_se_condition_files.add(1)
+            # itask.loaded_non_se_condition_files.add(1)
             itask.loaded_non_se_condition_files.add(0)
 
         task_slice_cache = None
