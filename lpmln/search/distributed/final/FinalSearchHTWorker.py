@@ -79,6 +79,7 @@ class FinalIConditionsSearchHTWorker(FinalIConditionsSearchBaseWorker):
 
             is_task_finish = cls.check_itasks_finish_status(isc_tasks)
             if is_task_finish:
+                logging.info("%s:%s all itasks terminate ...")
                 break
 
             if ht_task_queue.empty():
