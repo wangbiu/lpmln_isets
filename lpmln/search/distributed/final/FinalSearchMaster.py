@@ -59,6 +59,7 @@ class FinalIConditionsSearchMaster:
                 if it.is_no_new_se_condition():
                     isnse.create_and_send_task_early_terminate_flag_file(*it.k_m_n, current_ne_number, host_ips)
                     it.is_task_finish = True
+                    it.save_progress_info()
                     continue
 
                 task_complete = it.hierarchical_task_complete_number[current_ne_number]
@@ -76,6 +77,7 @@ class FinalIConditionsSearchMaster:
                     else:
                         it.is_task_finish = True
                         isnse.create_and_send_task_early_terminate_flag_file(*it.k_m_n, current_ne_number, host_ips)
+                        it.save_progress_info()
                 else:
                     is_finish = False
         return is_finish
