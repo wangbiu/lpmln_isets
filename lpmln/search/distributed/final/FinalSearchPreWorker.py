@@ -19,6 +19,7 @@ from lpmln.utils.CombinationSpaceUtils import CombinationSearchingSpaceSplitter
 from lpmln.utils.counter.CombinaryCounter import CombinaryCounter
 import lpmln.iset.ISetCompositionUtils as iscm
 from lpmln.search.distributed.final.FinalSearchBase import FinalIConditionsSearchBaseWorker, ITaskSignal, SearchQueueManager
+import itertools
 config = cfg.load_configuration()
 
 
@@ -33,6 +34,19 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
             ht_slices = cls.process_nse_subparts_task_slices(cls, itask_id, itask, ts, result_queue)
             ht_check_task_slices.extend(ht_slices)
 
+        if len(ht_check_task_slices) != 0:
+            return 0
+
+        ts = ht_check_task_slices[0]
+        ne_iset_number = len(ts[0]) + ts[2]
+
+        if ne_iset_number < 10:
+            cls.vandermonde_split_ht_task(cls, itask_id, ht_check_task_slices, ht_task_queue)
+        else:
+            cls.single_split_ht_tasks(cls, itask_id, ht_check_task_slices, ht_task_queue)
+
+    @staticmethod
+    def vandermonde_split_ht_task(cls, itask_id, ht_check_task_slices, ht_task_queue):
         for ts in ht_check_task_slices:
             left_isets = ts[0]
             right_zone_isets = list(ts[1])
@@ -51,6 +65,18 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
                 for iset in left_isets:
                     vts[0].add(iset)
                 ht_task_queue.put((itask_id, vts))
+
+    @staticmethod
+    def single_split_ht_tasks(cls, itask_id, ht_check_task_slices, ht_task_queue):
+        for ts in ht_check_task_slices:
+            left_isets = ts[0]
+            right_zone_isets = ts[1]
+            choice_number = ts[2]
+            task_iter = itertools.combinations(right_zone_isets, choice_number)
+            for right_iset in task_iter:
+                ne_isets = left_isets.union(set(right_iset))
+                task_item = (itask_id, (ne_isets, set(), 0))
+                ht_task_queue.put(task_item)
 
     @staticmethod
     def process_one_nse_subpart_task_slice(cls, nse_isets, task_slice):
