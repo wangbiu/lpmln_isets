@@ -60,43 +60,24 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
         :param task_slice: (left_iset_ids, right_zone_iset_ids, right_zone_choice_number)
         :return:
         """
-        skip_number = 0
-        processed_task_slices = list()
         original_left_isets = set(task_slice[0])
         remained_nse_isets = nse_isets.difference(original_left_isets)
-        nse_size = len(remained_nse_isets)
 
-        if nse_size == 0:
-            skip_number = CombinaryCounter.compute_comb(len(task_slice[1]), task_slice[2])
-            return skip_number, list()
+        is_yang_split, yang_task_slices = CombinationSearchingSpaceSplitter.yanghui_split(
+            task_slice[1], task_slice[2], remained_nse_isets)
 
-        if not remained_nse_isets.issubset(task_slice[1]):
-            processed_task_slices.append(task_slice)
-            return 0, processed_task_slices
+        if is_yang_split:
+            nse_slice = yang_task_slices[-1]
+            yang_task_slices = yang_task_slices[0:-1]
+            skip_number = CombinaryCounter.compute_comb(len(nse_slice[1]), nse_slice[2])
+        else:
+            skip_number = 0
 
-        if len(task_slice[1]) == task_slice[2]:
-            return 1, list()
+        for yts in yang_task_slices:
+            for iset in original_left_isets:
+                yts[0].add(iset)
 
-        if task_slice[2] == 0:
-            processed_task_slices.append(task_slice)
-            return 0, processed_task_slices
-
-        eliminate_isets = set()
-        right_zone_isets = copy.deepcopy(task_slice[1])
-        remained_nse_isets = list(remained_nse_isets)
-        for i in range(nse_size + 1):
-            if i == nse_size:
-                skip_number = CombinaryCounter.compute_comb(len(right_zone_isets), task_slice[2] - nse_size)
-            else:
-                left_isets = copy.deepcopy(eliminate_isets)
-                eliminate_isets.add(remained_nse_isets[i])
-                right_zone_isets.remove(remained_nse_isets[i])
-                right_choice_number = task_slice[2] - len(left_isets)
-                left_isets = left_isets.union(original_left_isets)
-                task_item = (left_isets, copy.deepcopy(right_zone_isets), right_choice_number)
-                processed_task_slices.append(task_item)
-
-        return skip_number, processed_task_slices
+        return skip_number, yang_task_slices
 
     @staticmethod
     def process_nse_subparts_task_slices(cls, itask_id, itask, task_slice, result_queue):

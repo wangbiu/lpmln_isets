@@ -52,47 +52,46 @@ class CombinationSearchingSpaceSplitter:
     @staticmethod
     def yanghui_split(all_elements, choice_number, split_elements):
         searching_slices = list()
+        split_elements_size = len(split_elements)
+        is_split = True
+
+        if split_elements_size == 0:
+            is_split = True
+            search_item = (set(), all_elements, choice_number)
+            searching_slices.append(search_item)
+            return is_split, searching_slices
+
+        if not split_elements.issubset(all_elements):
+            is_split = False
+            search_item = (set(), all_elements, choice_number)
+            searching_slices.append(search_item)
+            return is_split, searching_slices
+
+        if choice_number == 0 or choice_number < split_elements_size:
+            is_split = False
+            search_item = (set(), all_elements, choice_number)
+            searching_slices.append(search_item)
+            return is_split, searching_slices
+
+        if choice_number == len(all_elements):
+            is_split = True
+            search_item = (set(), all_elements, choice_number)
+            searching_slices.append(search_item)
+            return is_split, searching_slices
+
         all_elements = copy.deepcopy(all_elements)
-
-        if 0 < len(split_elements) <= choice_number < len(all_elements) and split_elements.issubset(all_elements):
-            eliminate_elements = set()
-            for ele in split_elements:
-                choice_elements = copy.deepcopy(eliminate_elements)
-                eliminate_elements.add(ele)
-                all_elements.remove(ele)
-                remained_elements = copy.deepcopy(all_elements)
-                remained_choice_number = choice_number - len(choice_elements)
-                ts = (choice_elements, remained_elements, remained_choice_number)
-                searching_slices.append(ts)
-
-            ts = (eliminate_elements, all_elements, choice_number - len(split_elements))
-            searching_slices.append(ts)
-        else:
-            ts = (set(), all_elements, choice_number)
+        eliminate_elements = set()
+        for ele in split_elements:
+            choice_elements = copy.deepcopy(eliminate_elements)
+            eliminate_elements.add(ele)
+            all_elements.remove(ele)
+            remained_choice_number = choice_number - len(choice_elements)
+            ts = (choice_elements, copy.deepcopy(all_elements), remained_choice_number)
             searching_slices.append(ts)
 
-        return searching_slices
-
-    @staticmethod
-    def yanghui_generator(all_elements, choice_number, split_elements):
-        all_elements = copy.deepcopy(all_elements)
-        if 0 < len(split_elements) <= choice_number < len(all_elements) and split_elements.issubset(all_elements):
-            eliminate_elements = set()
-            for ele in split_elements:
-                choice_elements = copy.deepcopy(eliminate_elements)
-                eliminate_elements.add(ele)
-                all_elements.remove(ele)
-                remained_elements = copy.deepcopy(all_elements)
-                remained_choice_number = choice_number - len(choice_elements)
-                ts = (choice_elements, remained_elements, remained_choice_number)
-                yield ts
-
-            ts = (eliminate_elements, all_elements, choice_number - len(split_elements))
-            yield ts
-        else:
-            ts = (set(), all_elements, choice_number)
-            yield ts
-        return True
+        ts = (eliminate_elements, all_elements, choice_number - len(split_elements))
+        searching_slices.append(ts)
+        return is_split, searching_slices
 
 
 def vandermonde_split_checker(max_elements_size=10):
@@ -143,52 +142,26 @@ def vandermonde_generator_checker(max_elements_size=10):
 
 def yanghui_split_checker(max_elements_size=10):
     all_elements = {i for i in range(max_elements_size)}
-    choice_elements = {random.randint(0, max_elements_size-1) for i in range(4)}
-    print(choice_elements)
+    split_size = random.randint(0, max_elements_size + 1)
+    choice_elements = {random.randint(-1, max_elements_size) for i in range(split_size)}
+    print("split elements: ", choice_elements)
     for choice_number in range(max_elements_size + 1):
         total_search_number = CombinaryCounter.compute_comb(max_elements_size, choice_number)
         slices_search_number = 0
         # all_elements = copy.deepcopy(elements)
-        searching_slices = CombinationSearchingSpaceSplitter.yanghui_split(all_elements, choice_number, choice_elements)
+        is_split, searching_slices = CombinationSearchingSpaceSplitter.yanghui_split(all_elements, choice_number, choice_elements)
         for ts in searching_slices:
             slices_search_number += CombinaryCounter.compute_comb(len(ts[1]), ts[2])
-
-        msg_text = "C(%d, %d), search slices number %d: real = %d, slices sum = %d, is same %s" % (
+        msg_text = "C(%d, %d), search slices number %d: real = %d, slices sum = %d, is same %s, is split %s" % (
             max_elements_size, choice_number, len(searching_slices), total_search_number, slices_search_number,
-            str(total_search_number == slices_search_number))
+            str(total_search_number == slices_search_number), str(is_split))
         print(msg_text)
 
         if total_search_number != slices_search_number:
             raise RuntimeError(msg_text)
 
 
-def yanghui_generator_checker(max_elements_size=10):
-    all_elements = {i for i in range(max_elements_size)}
-    choice_elements = {random.randint(0, max_elements_size+1) for i in range(4)}
-    # choice_elements = set()
-    # choice_elements.add(-1)
 
-    print(choice_elements)
-
-    for choice_number in range(max_elements_size + 1):
-        total_search_number = CombinaryCounter.compute_comb(max_elements_size, choice_number)
-        slices_search_number = 0
-        # all_elements = copy.deepcopy(elements)
-        searching_slices = CombinationSearchingSpaceSplitter.yanghui_generator(all_elements, choice_number, choice_elements)
-        slice_cnt = 0
-        for ts in searching_slices:
-            slice_cnt += 1
-            slices_search_number += CombinaryCounter.compute_comb(len(ts[1]), ts[2])
-
-        msg_text = "C(%d, %d), search slices number %d: real = %d, slices sum = %d, is same %s" % (
-            max_elements_size, choice_number, slice_cnt, total_search_number, slices_search_number,
-            str(total_search_number == slices_search_number))
-        print(msg_text)
-
-        if total_search_number != slices_search_number:
-            raise RuntimeError(msg_text)
-
-    pass
 
 
 if __name__ == '__main__':
@@ -196,9 +169,9 @@ if __name__ == '__main__':
     import random
 
     # vandermonde_split_checker(60)
-    # yanghui_split_checker(60)
+    yanghui_split_checker(20)
     # vandermonde_generator_checker(60)
-    yanghui_generator_checker(10)
+
 
     pass
     
