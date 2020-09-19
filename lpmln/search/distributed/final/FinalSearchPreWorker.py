@@ -34,13 +34,13 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
             ht_slices = cls.process_nse_subparts_task_slices(cls, itask_id, itask, ts, result_queue)
             ht_check_task_slices.extend(ht_slices)
 
-        if len(ht_check_task_slices) != 0:
+        if len(ht_check_task_slices) == 0:
             return 0
 
         ts = ht_check_task_slices[0]
         ne_iset_number = len(ts[0]) + ts[2]
 
-        if ne_iset_number < 10:
+        if ne_iset_number < 8:
             cls.vandermonde_split_ht_task(cls, itask_id, ht_check_task_slices, ht_task_queue)
         else:
             cls.single_split_ht_tasks(cls, itask_id, ht_check_task_slices, ht_task_queue)
