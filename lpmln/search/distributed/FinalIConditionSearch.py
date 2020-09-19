@@ -379,20 +379,24 @@ class FinalIConditionsSearchWorker:
         ht_task_queue = manager_tuple[2]
         result_queue = manager_tuple[3]
         processed_ht_task_slices_number = worker_info[3]
-        is_ht_task_queue_empty = True
+        is_process_ht_task_queue = False
 
         while True:
             if ht_task_queue.empty():
                 break
 
-            is_ht_task_queue_empty = False
+            is_process_ht_task_queue = True
             ts = ht_task_queue.get()
             start_time = datetime.now()
             itask_id = ts[0]
+            itask = itasks[itask_id]
             processed_ht_task_slices_number += 1
             ne_iset_number, task_check_number, se_conditions_cache, nse_conditions_cache = \
-                cls.search_ht_task_slice(cls, itasks[itask_id], ts[1])
+                cls.search_ht_task_slice(cls, itask, ts[1])
             end_time = datetime.now()
+
+            if ne_iset_number > itask.rule_number and len(nse_conditions_cache) > 0:
+                print("debug info (wrong nse conditions): ", ts)
 
             if len(se_conditions_cache) > 0:
                 result_queue.put((ITaskSignal.se_condition_signal, itask_id, se_conditions_cache))
@@ -404,7 +408,7 @@ class FinalIConditionsSearchWorker:
                             task_check_number, 0, (start_time, end_time))
             result_queue.put(result_tuple)
 
-        return is_ht_task_queue_empty, processed_ht_task_slices_number
+        return is_process_ht_task_queue, processed_ht_task_slices_number
 
 
     @staticmethod
@@ -453,7 +457,7 @@ class FinalIConditionsSearchWorker:
 
         task_queue = manager_tuple[1]
         is_task_queue_complete = False
-        is_task_queue_empty = True
+        is_process_tasks = False
         processed_task_slices_number = worker_info[2]
 
         while True:
@@ -461,13 +465,11 @@ class FinalIConditionsSearchWorker:
                 if task_queue.empty():
                     break
                 task_slice_cache = task_queue.get()
-                is_task_queue_empty = False
+                is_process_tasks = True
 
             # logging.debug(task_slice_cache)
 
             itask_id = task_slice_cache[0]
-
-
             if itask_id == ITaskSignal.kill_signal:
                 is_task_queue_complete = True
                 break
@@ -486,7 +488,7 @@ class FinalIConditionsSearchWorker:
             cls.process_task_slice(cls, itask_id, itask, task_slice_cache[1], manager_tuple)
             task_slice_cache = None
 
-        return is_task_queue_complete, is_task_queue_empty, processed_task_slices_number, task_slice_cache
+        return is_task_queue_complete, is_process_tasks, processed_task_slices_number, task_slice_cache
 
 
     @staticmethod
@@ -638,49 +640,45 @@ class FinalIConditionsSearchWorker:
 
         task_slice_cache = None
         is_task_queue_finish = False
-        is_kill_task_worker = False
-        is_task_queue_empty = False
-
+        is_process_task_queue = False
+        is_process_ht_task_queue = False
         while True:
             if not pathlib.Path(config.task_host_lock_file).exists():
                 break
 
             if not is_task_queue_finish:
-                is_task_queue_finish, is_task_queue_empty, processed_task_slices_number, task_slice_cache = \
+                is_task_queue_finish, is_process_task_queue, processed_task_slices_number, task_slice_cache = \
                     cls.get_and_process_task_queue(cls, isc_tasks, task_slice_cache, worker_info, manager_tuple)
 
                 if is_task_queue_finish:
                     msg_text = "%s:%s isc task queue finish, process %d task slices %d ht task slices ..." % (
                         worker_info[0], worker_info[1], worker_info[2], worker_info[3])
                     logging.info(msg_text)
-                    is_task_queue_empty = False
+                    is_process_task_queue = False
                 else:
-                    if not is_task_queue_empty and task_slice_cache is not None:
+                    if is_process_task_queue and task_slice_cache is not None:
                         ne_iset_number = len(task_slice_cache[1][0]) + task_slice_cache[1][2] - 1
                         msg_text = "%s waiting for nse condition complete file: %d" % (worker_name, ne_iset_number)
-                        logging.info(msg_text)
+                        logging.info((task_slice_cache, msg_text))
 
-            is_ht_task_queue_empty, processed_ht_task_slices_number = \
+            is_process_ht_task_queue, processed_ht_task_slices_number = \
                 cls.get_and_process_ht_task_queue(cls, isc_tasks, worker_info, manager_tuple)
 
             worker_info[2] = processed_task_slices_number
             worker_info[3] = processed_ht_task_slices_number
 
-            if not is_task_queue_empty or not is_ht_task_queue_empty:
+            if is_process_task_queue or is_process_ht_task_queue:
                 msg_text = "%s:%s isc task worker process %d task slices %d ht task slices ..." % (
                     worker_info[0], worker_info[1], worker_info[2], worker_info[3])
                 logging.info(msg_text)
-
                 logging.info("%s waiting for task queue and ht task queue ..." % worker_name)
 
             is_task_finish = cls.check_itasks_finish_status(isc_tasks)
             if is_task_finish:
                 break
-
             time.sleep(1)
 
-        logging.info("%s processes %d isc task slices %d ht itask slices" % (
-            worker_name, processed_task_slices_number, processed_ht_task_slices_number))
+        logging.info("%s processes %d isc task slices %d ht itask slices" % (worker_name, worker_info[2], worker_info[3]))
 
     @staticmethod
     def check_itasks_finish_status(itasks):
