@@ -410,11 +410,9 @@ class FinalIConditionsSearchWorker:
 
         return is_process_ht_task_queue, processed_ht_task_slices_number
 
-
     @staticmethod
     def search_ht_task_slice(cls, itask, task_slice):
         task_check_number = 0
-        nse_cdt_cnt = 0
         is_check_valid_rules = False
         left_iset_ids = list(task_slice[0])
 
@@ -423,14 +421,13 @@ class FinalIConditionsSearchWorker:
         validator = ISetConditionValidator(lp_type=itask.lp_type, is_use_extended_rules=itask.is_use_extended_rules)
 
         task_iter = itertools.combinations(task_slice[1], task_slice[2])
-        ne_iset_number = 0
+        ne_iset_number = len(left_iset_ids) + task_slice[2]
 
         for right_ti in task_iter:
             non_ne_ids = list()
             non_ne_ids.extend(left_iset_ids)
             non_ne_ids.extend(list(right_ti))
             non_ne_ids = set(non_ne_ids)
-            ne_iset_number = len(non_ne_ids)
 
             task_check_number += 1
             is_contain_valid_rule, is_strongly_equivalent, condition = \
@@ -440,8 +437,9 @@ class FinalIConditionsSearchWorker:
             if is_strongly_equivalent:
                 se_conditions_cache.append(condition)
             else:
-                nse_cdt_cnt += 1
                 nse_conditions_cache.append(condition)
+                if ne_iset_number > itask.rule_number:
+                    logging.error(("wrong nse condition ", itask.k_m_n, non_ne_ids))
 
         return ne_iset_number, task_check_number, se_conditions_cache, nse_conditions_cache
 
@@ -498,7 +496,7 @@ class FinalIConditionsSearchWorker:
         no_sv_task_slices = cls.process_semi_valid_task_slices(cls, itask_id, itask, task_slice, result_queue)
         ht_check_task_slices = list()
         for ts in no_sv_task_slices:
-            ht_slices = cls.process_nse_subpart_task_slices(cls, itask_id, itask, ts, result_queue)
+            ht_slices = cls.process_nse_subparts_task_slices(cls, itask_id, itask, ts, result_queue)
             ht_check_task_slices.extend(ht_slices)
 
         for ts in ht_check_task_slices:
@@ -521,7 +519,51 @@ class FinalIConditionsSearchWorker:
                 ht_task_queue.put((itask_id, vts))
 
     @staticmethod
-    def process_nse_subpart_task_slices(cls, itask_id, itask, task_slice, result_queue):
+    def process_one_nse_subpart_task_slice(cls, nse_isets, task_slice):
+        """
+
+        :param cls:
+        :param nse_isets:
+        :param task_slice: (left_iset_ids, right_zone_iset_ids, right_zone_choice_number)
+        :return:
+        """
+        skip_number = 0
+        processed_task_slices = list()
+        original_left_isets = set(task_slice[0])
+        remained_nse_isets = nse_isets.difference(original_left_isets)
+        nse_size = len(remained_nse_isets)
+
+        if nse_size == 0:
+            skip_number = CombinaryCounter.compute_comb(len(task_slice[1]), task_slice[2])
+            return skip_number, processed_task_slices
+
+        if not remained_nse_isets.issubset(task_slice[1]):
+            processed_task_slices.append(task_slice)
+            return skip_number, processed_task_slices
+
+        if len(task_slice[1]) == task_slice[2]:
+            skip_number = CombinaryCounter.compute_comb(len(task_slice[1]), task_slice[2])
+            return skip_number, processed_task_slices
+
+        eliminate_isets = set()
+        right_zone_isets = copy.deepcopy(task_slice[1])
+        remained_nse_isets = list(remained_nse_isets)
+        for i in range(nse_size + 1):
+            if i == nse_size:
+                skip_number = CombinaryCounter.compute_comb(len(task_slice[1]), task_slice[2] - nse_size)
+            else:
+                left_isets = copy.deepcopy(eliminate_isets)
+                eliminate_isets.add(remained_nse_isets[i])
+                right_zone_isets.remove(remained_nse_isets[i])
+                right_choice_number = task_slice[2] - len(left_isets)
+                left_isets = left_isets.union(original_left_isets)
+                task_item = (left_isets, copy.deepcopy(right_zone_isets), right_choice_number)
+                processed_task_slices.append(task_item)
+
+        return skip_number, processed_task_slices
+
+    @staticmethod
+    def process_nse_subparts_task_slices(cls, itask_id, itask, task_slice, result_queue):
         skip_number = 0
         processed_task_slices = [task_slice]
         original_left_isets = set(task_slice[0])
@@ -529,37 +571,12 @@ class FinalIConditionsSearchWorker:
 
         for nse in itask.non_se_conditions:
             nse_new_task_slices = list()
-            # print(nse)
             for ts in processed_task_slices:
-                # print(ts)
-                left_iset_ids = set(ts[0])
-                right_zone_isets = set(ts[1])
-                nse_remained_isets = nse.difference(left_iset_ids)
+                ts_skip_number, ts_new_task_slices = cls.process_one_nse_subpart_task_slice(cls, nse, ts)
+                skip_number += ts_skip_number
+                nse_new_task_slices.extend(ts_new_task_slices)
 
-                if len(nse_remained_isets) == 0:
-                    skip_number += CombinaryCounter.compute_comb(len(right_zone_isets), ts[2])
-                else:
-                    if not nse_remained_isets.issubset(right_zone_isets):
-                        nse_new_task_slices.append(ts)
-                    else:
-                        if ts[2] == 0:
-                            nse_new_task_slices.append(ts)
-                        else:
-                            yang_task_slices = CombinationSearchingSpaceSplitter.yanghui_split(
-                                right_zone_isets, ts[2], nse_remained_isets)
-
-                            skip_ts = yang_task_slices[-1]
-                            yang_task_slices = yang_task_slices[0:-1]
-                            for yts in yang_task_slices:
-                                for iset in left_iset_ids:
-                                    yts[0].add(iset)
-                                # print("\t\t", yts)
-
-                            skip_number += CombinaryCounter.compute_comb(len(skip_ts[1]), skip_ts[2])
-                            nse_new_task_slices.extend(yang_task_slices)
-                # print("\n")
             processed_task_slices = nse_new_task_slices
-
 
         if skip_number > 0:
             result_item = (ITaskSignal.stat_signal, itask_id, ne_iset_number, 0, skip_number, 0, None)

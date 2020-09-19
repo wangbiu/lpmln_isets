@@ -31,7 +31,6 @@ class CombinationSearchingSpaceSplitter:
 
     @staticmethod
     def vandermonde_generator(left_zone_elements, right_zone_elements, choice_number):
-        searching_slices = list()
         left_zone_length = len(left_zone_elements)
         right_zone_length = len(right_zone_elements)
 
