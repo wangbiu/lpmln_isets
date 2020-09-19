@@ -11,6 +11,8 @@ from lpmln.search.distributed.final import FinalIConditionsSearchHTWorker, Final
 from lpmln.search.distributed.final.FinalSearchPreWorker import FinalIConditionsSearchPreWorker
 from lpmln.search.distributed.final.FinalSearchBase import SearchQueueManager
 from lpmln.itask.ITask import ITaskConfig
+from lpmln.iset.ISetConditionValidator import ISetConditionValidator
+from multiprocessing import Pool
 master = FinalSearchMaster
 worker = FinalIConditionsSearchHTWorker
 pre_worker = FinalIConditionsSearchPreWorker
@@ -46,6 +48,24 @@ def test_nse_process():
     skip, new_ts = pre_worker.process_one_nse_subpart_task_slice(pre_worker, nse, task_slice)
     print(skip)
     print(new_ts)
+
+
+def test_parallel_validate():
+    isc_tasks = load_itasks()
+    itask = isc_tasks[1]
+    ne_isets = {32, 35, 44}
+    p = Pool(100)
+    validator = ISetConditionValidator(False)
+    is_se, condition = FinalIConditionsSearchHTWorker.parallel_validate_kmn_extended_icondition(
+        FinalIConditionsSearchHTWorker, ne_isets, itask, validator)
+
+    print(is_se, condition)
+
+    is_contain_valid_rule, is_strongly_equivalent, condition = \
+        validator.validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids_return_icondition_obj(ne_isets, *itask.k_m_n, False)
+
+    print(is_strongly_equivalent, condition)
+
 
 
 

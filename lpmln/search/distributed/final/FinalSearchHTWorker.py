@@ -8,19 +8,69 @@
 """
 
 import logging
+from multiprocessing import Process, Manager
 from datetime import datetime
 import time
 import pathlib
-
+from lpmln.iset.ISetCondition import ISetCondition
 from lpmln.iset.ISetConditionValidator import ISetConditionValidator
+import lpmln.iset.ISetUtils as isu
 import lpmln.config.GlobalConfig as cfg
 from lpmln.itask.ITask import ITaskConfig
 import itertools
+import copy
 from lpmln.search.distributed.final.FinalSearchBase import FinalIConditionsSearchBaseWorker, ITaskSignal, SearchQueueManager
 config = cfg.load_configuration()
 
 
 class FinalIConditionsSearchHTWorker(FinalIConditionsSearchBaseWorker):
+
+    @staticmethod
+    def parallel_validate_kmn_extended_icondition(cls, ne_isets, itask, ht_validator):
+        print("enter parallel validate ")
+        is_use_extended_rules = itask.is_use_extended_rules
+        icondition = isu.construct_iset_condition_from_non_emtpy_iset_ids(ne_isets, itask.iset_number)
+        isets = isu.construct_isets_from_iset_condition(icondition, is_use_extended_rules)
+        is_check_valid_rule = False
+        singleton_iset_ids = list()
+        validated_condition = ISetCondition(icondition, singleton_iset_ids)
+        is_contain_valid, is_se_sat = ht_validator.validate_isets_kmn_program(isets, *itask.k_m_n, is_check_valid_rule)
+
+        if not is_se_sat:
+            return is_se_sat, validated_condition
+
+        k_size = itask.k_m_n[0]
+        m_size = itask.k_m_n[1]
+        n_size = itask.k_m_n[2]
+        ht_jobs = list()
+
+        # manager = Manager()
+        # singleton_results = manager.list()
+
+        for sid in ne_isets:
+            extended_isets = copy.deepcopy(isets)
+            p = Process(target=cls.validate_extended_icondition,
+                        args=(k_size, m_size, n_size, itask.lp_type, itask.is_use_extended_rules,
+                                             extended_isets, sid + 1)) #, singleton_results))
+            ht_jobs.append(p)
+            p.start()
+
+        for p in ht_jobs:
+            p.join()
+
+        # singleton_iset_ids.extend(singleton_results)
+        return is_se_sat, validated_condition
+
+    @staticmethod
+    def validate_extended_icondition(k_size, m_size, n_size, lp_type, is_use_extended_rules, extended_isets, singleton_id):
+        new_atom = -1
+        ht_validator = ISetConditionValidator(lp_type=lp_type, is_use_extended_rules=is_use_extended_rules)
+        extended_isets[singleton_id].members.add(new_atom)
+        is_contain_valid, is_se_sat = ht_validator.validate_isets_kmn_program(
+            extended_isets, k_size, m_size, n_size, False)
+        print("validate ", singleton_id)
+        # if not is_se_sat:
+        #     results.append(singleton_id)
 
     @staticmethod
     def search_ht_task_slice(cls, itask, task_slice):
@@ -42,9 +92,18 @@ class FinalIConditionsSearchHTWorker(FinalIConditionsSearchBaseWorker):
             non_ne_ids = set(non_ne_ids)
 
             task_check_number += 1
+
             is_contain_valid_rule, is_strongly_equivalent, condition = \
                 validator.validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids_return_icondition_obj(
                     non_ne_ids, *itask.k_m_n, is_check_valid_rule=is_check_valid_rules)
+
+            # if ne_iset_number < 3:
+            #     is_contain_valid_rule, is_strongly_equivalent, condition = \
+            #         validator.validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids_return_icondition_obj(
+            #             non_ne_ids, *itask.k_m_n, is_check_valid_rule=is_check_valid_rules)
+            # else:
+            #     is_strongly_equivalent, condition = \
+            #         cls.parallel_validate_kmn_extended_icondition(cls, non_ne_ids, itask, validator)
 
             if is_strongly_equivalent:
                 se_conditions_cache.append(condition)

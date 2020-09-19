@@ -6,7 +6,7 @@
 @Email   : wangbiu@foxmail.com
 @File    : MultipleProecessing.py
 """
-from multiprocessing import Pool, Queue
+from multiprocessing import Pool, Queue, Manager
 from multiprocessing.managers import BaseManager
 import time
 
@@ -31,6 +31,24 @@ def get_result_queue(i):
 host = "127.0.0.1"
 port = 7845
 passwd = "test123"
+
+
+def test_manager_list():
+    manager = Manager()
+    results = manager.list()
+    pool = Pool(10)
+    for i in range(2):
+        pool.apply_async(put_list, args=(results, 5))
+
+    pool.close()
+    pool.join()
+    print(len(results), results)
+
+def put_list(results, max_num):
+    for i in range(max_num):
+        time.sleep(0.1)
+        results.append(i)
+
 
 
 def master_fun():
