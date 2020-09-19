@@ -10,21 +10,11 @@
 from multiprocessing import Pool, Queue
 from multiprocessing.managers import BaseManager
 import logging
-from datetime import datetime
-import time
 import pathlib
-
-from lpmln.iset.ISetConditionValidator import ISetConditionValidator
-import lpmln.message.Messager as msg
 import lpmln.config.GlobalConfig as cfg
 from lpmln.itask.ITask import ITaskConfig
 import lpmln.iset.ISetNonSEUtils as isnse
 import lpmln.utils.SSHClient as ssh
-import itertools
-import copy
-from lpmln.utils.CombinationSpaceUtils import CombinationSearchingSpaceSplitter
-from lpmln.utils.counter.CombinaryCounter import CombinaryCounter
-import lpmln.iset.ISetCompositionUtils as iscm
 
 
 
@@ -133,9 +123,7 @@ class FinalIConditionsSearchBaseWorker:
 
         manager, task_queue, ht_task_queue, result_queue = \
             SearchQueueManager.init_task_worker_queue_manager()
-
         host_ip = ssh.get_host_ip()
-
         result_queue.put((ITaskSignal.add_worker_signal, config.worker_host_name, host_ip))
         logging.info("task worker host %s start ..." % config.worker_host_name)
 
