@@ -109,18 +109,18 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
             nse_new_task_slices = list()
             for ts in processed_task_slices:
                 ts_skip_number, ts_new_task_slices = cls.process_one_nse_subpart_task_slice(cls, nse, ts)
-                print("nse: ", nse, ", task slice: ", ts, ", skip ", ts_skip_number)
+                # print("nse: ", nse, ", task slice: ", ts, ", skip ", ts_skip_number)
                 skip_number += ts_skip_number
                 nse_new_task_slices.extend(ts_new_task_slices)
 
             processed_task_slices = nse_new_task_slices
 
-        remain_task = 0
-        for ts in processed_task_slices:
-            remain_task += CombinaryCounter.compute_comb(len(ts[1]), ts[2])
-        total_task = CombinaryCounter.compute_comb(len(task_slice[1]), task_slice[2])
-        print("task slice ", task_slice, "has task ", total_task, "total skip ", skip_number, "remian ", remain_task)
-        print("total = skip + remain ", remain_task + skip_number == total_task, "\n")
+        # remain_task = 0
+        # for ts in processed_task_slices:
+        #     remain_task += CombinaryCounter.compute_comb(len(ts[1]), ts[2])
+        # total_task = CombinaryCounter.compute_comb(len(task_slice[1]), task_slice[2])
+        # print("task slice ", task_slice, "has task ", total_task, "total skip ", skip_number, "remian ", remain_task)
+        # print("total = skip + remain ", remain_task + skip_number == total_task, "\n")
 
 
         if skip_number > 0:
