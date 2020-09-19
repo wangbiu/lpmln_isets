@@ -7,10 +7,10 @@
 @File    : FinalIConditionSearchTest.py
 """
 
-from lpmln.search.distributed.FinalIConditionSearch import FinalIConditionsSearchWorker, FinalIConditionsSearchMaster, SearchQueueManager
+from lpmln.search.distributed.FinalIConditionSearch import FinalIConditionsSearchHTWorker, FinalIConditionsSearchMaster, SearchQueueManager
 from lpmln.itask.ITask import ITaskConfig
 master = FinalIConditionsSearchMaster
-worker = FinalIConditionsSearchWorker
+worker = FinalIConditionsSearchHTWorker
 import lpmln.config.GlobalConfig as cfg
 config = cfg.load_configuration()
 import os
