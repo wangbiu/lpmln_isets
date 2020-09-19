@@ -7,29 +7,18 @@
 @File    : FinalSearchMaster.py
 """
 
-from multiprocessing import Pool, Queue
-from multiprocessing.managers import BaseManager
+from multiprocessing import Pool
 import logging
-from datetime import datetime
 import time
-import pathlib
-
-from lpmln.iset.ISetConditionValidator import ISetConditionValidator
 import lpmln.message.Messager as msg
 import lpmln.config.GlobalConfig as cfg
 from lpmln.itask.ITask import ITaskConfig
 import lpmln.iset.ISetNonSEUtils as isnse
 import lpmln.utils.SSHClient as ssh
-import itertools
 import copy
 from lpmln.utils.CombinationSpaceUtils import CombinationSearchingSpaceSplitter
-from lpmln.utils.counter.CombinaryCounter import CombinaryCounter
-import lpmln.iset.ISetCompositionUtils as iscm
-
-
-
+from lpmln.search.distributed.final.FinalSearchBase import SearchQueueManager, ITaskSignal
 config = cfg.load_configuration()
-
 
 
 class FinalIConditionsSearchMaster:
@@ -201,7 +190,7 @@ class FinalIConditionsSearchMaster:
 
     @staticmethod
     def init_task_slices_generator_pool(cls, isc_config_file):
-        task_generator_pool = Pool(2)
+        task_generator_pool = Pool(1)
         task_generator_pool.apply_async(cls.itask_slices_generator, args=(cls, isc_config_file))
         task_generator_pool.close()
         return task_generator_pool
@@ -291,7 +280,6 @@ class FinalIConditionsSearchMaster:
         logging.info(msg_text)
         msg.send_message(msg=msg_text, attached_files=attached_files)
         return isc_tasks
-
 
 
 if __name__ == '__main__':

@@ -25,15 +25,264 @@ import copy
 from lpmln.utils.CombinationSpaceUtils import CombinationSearchingSpaceSplitter
 from lpmln.utils.counter.CombinaryCounter import CombinaryCounter
 import lpmln.iset.ISetCompositionUtils as iscm
-
-
-
+from lpmln.search.distributed.final.FinalSearchBase import FinalIConditionsSearchBaseWorker, ITaskSignal, SearchQueueManager
 config = cfg.load_configuration()
 
 
+class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
+    @staticmethod
+    def get_and_process_task_queue(cls, itasks, task_slice_cache, worker_info, manager_tuple):
+        """
+        :param cls:
+        :param worker_id:
+        :param itasks:
+        :param manager_tuple: manager_tuple = (manager, task_queue, ht_task_queue, result_queue)
+        :return:
+        """
 
-class FinalIConditionsSearchPreWorker:
+        task_queue = manager_tuple[1]
+        is_task_queue_complete = False
+        is_process_tasks = False
+        processed_task_slices_number = worker_info[2]
 
+        while True:
+            if task_slice_cache is None:
+                if task_queue.empty():
+                    break
+                task_slice_cache = task_queue.get()
+                is_process_tasks = True
+
+            # logging.debug(task_slice_cache)
+
+            itask_id = task_slice_cache[0]
+            if itask_id == ITaskSignal.kill_signal:
+                is_task_queue_complete = True
+                break
+
+            processed_task_slices_number += 1
+            itask = itasks[itask_id]
+
+            if itask.is_task_finish:
+                task_slice_cache = None
+                continue
+
+            load_nse_complete = cls.task_worker_load_nse_conditions(itask, task_slice_cache[1])
+            if not load_nse_complete:
+                break
+
+            cls.process_task_slice(cls, itask_id, itask, task_slice_cache[1], manager_tuple)
+            task_slice_cache = None
+
+        return is_task_queue_complete, is_process_tasks, processed_task_slices_number, task_slice_cache
+
+    @staticmethod
+    def process_task_slice(cls, itask_id, itask, task_slice, manager_tuple):
+        result_queue = manager_tuple[3]
+        ht_task_queue = manager_tuple[2]
+        no_sv_task_slices = cls.process_semi_valid_task_slices(cls, itask_id, itask, task_slice, result_queue)
+        ht_check_task_slices = list()
+        for ts in no_sv_task_slices:
+            ht_slices = cls.process_nse_subparts_task_slices(cls, itask_id, itask, ts, result_queue)
+            ht_check_task_slices.extend(ht_slices)
+
+        for ts in ht_check_task_slices:
+            left_isets = ts[0]
+            right_zone_isets = list(ts[1])
+            choice_number = ts[2]
+
+            split_left_length = len(right_zone_isets) // 2
+            if split_left_length > 14:
+                split_left_length = 14
+
+            split_left_zone = set(right_zone_isets[0:split_left_length])
+            split_right_zone = set(right_zone_isets[split_left_length:])
+            v_generator = CombinationSearchingSpaceSplitter.vandermonde_generator(
+                split_left_zone, split_right_zone, choice_number)
+
+            for vts in v_generator:
+                for iset in left_isets:
+                    vts[0].add(iset)
+                ht_task_queue.put((itask_id, vts))
+
+    @staticmethod
+    def process_one_nse_subpart_task_slice(cls, nse_isets, task_slice):
+        """
+
+        :param cls:
+        :param nse_isets:
+        :param task_slice: (left_iset_ids, right_zone_iset_ids, right_zone_choice_number)
+        :return:
+        """
+        skip_number = 0
+        processed_task_slices = list()
+        original_left_isets = set(task_slice[0])
+        remained_nse_isets = nse_isets.difference(original_left_isets)
+        nse_size = len(remained_nse_isets)
+
+        if nse_size == 0:
+            skip_number = CombinaryCounter.compute_comb(len(task_slice[1]), task_slice[2])
+            return skip_number, processed_task_slices
+
+        if not remained_nse_isets.issubset(task_slice[1]):
+            processed_task_slices.append(task_slice)
+            return skip_number, processed_task_slices
+
+        if len(task_slice[1]) == task_slice[2]:
+            skip_number = CombinaryCounter.compute_comb(len(task_slice[1]), task_slice[2])
+            return skip_number, processed_task_slices
+
+        eliminate_isets = set()
+        right_zone_isets = copy.deepcopy(task_slice[1])
+        remained_nse_isets = list(remained_nse_isets)
+        for i in range(nse_size + 1):
+            if i == nse_size:
+                skip_number = CombinaryCounter.compute_comb(len(task_slice[1]), task_slice[2] - nse_size)
+            else:
+                left_isets = copy.deepcopy(eliminate_isets)
+                eliminate_isets.add(remained_nse_isets[i])
+                right_zone_isets.remove(remained_nse_isets[i])
+                right_choice_number = task_slice[2] - len(left_isets)
+                left_isets = left_isets.union(original_left_isets)
+                task_item = (left_isets, copy.deepcopy(right_zone_isets), right_choice_number)
+                processed_task_slices.append(task_item)
+
+        return skip_number, processed_task_slices
+
+    @staticmethod
+    def process_nse_subparts_task_slices(cls, itask_id, itask, task_slice, result_queue):
+        skip_number = 0
+        processed_task_slices = [task_slice]
+        original_left_isets = set(task_slice[0])
+        ne_iset_number = len(original_left_isets) + task_slice[2]
+
+        for nse in itask.non_se_conditions:
+            nse_new_task_slices = list()
+            for ts in processed_task_slices:
+                ts_skip_number, ts_new_task_slices = cls.process_one_nse_subpart_task_slice(cls, nse, ts)
+                skip_number += ts_skip_number
+                nse_new_task_slices.extend(ts_new_task_slices)
+
+            processed_task_slices = nse_new_task_slices
+
+        if skip_number > 0:
+            result_item = (ITaskSignal.stat_signal, itask_id, ne_iset_number, 0, skip_number, 0, None)
+            result_queue.put(result_item)
+
+        return processed_task_slices
+
+    @staticmethod
+    def process_semi_valid_task_slices(cls, itask_id, itask, task_slice, result_queue):
+        left_isets = task_slice[0]
+        right_zone_isets = task_slice[1]
+        right_zone_choice_number = task_slice[2]
+        ne_iset_number = len(left_isets) + right_zone_choice_number
+        search_i4_isets = set(itask.meta_data.search_i4_composed_iset_ids)
+        skip_number = 0
+        new_task_slices = list()
+
+        right_zone_i4_isets = right_zone_isets.intersection(search_i4_isets)
+        if len(right_zone_i4_isets) == 0:
+            v_generator = [task_slice]
+        else:
+            right_zone_non_i4_isets = right_zone_isets.difference(right_zone_i4_isets)
+            v_generator = CombinationSearchingSpaceSplitter.vandermonde_generator(
+                right_zone_i4_isets, right_zone_non_i4_isets, right_zone_choice_number)
+
+        for ts in v_generator:
+            new_left_ids = left_isets.union(ts[0])
+            is_contain_semi_valid_rule = iscm.check_contain_rules_without_i_n_iset(
+                4, new_left_ids, itask.rule_number, itask.is_use_extended_rules)
+            if is_contain_semi_valid_rule:
+                skip_number += CombinaryCounter.compute_comb(len(ts[1]), ts[2])
+            else:
+                new_task_slices.append((new_left_ids, ts[1], ts[2]))
+
+        if skip_number > 0:
+            result_tuple = (ITaskSignal.stat_signal, itask_id, ne_iset_number, 0, skip_number, skip_number, None)
+            result_queue.put(result_tuple)
+
+        return new_task_slices
+
+    @staticmethod
+    def task_worker_load_nse_conditions(itask, task_slice):
+        ne_iset_number = task_slice[2] + len(task_slice[0])
+        load_complete = True
+        for i in range(1, ne_iset_number):
+            if i not in itask.loaded_non_se_condition_files:
+                complete_flag = isnse.get_transport_complete_flag_file(*itask.k_m_n, i)
+                if pathlib.Path(complete_flag).exists():
+                    nse_conditions = isnse.load_kmn_non_se_results(*itask.k_m_n, i, itask.lp_type,
+                                                                   itask.is_use_extended_rules)
+                    itask.non_se_conditions.extend(nse_conditions)
+                    itask.loaded_non_se_condition_files.add(i)
+                else:
+                    load_complete = False
+                    break
+        return load_complete
+
+    @staticmethod
+    def kmn_isc_task_worker(cls, isc_config_file="isets-tasks.json", worker_id=1, is_check_valid_rules=True):
+
+        manager_tuple = SearchQueueManager.init_task_worker_queue_manager()
+        # manager_tuple = (manager, task_queue, ht_task_queue, result_queue)
+
+        worker_name = "worker-%d" % worker_id
+        worker_host_name = config.worker_host_name
+        processed_task_slices_number = 0
+        processed_ht_task_slices_number = 0
+        worker_info = [worker_host_name, worker_name, processed_task_slices_number, processed_ht_task_slices_number]
+
+        msg_text = "task worker %s start!" % (worker_name)
+        logging.info(msg_text)
+        isc_tasks = ITaskConfig(isc_config_file)
+        isc_tasks = isc_tasks.isc_tasks
+
+        for itask in isc_tasks:
+            # itask.loaded_non_se_condition_files.add(1)
+            itask.loaded_non_se_condition_files.add(0)
+
+        task_slice_cache = None
+        is_task_queue_finish = False
+        is_process_task_queue = False
+        is_process_ht_task_queue = False
+        while True:
+            if not pathlib.Path(config.task_host_lock_file).exists():
+                break
+
+            if not is_task_queue_finish:
+                is_task_queue_finish, is_process_task_queue, processed_task_slices_number, task_slice_cache = \
+                    cls.get_and_process_task_queue(cls, isc_tasks, task_slice_cache, worker_info, manager_tuple)
+
+                if is_task_queue_finish:
+                    msg_text = "%s:%s isc task queue finish, process %d task slices %d ht task slices ..." % (
+                        worker_info[0], worker_info[1], worker_info[2], worker_info[3])
+                    logging.info(msg_text)
+                    is_process_task_queue = False
+                else:
+                    if is_process_task_queue and task_slice_cache is not None:
+                        ne_iset_number = len(task_slice_cache[1][0]) + task_slice_cache[1][2] - 1
+                        msg_text = "%s waiting for nse condition complete file: %d" % (worker_name, ne_iset_number)
+                        logging.info((task_slice_cache, msg_text))
+
+            is_process_ht_task_queue, processed_ht_task_slices_number = \
+                cls.get_and_process_ht_task_queue(cls, isc_tasks, worker_info, manager_tuple)
+
+            worker_info[2] = processed_task_slices_number
+            worker_info[3] = processed_ht_task_slices_number
+
+            if is_process_task_queue or is_process_ht_task_queue:
+                msg_text = "%s:%s isc task worker process %d task slices %d ht task slices ..." % (
+                    worker_info[0], worker_info[1], worker_info[2], worker_info[3])
+                logging.info(msg_text)
+                logging.info("%s waiting for task queue and ht task queue ..." % worker_name)
+
+            is_task_finish = cls.check_itasks_finish_status(isc_tasks)
+            if is_task_finish:
+                break
+            time.sleep(1)
+
+        logging.info(
+            "%s processes %d isc task slices %d ht itask slices" % (worker_name, worker_info[2], worker_info[3]))
 
 
 if __name__ == '__main__':

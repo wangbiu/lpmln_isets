@@ -98,6 +98,11 @@ class SearchQueueManager:
 
 class FinalIConditionsSearchBaseWorker:
     @staticmethod
+    def join_list_data(data):
+        data = [str(s) for s in data]
+        return ",".join(data)
+
+    @staticmethod
     def init_worker_host_nse_envs(isc_tasks):
         for it in isc_tasks:
             isnse.clear_transport_complete_flag_files(*it.k_m_n, it.min_ne, it.max_ne)
@@ -107,6 +112,51 @@ class FinalIConditionsSearchBaseWorker:
             pathlib.Path(nse_1_path).touch()
             isnse.clear_task_terminate_flag_files(*it.k_m_n)
 
+    @staticmethod
+    def check_itasks_finish_status(itasks):
+        task_finish = True
+        for itask in itasks:
+            if not itask.is_task_finish:
+                task_terminate_flag = isnse.get_task_early_terminate_flag_file(*itask.k_m_n)
+                if pathlib.Path(task_terminate_flag).exists():
+                    itask.is_task_finish = True
+                else:
+                    task_finish = False
+                    break
+        return task_finish
+
+    @staticmethod
+    def init_kmn_isc_task_workers(cls, isc_config_file="isets-tasks.json", is_check_valid_rules=True):
+        payload = config.worker_payload
+        worker_pool = Pool(payload)
+        pathlib.Path(config.task_host_lock_file).touch()
+
+        manager, task_queue, ht_task_queue, result_queue = \
+            SearchQueueManager.init_task_worker_queue_manager()
+
+        host_ip = ssh.get_host_ip()
+
+        result_queue.put((ITaskSignal.add_worker_signal, config.worker_host_name, host_ip))
+        logging.info("task worker host %s start ..." % config.worker_host_name)
+
+        # 初始化不等价条件目录文件
+        isc_tasks = ITaskConfig(isc_config_file)
+        isc_tasks = isc_tasks.isc_tasks
+        cls.init_worker_host_nse_envs(isc_tasks)
+
+        for i in range(payload):
+            worker_pool.apply_async(cls.kmn_isc_task_worker,
+                                    args=(cls, isc_config_file, i + 1, is_check_valid_rules))
+        worker_pool.close()
+        worker_pool.join()
+        # if pathlib.Path(task_worker_host_lock_file).exists():
+        result_queue.put((ITaskSignal.kill_signal, config.worker_host_name, host_ip))
+        logging.info("task worker host %s send kill signal ..." % config.worker_host_name)
+        logging.info("task worker host %s exit ..." % config.worker_host_name)
+
+    @staticmethod
+    def kmn_isc_task_worker(cls, isc_config_file="isets-tasks.json", worker_id=1, is_check_valid_rules=True):
+        pass
 
 
 if __name__ == '__main__':
