@@ -18,6 +18,7 @@ import lpmln.utils.SSHClient as ssh
 import copy
 from lpmln.utils.CombinationSpaceUtils import CombinationSearchingSpaceSplitter
 from lpmln.search.distributed.final.FinalSearchBase import SearchQueueManager, ITaskSignal
+from lpmln.search.distributed.final.FinalSearchPreWorker import FinalIConditionsSearchPreWorker
 config = cfg.load_configuration()
 
 
@@ -196,12 +197,20 @@ class FinalIConditionsSearchMaster:
         return task_generator_pool
 
     @staticmethod
+    def init_pre_task_worker_pool(cls, isc_config_file, result_queue):
+        worker_pool, result_queue, host_ip = FinalIConditionsSearchPreWorker.init_kmn_isc_task_workers(
+            FinalIConditionsSearchPreWorker, isc_config_file, is_check_valid_rules=True, result_queue=result_queue)
+        return worker_pool
+
+    @staticmethod
     def init_kmn_isc_task_master_from_config(cls, isc_config_file="isets-tasks.json", sleep_time=30):
         manager, task_queue, ht_task_queue, result_queue = \
             SearchQueueManager.init_task_master_queue_manager()
         manager_tuple = (manager, task_queue, ht_task_queue, result_queue)
         localhost_ip = ssh.get_host_ip()
         ts_generator_pool = cls.init_task_slices_generator_pool(cls, isc_config_file)
+
+        pre_task_pool = cls.init_pre_task_worker_pool(cls, isc_config_file, result_queue)
 
         working_hosts_number = 0
 
@@ -255,6 +264,9 @@ class FinalIConditionsSearchMaster:
                     online_hosts.remove(host_ip)
 
         ts_generator_pool.join()
+        pre_task_pool.join()
+
+        FinalIConditionsSearchPreWorker.send_worker_terminate_info(FinalIConditionsSearchPreWorker, localhost_ip, result_queue)
 
         while working_hosts_number > 0:
             if sleep_cnt == 10:

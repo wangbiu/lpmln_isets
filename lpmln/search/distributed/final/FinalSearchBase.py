@@ -116,13 +116,15 @@ class FinalIConditionsSearchBaseWorker:
         return task_finish
 
     @staticmethod
-    def init_kmn_isc_task_workers(cls, isc_config_file="isets-tasks.json", is_check_valid_rules=True):
+    def init_kmn_isc_task_workers(cls, isc_config_file="isets-tasks.json", is_check_valid_rules=True, result_queue=None):
         payload = config.worker_payload
         worker_pool = Pool(payload)
         pathlib.Path(config.task_host_lock_file).touch()
 
-        manager, task_queue, ht_task_queue, result_queue = \
-            SearchQueueManager.init_task_worker_queue_manager()
+        if result_queue is None:
+            manager, task_queue, ht_task_queue, result_queue = \
+                SearchQueueManager.init_task_worker_queue_manager()
+
         host_ip = ssh.get_host_ip()
         result_queue.put((ITaskSignal.add_worker_signal, config.worker_host_name, host_ip))
         logging.info("task worker host %s start ..." % config.worker_host_name)
@@ -136,8 +138,10 @@ class FinalIConditionsSearchBaseWorker:
             worker_pool.apply_async(cls.kmn_isc_task_worker,
                                     args=(cls, isc_config_file, i + 1, is_check_valid_rules))
         worker_pool.close()
-        worker_pool.join()
-        # if pathlib.Path(task_worker_host_lock_file).exists():
+        return worker_pool, result_queue, host_ip
+
+    @staticmethod
+    def send_worker_terminate_info(cls, host_ip, result_queue):
         result_queue.put((ITaskSignal.kill_signal, config.worker_host_name, host_ip))
         logging.info("task worker host %s send kill signal ..." % config.worker_host_name)
         logging.info("task worker host %s exit ..." % config.worker_host_name)

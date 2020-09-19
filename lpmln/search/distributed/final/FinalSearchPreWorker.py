@@ -7,20 +7,13 @@
 @File    : FinalSearchPreWorker.py
 """
 
-from multiprocessing import Pool, Queue
-from multiprocessing.managers import BaseManager
 import logging
-from datetime import datetime
 import time
 import pathlib
 
-from lpmln.iset.ISetConditionValidator import ISetConditionValidator
-import lpmln.message.Messager as msg
 import lpmln.config.GlobalConfig as cfg
 from lpmln.itask.ITask import ITaskConfig
 import lpmln.iset.ISetNonSEUtils as isnse
-import lpmln.utils.SSHClient as ssh
-import itertools
 import copy
 from lpmln.utils.CombinationSpaceUtils import CombinationSearchingSpaceSplitter
 from lpmln.utils.counter.CombinaryCounter import CombinaryCounter
@@ -30,51 +23,6 @@ config = cfg.load_configuration()
 
 
 class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
-    @staticmethod
-    def get_and_process_task_queue(cls, itasks, task_slice_cache, worker_info, manager_tuple):
-        """
-        :param cls:
-        :param worker_id:
-        :param itasks:
-        :param manager_tuple: manager_tuple = (manager, task_queue, ht_task_queue, result_queue)
-        :return:
-        """
-
-        task_queue = manager_tuple[1]
-        is_task_queue_complete = False
-        is_process_tasks = False
-        processed_task_slices_number = worker_info[2]
-
-        while True:
-            if task_slice_cache is None:
-                if task_queue.empty():
-                    break
-                task_slice_cache = task_queue.get()
-                is_process_tasks = True
-
-            # logging.debug(task_slice_cache)
-
-            itask_id = task_slice_cache[0]
-            if itask_id == ITaskSignal.kill_signal:
-                is_task_queue_complete = True
-                break
-
-            processed_task_slices_number += 1
-            itask = itasks[itask_id]
-
-            if itask.is_task_finish:
-                task_slice_cache = None
-                continue
-
-            load_nse_complete = cls.task_worker_load_nse_conditions(itask, task_slice_cache[1])
-            if not load_nse_complete:
-                break
-
-            cls.process_task_slice(cls, itask_id, itask, task_slice_cache[1], manager_tuple)
-            task_slice_cache = None
-
-        return is_task_queue_complete, is_process_tasks, processed_task_slices_number, task_slice_cache
-
     @staticmethod
     def process_task_slice(cls, itask_id, itask, task_slice, manager_tuple):
         result_queue = manager_tuple[3]
@@ -222,15 +170,13 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
 
     @staticmethod
     def kmn_isc_task_worker(cls, isc_config_file="isets-tasks.json", worker_id=1, is_check_valid_rules=True):
-
         manager_tuple = SearchQueueManager.init_task_worker_queue_manager()
         # manager_tuple = (manager, task_queue, ht_task_queue, result_queue)
+        task_queue = manager_tuple[1]
 
         worker_name = "worker-%d" % worker_id
         worker_host_name = config.worker_host_name
         processed_task_slices_number = 0
-        processed_ht_task_slices_number = 0
-        worker_info = [worker_host_name, worker_name, processed_task_slices_number, processed_ht_task_slices_number]
 
         msg_text = "task worker %s start!" % (worker_name)
         logging.info(msg_text)
@@ -241,48 +187,59 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
             # itask.loaded_non_se_condition_files.add(1)
             itask.loaded_non_se_condition_files.add(0)
 
-        task_slice_cache = None
-        is_task_queue_finish = False
         is_process_task_queue = False
-        is_process_ht_task_queue = False
+        task_slice_cache = None
+        last_nse_iset_number = 0
         while True:
             if not pathlib.Path(config.task_host_lock_file).exists():
                 break
 
-            if not is_task_queue_finish:
-                is_task_queue_finish, is_process_task_queue, processed_task_slices_number, task_slice_cache = \
-                    cls.get_and_process_task_queue(cls, isc_tasks, task_slice_cache, worker_info, manager_tuple)
-
-                if is_task_queue_finish:
-                    msg_text = "%s:%s isc task queue finish, process %d task slices %d ht task slices ..." % (
-                        worker_info[0], worker_info[1], worker_info[2], worker_info[3])
-                    logging.info(msg_text)
-                    is_process_task_queue = False
-                else:
-                    if is_process_task_queue and task_slice_cache is not None:
-                        ne_iset_number = len(task_slice_cache[1][0]) + task_slice_cache[1][2] - 1
-                        msg_text = "%s waiting for nse condition complete file: %d" % (worker_name, ne_iset_number)
-                        logging.info((task_slice_cache, msg_text))
-
-            is_process_ht_task_queue, processed_ht_task_slices_number = \
-                cls.get_and_process_ht_task_queue(cls, isc_tasks, worker_info, manager_tuple)
-
-            worker_info[2] = processed_task_slices_number
-            worker_info[3] = processed_ht_task_slices_number
-
-            if is_process_task_queue or is_process_ht_task_queue:
-                msg_text = "%s:%s isc task worker process %d task slices %d ht task slices ..." % (
-                    worker_info[0], worker_info[1], worker_info[2], worker_info[3])
-                logging.info(msg_text)
-                logging.info("%s waiting for task queue and ht task queue ..." % worker_name)
-
             is_task_finish = cls.check_itasks_finish_status(isc_tasks)
             if is_task_finish:
                 break
-            time.sleep(1)
+
+            if task_slice_cache is None:
+                if task_queue.empty():
+                    if is_process_task_queue:
+                        logging.info("%s:%s waiting for task queue ... " % (worker_host_name, worker_name))
+                        is_process_task_queue = False
+                    time.sleep(1)
+                    continue
+                else:
+                    task_slice_cache = task_queue.get()
+                    processed_task_slices_number += 1
+                    is_process_task_queue = True
+
+
+            itask_id = task_slice_cache[0]
+            if itask_id == ITaskSignal.kill_signal:
+                break
+
+            itask = isc_tasks[itask_id]
+
+            if itask.is_task_finish:
+                task_slice_cache = None
+                continue
+
+            task_slice = task_slice_cache[1]
+            nse_iset_number = task_slice[2] + len(task_slice[0]) - 1
+
+            load_nse_complete = cls.task_worker_load_nse_conditions(itask, task_slice)
+            if not load_nse_complete:
+                if last_nse_iset_number != nse_iset_number:
+                    last_nse_iset_number = nse_iset_number
+                    logging.info((task_slice,
+                                  "%s:%s waiting for %d-%d-%d nse complete file %d" % (
+                                      worker_host_name, worker_name, *itask.k_m_n, nse_iset_number)
+                                  ))
+                time.sleep(1)
+                continue
+
+            cls.process_task_slice(cls, itask_id, itask, task_slice, manager_tuple)
+            task_slice_cache = None
 
         logging.info(
-            "%s processes %d isc task slices %d ht itask slices" % (worker_name, worker_info[2], worker_info[3]))
+            "%s processes %d isc task slices ... " % (worker_name, processed_task_slices_number))
 
 
 if __name__ == '__main__':

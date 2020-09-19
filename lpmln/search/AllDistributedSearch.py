@@ -13,9 +13,10 @@ import lpmln.search.distributed.AugumentedPreSkipI4DistributedSearch as alg3
 import lpmln.search.distributed.NoWaitNSEAugPreSkipI4DSearch as alg4
 import lpmln.search.distributed.EarlyTerminationPreSkipI4DSearch as alg5
 import lpmln.search.distributed.AfterSkipNSEEarlyTPreSI4DSearch as alg6
+import lpmln.search.distributed.final as alg7
 
 
-algorithms = [alg1, alg2, alg3, alg4, alg5, alg6]
+algorithms = [alg1, alg2, alg3, alg4, alg5, alg6, alg7]
 
 
 def get_distributed_search_algorithm(alg_id):
@@ -38,8 +39,8 @@ def init_task_worker(isc_config_file="isets-tasks.json", is_check_valid_rules=Tr
 
 if __name__ == '__main__':
     try:
-        # init_task_worker()
-        init_task_master(sleep_time=2, alg_id=6)
+        init_task_worker()
+        # init_task_master(sleep_time=2, alg_id=6)
     except Exception as e:
         print(e)
     pass

@@ -71,9 +71,6 @@ class FinalIConditionsSearchHTWorker(FinalIConditionsSearchBaseWorker):
         isc_tasks = ITaskConfig(isc_config_file)
         isc_tasks = isc_tasks.isc_tasks
 
-        for itask in isc_tasks:
-            itask.loaded_non_se_condition_files.add(0)
-
         is_process_ht_task_queue = False
 
         while True:
@@ -89,7 +86,7 @@ class FinalIConditionsSearchHTWorker(FinalIConditionsSearchBaseWorker):
                     is_process_ht_task_queue = False
                     logging.info("%s:%s waiting for ht task queue ..." % (worker_host_name, worker_name))
                 time.sleep(1)
-                break
+                continue
 
             is_process_ht_task_queue = True
             processed_ht_task_slices_number += 1
@@ -117,6 +114,13 @@ class FinalIConditionsSearchHTWorker(FinalIConditionsSearchBaseWorker):
             result_queue.put(result_tuple)
 
         logging.info("%s processes  %d ht itask slices" % (worker_name, processed_ht_task_slices_number))
+
+    @staticmethod
+    def init_kmn_isc_task_workers(cls, isc_config_file="isets-tasks.json", is_check_valid_rules=True, result_queue=None):
+        worker_pool, result_queue, host_ip = super().init_kmn_isc_task_workers(cls, isc_config_file, is_check_valid_rules)
+        worker_pool.join()
+        cls.send_worker_terminate_info(cls, host_ip, result_queue)
+
 
 
 if __name__ == '__main__':

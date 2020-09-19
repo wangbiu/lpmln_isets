@@ -7,6 +7,9 @@
 @File    : __init__.py.py
 """
 
+from lpmln.search.distributed.final.FinalSearchMaster import FinalIConditionsSearchMaster
+from lpmln.search.distributed.final.FinalSearchHTWorker import FinalIConditionsSearchHTWorker
+
 
 def init_task_master(isc_config_file="isets-tasks.json", sleep_time=30):
     FinalIConditionsSearchMaster.init_kmn_isc_task_master_from_config(FinalIConditionsSearchMaster, isc_config_file, sleep_time)
