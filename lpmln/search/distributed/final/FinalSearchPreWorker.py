@@ -301,6 +301,13 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
         result_queue_cache = list()
         return result_queue_cache
 
+    @staticmethod
+    def init_extra_kmn_pre_task_workers(cls, isc_config_file="isets-tasks.json", is_check_valid_rules=True,
+                                  result_queue=None):
+        worker_pool, result_queue, host_ip = cls.init_kmn_isc_task_workers(cls, isc_config_file, is_check_valid_rules, result_queue)
+        worker_pool.join()
+        cls.send_worker_terminate_info(cls, host_ip, result_queue)
+
 
 
 if __name__ == '__main__':
