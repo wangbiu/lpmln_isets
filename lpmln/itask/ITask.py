@@ -40,6 +40,7 @@ class ITask:
         self.task_slice_file_exist = True
         self.unknown_iset_number = 0
         self.result_file = ""
+        self.result_file_write = False
 
         self.task_type = "%s-%s" % (str(self.lp_type), "elp" if self.is_use_extended_rules else "dlp")
         self.task_flag = "**%d-%d-%d (%d ~ %d) %s isc tasks**"
@@ -153,11 +154,13 @@ class ITask:
             self.hierarchical_task_number[i] = task_number
 
     def dump_tmp_se_condition(self):
-        if self.is_find_new_se_condition:
-            self.is_find_new_se_condition = False
-            if self.is_task_finish:
+        if self.is_task_finish:
+            if not self.result_file_write:
                 self.task_finish()
-            else:
+                self.result_file_write = True
+        else:
+            if self.is_find_new_se_condition:
+                self.is_find_new_se_condition = False
                 file_time_fmt = "%Y_%m_%d_%H_%M_%S"
                 now_time = datetime.datetime.now()
                 file_name = "%d-%d-%d-isc-%d-%d-emp-%s.txt" % (
