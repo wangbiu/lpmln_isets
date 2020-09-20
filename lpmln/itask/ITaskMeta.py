@@ -145,7 +145,7 @@ class ITaskMetaGenerator:
         self.compute_nse_isets()
         self.compute_search_isets()
         self.compute_search_i4_composed_isets()
-        self.compute_min_i4_isets_tuples()
+        # self.compute_min_i4_isets_tuples()
 
     def init_i_n_composed_iset_ids(self):
         self.meta_data.i3_composed_iset_ids = self.get_i_n_composed_isets(3)
@@ -275,8 +275,8 @@ class ITaskMetaGenerator:
 
 
 def generate_itask_meta_data():
-    kmns = [[0, 1, 1], [1, 1, 0], [0, 2, 1], [1, 1, 1], [1, 2, 0], [2, 1, 0]]
-    # kmns = [[0, 1, 1]]
+    kmns = [[0, 1, 1], [1, 1, 0], [0, 2, 1], [1, 1, 1], [1, 2, 0], [2, 1, 0], [0, 3, 1], [0, 4, 1]]
+    # kmns = [[0, 3, 1], [0, 4, 1]]
     meta = list()
     for kmn in kmns:
         generator = ITaskMetaGenerator(kmn, "lpmln", False)
