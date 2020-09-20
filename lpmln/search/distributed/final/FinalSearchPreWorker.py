@@ -141,7 +141,7 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
         if skip_number > 0:
             nse_skip_result = (itask_id, ne_iset_number, 0, skip_number, 0)
             # result_queue.put(result_item)
-            print("nse skip", nse_skip_result)
+            # print("nse skip", nse_skip_result)
 
         return processed_task_slices, nse_skip_result
 
@@ -175,7 +175,7 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
         valid_skip_result = None
         if skip_number > 0:
             valid_skip_result = (itask_id, ne_iset_number, 0, skip_number, skip_number)
-            print("valid skip ", valid_skip_result)
+            # print("valid skip ", valid_skip_result)
             # result_queue.put(result_tuple)
 
         return new_task_slices, valid_skip_result
