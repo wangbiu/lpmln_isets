@@ -21,7 +21,7 @@ def init_task_worker(isc_config_file="isets-tasks.json", is_check_valid_rules=Tr
 
 
 def extra_init_pretask_worker(isc_config_file="isets-tasks.json", is_check_valid_rules=False):
-    FinalIConditionsSearchPreWorker.init_extra_kmn_pre_task_workers(isc_config_file, is_check_valid_rules, None)
+    FinalIConditionsSearchPreWorker.init_extra_kmn_pre_task_workers(FinalIConditionsSearchPreWorker, isc_config_file, is_check_valid_rules, None)
 
 
 if __name__ == '__main__':
