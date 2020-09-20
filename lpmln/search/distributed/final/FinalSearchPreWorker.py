@@ -26,16 +26,21 @@ config = cfg.load_configuration()
 class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
     @staticmethod
     def process_task_slice(cls, itask_id, itask, task_slice, manager_tuple):
-        result_queue = manager_tuple[3]
         ht_task_queue = manager_tuple[2]
-        no_sv_task_slices = cls.process_semi_valid_task_slices(cls, itask_id, itask, task_slice, result_queue)
+        result_queue_cache = list()
+        no_sv_task_slices, valid_skip_result = cls.process_semi_valid_task_slices(cls, itask_id, itask, task_slice)
+        if valid_skip_result is not None:
+            result_queue_cache.append(valid_skip_result)
+
         ht_check_task_slices = list()
         for ts in no_sv_task_slices:
-            ht_slices = cls.process_nse_subparts_task_slices(cls, itask_id, itask, ts, result_queue)
+            ht_slices, nse_skip_result = cls.process_nse_subparts_task_slices(cls, itask_id, itask, ts)
             ht_check_task_slices.extend(ht_slices)
+            if nse_skip_result is not None:
+                result_queue_cache.append(nse_skip_result)
 
         if len(ht_check_task_slices) == 0:
-            return 0
+            return result_queue_cache
 
         ts = ht_check_task_slices[0]
         ne_iset_number = len(ts[0]) + ts[2]
@@ -44,6 +49,8 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
             cls.vandermonde_split_ht_task(cls, itask_id, ht_check_task_slices, ht_task_queue)
         else:
             cls.single_split_ht_tasks(cls, itask_id, ht_check_task_slices, ht_task_queue)
+
+        return result_queue_cache
 
     @staticmethod
     def vandermonde_split_ht_task(cls, itask_id, ht_check_task_slices, ht_task_queue):
@@ -106,7 +113,7 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
         return skip_number, yang_task_slices
 
     @staticmethod
-    def process_nse_subparts_task_slices(cls, itask_id, itask, task_slice, result_queue):
+    def process_nse_subparts_task_slices(cls, itask_id, itask, task_slice):
         skip_number = 0
         processed_task_slices = [task_slice]
         original_left_isets = set(task_slice[0])
@@ -129,15 +136,17 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
         # print("task slice ", task_slice, "has task ", total_task, "total skip ", skip_number, "remian ", remain_task)
         # print("total = skip + remain ", remain_task + skip_number == total_task, "\n")
 
+        nse_skip_result = None
 
         if skip_number > 0:
-            result_item = (ITaskSignal.stat_signal, itask_id, ne_iset_number, 0, skip_number, 0, None)
-            result_queue.put(result_item)
+            nse_skip_result = (itask_id, ne_iset_number, 0, skip_number, 0)
+            # result_queue.put(result_item)
+            print("nse skip", nse_skip_result)
 
-        return processed_task_slices
+        return processed_task_slices, nse_skip_result
 
     @staticmethod
-    def process_semi_valid_task_slices(cls, itask_id, itask, task_slice, result_queue):
+    def process_semi_valid_task_slices(cls, itask_id, itask, task_slice):
         left_isets = task_slice[0]
         right_zone_isets = task_slice[1]
         right_zone_choice_number = task_slice[2]
@@ -163,11 +172,13 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
             else:
                 new_task_slices.append((new_left_ids, ts[1], ts[2]))
 
+        valid_skip_result = None
         if skip_number > 0:
-            result_tuple = (ITaskSignal.stat_signal, itask_id, ne_iset_number, 0, skip_number, skip_number, None)
-            result_queue.put(result_tuple)
+            valid_skip_result = (itask_id, ne_iset_number, 0, skip_number, skip_number)
+            print("valid skip ", valid_skip_result)
+            # result_queue.put(result_tuple)
 
-        return new_task_slices
+        return new_task_slices, valid_skip_result
 
     @staticmethod
     def task_worker_load_nse_conditions(itask, task_slice):
@@ -208,6 +219,7 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
         is_process_task_queue = False
         task_slice_cache = None
         last_nse_iset_number = 0
+        result_queue_cache = list()
         while True:
             if not pathlib.Path(config.task_host_lock_file).exists():
                 break
@@ -250,14 +262,45 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
                                   "%s:%s waiting for %d-%d-%d nse complete file %d" % (
                                       worker_host_name, worker_name, *itask.k_m_n, nse_iset_number)
                                   ))
+                result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, manager_tuple[3])
                 time.sleep(1)
                 continue
 
-            cls.process_task_slice(cls, itask_id, itask, task_slice, manager_tuple)
+            rq_cache = cls.process_task_slice(cls, itask_id, itask, task_slice, manager_tuple)
+            result_queue_cache.extend(rq_cache)
             task_slice_cache = None
 
         logging.info(
             "%s processes %d isc task slices ... " % (worker_name, processed_task_slices_number))
+
+    @staticmethod
+    def batch_send_stat_info_2_result_queue(cls, result_queue_cache, result_queue):
+        if len(result_queue_cache) == 0:
+            return result_queue_cache
+
+        key = "%d-%d"
+        results = dict()
+        for rq in result_queue_cache:
+            data_key = key % (rq[0], rq[1])
+            if data_key in results:
+                data_item = results[data_key]
+            else:
+                data_item = [rq[0], rq[1], 0, 0, 0]
+                results[data_key] = data_item
+
+            for i in range(2, len(rq)):
+                data_item[i] += rq[i]
+
+        for data_key in results:
+            data_item = [ITaskSignal.stat_signal]
+            data_item.extend(results[data_key])
+            data_item.append(None)
+            data_item = tuple(data_item)
+            result_queue.put(data_item)
+
+        result_queue_cache = list()
+        return result_queue_cache
+
 
 
 if __name__ == '__main__':
