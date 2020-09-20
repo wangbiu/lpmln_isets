@@ -270,6 +270,9 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
             result_queue_cache.extend(rq_cache)
             task_slice_cache = None
 
+            if len(result_queue_cache) > 2000:
+                result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, manager_tuple[3])
+
         logging.info(
             "%s processes %d isc task slices ... " % (worker_name, processed_task_slices_number))
 
