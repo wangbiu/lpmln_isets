@@ -174,7 +174,7 @@ class FinalIConditionsSearchMaster:
             right_zone_iset_ids = set(copy.deepcopy(it.meta_data.search_space_iset_ids))
             left_zone_iset_ids = set(it.meta_data.search_i4_composed_iset_ids)
 
-            max_left_zone_length = 9
+            max_left_zone_length = 12
             if len(left_zone_iset_ids) > max_left_zone_length:
                 left_zone_iset_ids = list(left_zone_iset_ids)[0:max_left_zone_length]
                 left_zone_iset_ids = set(left_zone_iset_ids)
