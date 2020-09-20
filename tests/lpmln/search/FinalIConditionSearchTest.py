@@ -43,7 +43,7 @@ def test_load_nse_condition():
 
 
 def test_nse_process():
-    task_slice =  ({32, 35, 36}, {0, 1, 4, 7, 8, 9, 39, 40, 12, 41, 44, 15, 16, 17, 20}, 0)
+    task_slice = ({32, 35, 36}, {0, 1, 4, 7, 8, 9, 39, 40, 12, 41, 44, 15, 16, 17, 20}, 0)
     nse = {35, 7}
     skip, new_ts = pre_worker.process_one_nse_subpart_task_slice(pre_worker, nse, task_slice)
     print(skip)
@@ -67,6 +67,13 @@ def test_parallel_validate():
     print(is_strongly_equivalent, condition)
 
 
+def test_singleton_icondition():
+    kmn = (0, 2, 3)
+    ne_isets = {16673, 2323}
+    validator = ISetConditionValidator(False)
+    is_contain_valid_rule, is_strongly_equivalent, condition = \
+        validator.validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids_return_icondition_obj(ne_isets, *kmn, False)
+    print(is_strongly_equivalent, condition)
 
 
 

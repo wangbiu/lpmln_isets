@@ -86,9 +86,12 @@ class ISetConditionValidator:
             extended_isets = copy.deepcopy(isets)
             extended_isets[nid].members.add(new_atom)
             is_contain_valid, is_se_sat = self.validate_isets_kmn_program(extended_isets, k_size, m_size, n_size,
-                                                                          is_check_valid_rule=False)
+                                                                                      is_check_valid_rule=False)
+
+            # TODO: nid 是实际的iset id, 而icondition中的集合id cid = iset_id + 1, 目的是为了从0开始索引，因此nid需要减一
+            # TODO: the nid is real iset id, the id in icondition is iset_id - 1
             if not is_se_sat:
-                singleton_iset_ids.append(nid)
+                singleton_iset_ids.append(nid - 1)
 
         is_se_sat = True
         return is_contain_valid, is_se_sat, validated_condition
