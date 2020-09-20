@@ -186,7 +186,7 @@ class ITask:
                 self.task_flag, self.task_total_number)
             else:
                 self.task_progress_rate = 100.0 * self.task_complete_number / self.task_total_number
-                details = self.get_itask_detail_status()
+                details = self.get_itask_detail_status(self.working_ne_iset_numbers)
                 if self.se_condition_number == 0:
                     prg_info = ":mag_right: %s: total tasks: %d, complete tasks: %d (%.3f%%, running time: %s), find 0 se conditions. details: \n %s" % (
                         self.task_flag, self.task_total_number, self.task_complete_number, self.task_progress_rate,
@@ -205,10 +205,20 @@ class ITask:
 
         return prg_info
 
-    def get_itask_detail_status(self):
+    def get_itask_detail_status(self, working_ne_iset_number=-1):
         status = list()
         tmpl = "\t\t\t\t ne iset: %d, task progress (cp/ck/sk/t): %d / %d / %d / %d (t/ck: %.3f, running time: %s), found conditions: %d se, %d nse, %d new nse."
-        for i in range(self.min_ne, self.max_ne + 1):
+
+        if working_ne_iset_number < 0:
+            min_ne = self.min_ne
+            max_ne = self.max_ne
+        else:
+            min_ne = working_ne_iset_number - 2
+            max_ne = working_ne_iset_number + 1
+            if min_ne < self.min_ne:
+                min_ne = self.min_ne
+
+        for i in range(min_ne, max_ne):
             task_number = self.hierarchical_task_number[i]
             check_number = self.hierarchical_task_check_number[i]
             if check_number == 0:
