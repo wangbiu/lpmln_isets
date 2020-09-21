@@ -68,12 +68,22 @@ def test_parallel_validate():
 
 
 def test_singleton_icondition():
-    kmn = (0, 2, 3)
-    ne_isets = {16673, 2323}
+    kmn_key = "kmn"
+    ne_isets_key = "ne_isets"
+    s_cases = [
+        {kmn_key: (0, 2, 3), ne_isets_key: {16673, 2323}},
+        {kmn_key: (2, 1, 0), ne_isets_key: {159}},
+        {kmn_key: (2, 1, 0), ne_isets_key: {271}},
+    ]
+
     validator = ISetConditionValidator(False)
-    is_contain_valid_rule, is_strongly_equivalent, condition = \
-        validator.validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids_return_icondition_obj(ne_isets, *kmn, False)
-    print(is_strongly_equivalent, condition)
+    for sc in s_cases:
+        kmn = sc[kmn_key]
+        ne_isets = sc[ne_isets_key]
+        is_contain_valid_rule, is_strongly_equivalent, condition = \
+            validator.validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids_return_icondition_obj(
+                ne_isets, *kmn, False)
+        print("k-m-n: ", kmn, "ne isets: ", ne_isets, "is se:", is_strongly_equivalent, "condition: ", condition)
 
 
 

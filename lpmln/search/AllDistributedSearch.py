@@ -37,6 +37,11 @@ def init_task_worker(isc_config_file="isets-tasks.json", is_check_valid_rules=Tr
     alg.init_task_worker(isc_config_file, is_check_valid_rules)
 
 
+def extra_init_pretask_worker(isc_config_file="isets-tasks.json", is_check_valid_rules=True):
+    alg7.extra_init_pretask_worker(isc_config_file, is_check_valid_rules)
+
+
+
 if __name__ == '__main__':
     try:
         # init_task_worker()
