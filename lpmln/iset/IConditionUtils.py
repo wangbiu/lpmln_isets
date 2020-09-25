@@ -11,6 +11,8 @@
 from lpmln.iset.ISetCondition import ISetCondition
 import lpmln.config.GlobalConfig as cfg
 config = cfg.load_configuration()
+from sympy import symbols, simplify, true, false
+from sympy.logic.boolalg import And, Or, Not, to_dnf
 
 
 def load_iconditions_from_file(ic_file, is_ne_formate=True):
@@ -32,6 +34,7 @@ def parse_ne_formate_icondition(data):
     condition = ISetCondition(list(), list(), True)
     condition.set_ne_iset_ids(set(cdt))
     condition.singletom_iset_ids = set(singleton)
+    return condition
 
 
 def parse_01_formate_icondition(data):
@@ -51,6 +54,44 @@ def parse_raw_icondition_data(data):
         singleton = [int(s) for s in singleton]
 
     return cdt, singleton
+
+
+def get_iconditions_ne_isets(iconditions):
+    ne_isets = set()
+    for ic in iconditions:
+        ne_isets = ne_isets.union(ic.ne_iset_ids)
+
+    return ne_isets
+
+
+def get_iconditions_ne_isets_logic_symbols(iconditions):
+    ne_isets = get_iconditions_ne_isets(iconditions)
+    ne_symboles = dict()
+    for ne in ne_isets:
+        ne_symboles[ne] = symbols("a"+str(ne+1))
+
+    return ne_symboles
+
+
+def convert_icondition_2_conjunctive_formula(icondition, ne_symbols):
+    ic_symbols = list()
+    for ne in ne_symbols:
+        if ne in icondition.ne_iset_ids:
+            ic_symbols.append(ne_symbols[ne])
+        else:
+            ic_symbols.append(Not(ne_symbols[ne]))
+
+    if len(ic_symbols) == 0:
+        return true
+
+    formula = ic_symbols[0]
+    for i in range(1, len(ic_symbols)):
+        formula = And(formula, ic_symbols[i])
+
+    return formula
+
+
+
 
 
 

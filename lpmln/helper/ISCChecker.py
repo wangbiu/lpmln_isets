@@ -6,7 +6,9 @@
 @Email   : wangbiu@foxmail.com
 @File    : ISCChecker.py
 """
+from mpmath import cond
 
+import lpmln.iset.IConditionUtils as iscu
 import lpmln.config.GlobalConfig as cfg
 config = cfg.load_configuration()
 
@@ -22,12 +24,20 @@ kmn_data = {
 }
 
 
-def get_isc_file(kmn_key):
-    return config.get_isc_results_file_path(*kmn_data[kmn_key])
+def check_isc_data(kmn_key):
+    file = config.get_isc_results_file_path(*kmn_data[kmn_key])
+    conditions = iscu.load_iconditions_from_file(file)
+    ne_isets = iscu.get_iconditions_ne_isets(conditions)
+    print("ne isets: ", ne_isets)
+    ne_symbols = iscu.get_iconditions_ne_isets_logic_symbols(conditions)
+    print("ne logic symbols: ", ne_symbols)
+
+    for c in conditions:
+        print(c, iscu.convert_icondition_2_conjunctive_formula(c, ne_symbols))
+
 
 
 if __name__ == '__main__':
-    for key in kmn_data:
-        print(get_isc_file(key))
+    check_isc_data("0-1-1")
     pass
     
