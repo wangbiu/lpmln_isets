@@ -33,6 +33,10 @@ class ISetCondition:
             string = "%s:%s" % (",".join(ne_isets), ",".join(singletons))
             return string
 
+    def set_ne_iset_ids(self, ne_isets):
+        self.ne_iset_ids = ne_isets
+        self.ne_iset_number = len(ne_isets)
+
     def stringify(self):
         """
         do not use this function
