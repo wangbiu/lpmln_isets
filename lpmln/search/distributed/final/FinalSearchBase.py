@@ -15,7 +15,7 @@ import lpmln.config.GlobalConfig as cfg
 from lpmln.itask.ITask import ITaskConfig
 import lpmln.iset.ISetNonSEUtils as isnse
 import lpmln.utils.SSHClient as ssh
-
+import lpmln.iset.ISetCompositionUtils as iscom
 
 
 config = cfg.load_configuration()
@@ -87,6 +87,28 @@ class SearchQueueManager:
 
 
 class FinalIConditionsSearchBaseWorker:
+    @staticmethod
+    def has_same_rules(ne_isets, rule_number, is_use_extended_rules):
+        same_record = list()
+        for i in range(rule_number):
+            has_same = [0] * rule_number
+            same_record.append(has_same)
+
+        for ne in ne_isets:
+            composition = iscom.get_iset_compositions(ne + 1, rule_number, is_use_extended_rules)
+            for i in range(rule_number):
+                for j in range(i + 1, rule_number):
+                    if composition[i] != composition[j]:
+                        same_record[i][j] += 1
+
+        for i in range(rule_number):
+            for j in range(i + 1, rule_number):
+                if same_record[i][j] == 0:
+                    return True
+
+        return False
+
+
     @staticmethod
     def join_list_data(data):
         data = [str(s) for s in data]

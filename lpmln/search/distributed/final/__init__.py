@@ -10,6 +10,7 @@
 from lpmln.search.distributed.final.FinalSearchMaster import FinalIConditionsSearchMaster
 from lpmln.search.distributed.final.FinalSearchHTWorker import FinalIConditionsSearchHTWorker
 from lpmln.search.distributed.final.FinalSearchPreWorker import FinalIConditionsSearchPreWorker
+from lpmln.search.distributed.final.FinalSearchHTWorkerCheckSameRule import FinalIConditionsSearchHTWorkerCheckSameRules
 
 
 def init_task_master(isc_config_file="isets-tasks.json", sleep_time=30):
@@ -24,6 +25,11 @@ def extra_init_pretask_worker(isc_config_file="isets-tasks.json", is_check_valid
     FinalIConditionsSearchPreWorker.init_extra_kmn_pre_task_workers(FinalIConditionsSearchPreWorker, isc_config_file, is_check_valid_rules, None)
 
 
+def init_task_worker_check_same_rules(isc_config_file="isets-tasks.json", is_check_valid_rules=True):
+    FinalIConditionsSearchHTWorkerCheckSameRules.init_kmn_isc_task_workers(
+        FinalIConditionsSearchHTWorkerCheckSameRules, isc_config_file, is_check_valid_rules, None)
+
 if __name__ == '__main__':
+    init_task_worker_check_same_rules()
     pass
     

@@ -34,6 +34,7 @@ def check_isc_data(kmn_key):
     print("ne isets: ", ne_isets)
     ignore_ne_isets = iscu.find_common_ne_isets_from_iconditions(conditions)
     print("common ne isets: ", ignore_ne_isets)
+    ignore_ne_isets = set()
     ne_symbols = iscu.get_iconditions_ne_isets_logic_symbols(conditions, ignore_ne_isets)
     print("ne logic symbols: ", ne_symbols)
 
@@ -94,10 +95,10 @@ def check_110_icondition():
 
 
 if __name__ == '__main__':
-    # check_isc_data("0-1-1")
+    check_isc_data("0-1-1")
     # check_isc_data("1-1-0")
     # check_011_programs()
     # check_011_icondition()
-    check_110_icondition()
+    # check_110_icondition()
     pass
     
