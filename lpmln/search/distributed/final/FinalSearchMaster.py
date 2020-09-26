@@ -85,13 +85,15 @@ class FinalIConditionsSearchMaster:
     @staticmethod
     def update_nse_files_to_new_host(host_ip, itasks):
         nse_files = list()
-        complete_flags = list()
+        flag_files = list()
         for it in itasks:
             for i in it.non_se_condition_files:
                 nse_files.append(isnse.get_nse_condition_file_path(*it.k_m_n, i, it.lp_type, it.is_use_extended_rules))
-                complete_flags.append(isnse.get_transport_complete_flag_file(*it.k_m_n, i))
+                flag_files.append(isnse.get_transport_complete_flag_file(*it.k_m_n, i))
+            if it.is_task_finish:
+                isnse.get_task_early_terminate_flag_file(*it.k_m_n)
         isnse.transport_non_se_results(nse_files, [host_ip])
-        isnse.transport_non_se_results(complete_flags, [host_ip])
+        isnse.transport_non_se_results(flag_files, [host_ip])
 
     @staticmethod
     def update_itask_running_info(itask, info):
