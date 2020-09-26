@@ -79,10 +79,13 @@ def check_itask_meta(k_size, m_size, n_size, lp_type="lpmln", is_use_extended_ru
     search_i4_isets = set(data.search_i4_composed_iset_ids)
     print("has %d search i4 isets: " % len(search_i4_isets), search_i4_isets)
     print("minimal i4 tuples: ", data.minmal_i4_isets_tuples)
+    return data
 
 
 if __name__ == '__main__':
     # check_itask(0, 2, 1)
-    check_itask_meta(0, 1, 1)
+    data = check_itask_meta(0, 1, 1)
+    print(data.search_space_iset_ids)
+    print(data.non_se_iset_ids)
     pass
     

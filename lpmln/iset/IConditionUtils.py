@@ -10,6 +10,7 @@
 
 from lpmln.iset.ISetCondition import ISetCondition
 import lpmln.config.GlobalConfig as cfg
+import lpmln.iset.ISetCompositionUtils as iscom
 config = cfg.load_configuration()
 from sympy import symbols, simplify, true, false
 from sympy.logic.boolalg import And, Or, Not, to_dnf
@@ -64,11 +65,12 @@ def get_iconditions_ne_isets(iconditions):
     return ne_isets
 
 
-def get_iconditions_ne_isets_logic_symbols(iconditions):
+def get_iconditions_ne_isets_logic_symbols(iconditions, ignore_ne_isets):
     ne_isets = get_iconditions_ne_isets(iconditions)
     ne_symboles = dict()
     for ne in ne_isets:
-        ne_symboles[ne] = symbols("a"+str(ne+1))
+        if ne not in ignore_ne_isets:
+            ne_symboles[ne] = symbols("a"+str(ne+1))
 
     return ne_symboles
 
@@ -91,8 +93,92 @@ def convert_icondition_2_conjunctive_formula(icondition, ne_symbols):
     return formula
 
 
+def convert_iconditions_2_disjunctive_formula(iconditions, ne_symbols):
+    conjunctive_formulas = list()
+    for ic in iconditions:
+        f = convert_icondition_2_conjunctive_formula(ic, ne_symbols)
+        conjunctive_formulas.append(f)
+
+    if len(conjunctive_formulas) == 0:
+        return True
+
+    dnf = conjunctive_formulas[0]
+    for i in range(1, len(conjunctive_formulas)):
+        dnf = Or(dnf, conjunctive_formulas[i])
+
+    return dnf
 
 
+def simplify_iconditions(iconditions, ignore_ne_isets=set()):
+    ne_symbols = get_iconditions_ne_isets_logic_symbols(iconditions, ignore_ne_isets)
+    dnf = convert_iconditions_2_disjunctive_formula(iconditions, ne_symbols)
+    simplified_dnf = simplify(dnf)
+    return simplified_dnf
+
+
+def find_common_ne_isets_from_iconditions(iconditions):
+    ne_isets = get_iconditions_ne_isets(iconditions)
+    ne_isets_count = dict()
+    for ne in ne_isets:
+        ne_isets_count[ne] = 0
+
+    for ic in iconditions:
+        for ne in ic.ne_iset_ids:
+            ne_isets_count[ne] += 1
+
+    common_ne_isets = set()
+    for ne in ne_isets_count:
+        if ne_isets_count[ne] == len(iconditions):
+            common_ne_isets.add(ne)
+
+    return common_ne_isets
+
+
+def get_rule_sets(rule_number, is_use_extended_rules):
+    rule_sets_names = ["h(%d)", "pb(%d)", "nb(%d)"]
+    if is_use_extended_rules:
+        rule_sets_names = ["h(%d)", "pb(%d)", "nb(%d)"]
+    rule_sets = list()
+    for i in range(1, rule_number + 1):
+        for rs in rule_sets_names:
+            rs = rs % i
+            rule_sets.append(rs)
+
+    return rule_sets
+
+
+def complete_and_analyse_icondition(ne_isets, condition_space_isets, meta):
+    search_space_iset_ids = set(meta.search_space_iset_ids)
+    non_se_iset_ids = set(meta.non_se_iset_ids)
+    search_space_isets = search_space_iset_ids.union(non_se_iset_ids)
+    e_isets = search_space_isets.difference(condition_space_isets)
+    free_isets = condition_space_isets.difference(ne_isets)
+
+    rule_number = sum(meta.kmn)
+
+    rule_sets = get_rule_sets(rule_number, meta.is_use_extended_rules)
+    condition_comp = dict()
+    for rs in rule_sets:
+        condition_comp[rs] = list()
+
+    compute_isets_compostions(condition_comp, ne_isets, "non-empty", rule_sets)
+
+    compute_isets_compostions(condition_comp, e_isets, "empty", rule_sets)
+
+    compute_isets_compostions(condition_comp, free_isets, "free", rule_sets)
+
+    return condition_comp
+
+
+def compute_isets_compostions(comp_data, isets, label, rule_sets):
+    for s in comp_data:
+        comp_data[s].append(label)
+
+    for s in isets:
+        comp = iscom.get_iset_binary_bits(s + 1, len(rule_sets))
+        for i in range(len(comp)):
+            if comp[i] == 1:
+                comp_data[rule_sets[i]].append(s)
 
 
 if __name__ == '__main__':
