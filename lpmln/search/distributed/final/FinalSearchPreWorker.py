@@ -265,6 +265,7 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
 
             is_task_finish = cls.check_itasks_finish_status(isc_tasks)
             if is_task_finish:
+                logging.info("%s:%s all itasks terminate ..." % (worker_host_name, worker_name))
                 break
 
             if task_slice_cache is None:
