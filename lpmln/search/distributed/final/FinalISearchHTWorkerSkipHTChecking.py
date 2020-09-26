@@ -12,16 +12,12 @@ from lpmln.iset.ISetCondition import ISetCondition
 from lpmln.iset.ISetConditionValidator import ISetConditionValidator
 import lpmln.config.GlobalConfig as cfg
 import itertools
-from lpmln.search.distributed.final.FinalSearchBase import FinalIConditionsSearchBaseWorker, ITaskSignal, \
-    SearchQueueManager
+from lpmln.search.distributed.final.FinalSearchHTWorker import FinalIConditionsSearchHTWorker
 
 config = cfg.load_configuration()
 
 
-class FinalIConditionsSearchHTWorker(FinalIConditionsSearchBaseWorker):
-
-
-
+class FinalIConditionsSearchHTWorkerSkipHT(FinalIConditionsSearchHTWorker):
     @staticmethod
     def search_ht_task_slice(cls, itask, task_slice):
         task_check_number = 0

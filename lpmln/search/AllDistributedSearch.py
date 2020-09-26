@@ -41,6 +41,8 @@ def extra_init_pretask_worker(isc_config_file="isets-tasks.json", is_check_valid
     alg7.extra_init_pretask_worker(isc_config_file, is_check_valid_rules)
 
 
+def skipht_init_task_worker(isc_config_file="isets-tasks.json", is_check_valid_rules=True):
+    alg7.init_task_worker_skip_ht_checking(isc_config_file, is_check_valid_rules)
 
 if __name__ == '__main__':
     try:
