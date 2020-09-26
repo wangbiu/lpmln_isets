@@ -44,8 +44,8 @@ def extra_init_pretask_worker(isc_config_file="isets-tasks.json", is_check_valid
 
 if __name__ == '__main__':
     try:
-        # init_task_worker()
-        init_task_master(sleep_time=2)
+        init_task_worker()
+        # init_task_master(sleep_time=2)
     except Exception as e:
         print(e)
     pass

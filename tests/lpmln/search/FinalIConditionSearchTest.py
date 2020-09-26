@@ -50,6 +50,21 @@ def test_nse_process():
     print(new_ts)
 
 
+def test_nse_condition():
+    kmn = [2, 1, 0]
+    ne_isets = [
+        {265, 267, 289, 15},
+        {265, 267, 97, 7}
+    ]
+
+    validator = ISetConditionValidator(False)
+    for ne in ne_isets:
+        is_valid, is_se, condition = validator.validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids_return_icondition_obj(
+            ne, *kmn, False)
+        print(ne, is_se)
+
+
+
 def test_parallel_validate():
     isc_tasks = load_itasks()
     itask = isc_tasks[1]

@@ -113,6 +113,45 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
         return skip_number, yang_task_slices
 
     @staticmethod
+    def process_one_nse_subpart_task_slice2(cls, nse_isets, task_slice):
+        """
+        :param cls:
+        :param nse_isets:
+        :param task_slice: (left_iset_ids, right_zone_iset_ids, right_zone_choice_number)
+        :return:
+        """
+        original_left_isets = set(task_slice[0])
+        remained_nse_isets = nse_isets.difference(original_left_isets)
+        yang_task_slices = list()
+
+        if len(remained_nse_isets) == 0:
+            skip_number = CombinaryCounter.compute_comb(len(task_slice[1]), task_slice[2])
+            return skip_number, yang_task_slices
+
+        if not remained_nse_isets.issubset(task_slice[1]):
+            skip_number = 0
+            yang_task_slices.append(task_slice)
+            return skip_number, yang_task_slices
+
+        nse_isets_size = len(remained_nse_isets)
+        right_zone_isets = task_slice[1].difference(remained_nse_isets)
+        v_generator = CombinationSearchingSpaceSplitter.vandermonde_generator(
+            remained_nse_isets, right_zone_isets, task_slice[2])
+
+        skip_number = 0
+        for slice in v_generator:
+            if len(slice[0]) == nse_isets_size:
+                skip_number += CombinaryCounter.compute_comb(len(slice[1]), slice[2])
+                continue
+
+            for a in original_left_isets:
+                slice[0].add(a)
+
+            yang_task_slices.append(slice)
+
+        return skip_number, yang_task_slices
+
+    @staticmethod
     def process_nse_subparts_task_slices(cls, itask_id, itask, task_slice):
         skip_number = 0
         processed_task_slices = [task_slice]
@@ -122,7 +161,7 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
         for nse in itask.non_se_conditions:
             nse_new_task_slices = list()
             for ts in processed_task_slices:
-                ts_skip_number, ts_new_task_slices = cls.process_one_nse_subpart_task_slice(cls, nse, ts)
+                ts_skip_number, ts_new_task_slices = cls.process_one_nse_subpart_task_slice2(cls, nse, ts)
                 # print("nse: ", nse, ", task slice: ", ts, ", skip ", ts_skip_number)
                 skip_number += ts_skip_number
                 nse_new_task_slices.extend(ts_new_task_slices)
