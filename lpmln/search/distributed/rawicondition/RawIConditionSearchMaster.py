@@ -147,10 +147,10 @@ class RawIConditionSearchMaster(FinalIConditionsSearchMaster):
 
         msg_texts = []
         attached_files = []
-        # for it in isc_tasks:
-        #     it.task_finish()
-        #     msg_texts.append(it.get_final_detail_progress_info())
-        #     attached_files.append(it.result_file)
+        for it in isc_tasks:
+            it.task_finish()
+            msg_texts.append(it.get_final_detail_progress_info())
+            # attached_files.append(it.result_file)
 
         msg_text = "isc tasks finish! \n\t\t%s" % "\n\t\t".join(msg_texts)
         logging.info(msg_text)
