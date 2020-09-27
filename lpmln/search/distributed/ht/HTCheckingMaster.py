@@ -70,6 +70,8 @@ class HTCheckingMaster(FinalIConditionsSearchMaster):
 
                 if task_complete == task_total_number:
                     it.is_task_finish = True
+                else:
+                    is_finish = False
 
         return is_finish
 
@@ -88,7 +90,7 @@ class HTCheckingMaster(FinalIConditionsSearchMaster):
         for tid in range(len(isc_tasks)):
             it = isc_tasks[tid]
             ht_task_number = it.ht_task_number
-            batch_size = 10
+            batch_size = 100
             ht_task_slices = [i for i in range(0, ht_task_number + 1, batch_size)]
             if ht_task_slices[-1] < ht_task_number:
                 ht_task_slices.append(ht_task_number)
@@ -115,8 +117,8 @@ class HTCheckingMaster(FinalIConditionsSearchMaster):
 
         isc_tasks_cfg = ITaskConfig(isc_config_file)
         isc_tasks = isc_tasks_cfg.isc_tasks
-        # for itask in isc_tasks:
-        #     itask.init_task_numbers()
+        for itask in isc_tasks:
+            itask.init_task_numbers()
         #     ht_checking_results.append(list())
 
         msg_text = "isc task master start, load %d isc tasks from %s" % (len(isc_tasks), isc_config_file)

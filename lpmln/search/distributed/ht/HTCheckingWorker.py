@@ -9,6 +9,7 @@
 
 import logging
 from multiprocessing import Process, Manager
+import linecache
 from datetime import datetime
 import time
 import pathlib
@@ -46,10 +47,10 @@ class HTCheckingWorker(FinalIConditionsSearchHTWorker):
         data_file_current_lines = list()
 
         for itask in isc_tasks:
-            data_file_current_lines.append(0)
+            # data_file_current_lines.append(-1)
             file_path = riu.get_complete_raw_icondition_file(*itask.k_m_n, itask.lp_type, itask.is_use_extended_rules)
-            file = open(file_path, mode="r", encoding="utf-8")
-            data_files.append(file)
+            # file = open(file_path, mode="r", encoding="utf-8")
+            data_files.append(file_path)
 
         is_process_ht_task_queue = False
 
@@ -77,10 +78,9 @@ class HTCheckingWorker(FinalIConditionsSearchHTWorker):
             itask = isc_tasks[itask_id]
 
             data_file = data_files[itask_id]
-            current_data_line = data_file_current_lines[itask_id]
 
-            task_check_number, current_data_line, se_conditions_cache, nse_conditions_cache = \
-                cls.verify_ht_tasks_from_file_data(cls, itask, ts[1], data_file, current_data_line)
+            task_check_number, se_conditions_cache, nse_conditions_cache = \
+                cls.verify_ht_tasks_from_file_data(cls, itask, ts[1], data_file)
 
             end_time = datetime.now()
 
@@ -96,33 +96,31 @@ class HTCheckingWorker(FinalIConditionsSearchHTWorker):
         logging.info("%s processes  %d ht itask slices" % (worker_name, processed_ht_task_slices_number))
 
     @staticmethod
-    def verify_ht_tasks_from_file_data(cls, itask, task_slice, data_file, current_data_file_line):
+    def verify_ht_tasks_from_file_data(cls, itask, task_slice, data_file):
         se_conditions_cache = list()
         nse_conditions_cache = list()
         validator = ISetConditionValidator(lp_type=itask.lp_type, is_use_extended_rules=itask.is_use_extended_rules)
         task_check_number = 0
 
-        for f in data_file:
-            current_data_file_line += 1
-            if current_data_file_line >= task_slice[0]:
-                task_check_number += 1
-                f = f.strip("\r\n")
-                ne_isets = f.split(",")
-                ne_isets = [int(s) for s in ne_isets]
+        for line in range(task_slice[0], task_slice[1]):
+            f = linecache.getline(data_file, line + 1)
+            task_check_number += 1
+            f = f.strip("\r\n")
+            ne_isets = f.split(",")
+            ne_isets = [int(s) for s in ne_isets]
+            ne_isets = set(ne_isets)
 
-                is_contain_valid_rule, is_strongly_equivalent, condition = \
-                    validator.validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids_return_icondition_obj(
-                        ne_isets, *itask.k_m_n, is_check_valid_rule=False)
+            is_contain_valid_rule, is_strongly_equivalent, condition = \
+                validator.validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids_return_icondition_obj(
+                    ne_isets, *itask.k_m_n, is_check_valid_rule=False)
 
-                if is_strongly_equivalent:
-                    se_conditions_cache.append(condition)
-                else:
-                    nse_conditions_cache.append(condition)
+            if is_strongly_equivalent:
+                se_conditions_cache.append(condition)
+            else:
+                nse_conditions_cache.append(condition)
 
-                if current_data_file_line == task_slice[1] - 1:
-                    break
-
-        return task_check_number, current_data_file_line, se_conditions_cache, nse_conditions_cache
+        # print(task_slice, "complete", "task check number", task_check_number)
+        return task_check_number, se_conditions_cache, nse_conditions_cache
 
 
 
