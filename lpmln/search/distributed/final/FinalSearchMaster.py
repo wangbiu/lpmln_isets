@@ -16,6 +16,7 @@ from lpmln.itask.ITask import ITaskConfig
 import lpmln.iset.ISetNonSEUtils as isnse
 import lpmln.utils.SSHClient as ssh
 import copy
+import pathlib
 from lpmln.utils.CombinationSpaceUtils import CombinationSearchingSpaceSplitter
 from lpmln.search.distributed.final.FinalSearchBase import SearchQueueManager, ITaskSignal
 from lpmln.search.distributed.final.FinalSearchPreWorker import FinalIConditionsSearchPreWorker
@@ -157,6 +158,16 @@ class FinalIConditionsSearchMaster:
         return working_hosts_diff
 
     @staticmethod
+    def check_itask_terminate_status(itask):
+        if not itask.is_task_finish:
+            terminate_flag = isnse.get_task_early_terminate_flag_file(*itask.k_m_n)
+            if pathlib.Path(terminate_flag).exists():
+                itask.is_task_finish = True
+            else:
+                itask.is_task_finish = False
+        return itask.is_task_finish
+
+    @staticmethod
     def itask_slices_generator(cls, isc_config_file):
         msg_text = "%s init task slices generator ..." % str(cls)
         logging.info(msg_text)
@@ -184,9 +195,16 @@ class FinalIConditionsSearchMaster:
             right_zone_iset_ids = right_zone_iset_ids.difference(left_zone_iset_ids)
 
             for ne_iset_number in range(min_ne, max_ne+1):
-                task_slices = CombinationSearchingSpaceSplitter.vandermonde_generator(left_zone_iset_ids, right_zone_iset_ids, ne_iset_number)
-                for ts in task_slices:
-                    task_queue.put((tid, ts))
+                if not cls.check_itask_terminate_status(it):
+                    task_slices = CombinationSearchingSpaceSplitter.near_uniform_vandermonde_generator(
+                        left_zone_iset_ids, right_zone_iset_ids, ne_iset_number)
+                    ts_cnt = 0
+                    for ts in task_slices:
+                        task_queue.put((tid, ts))
+
+                        ts_cnt += 1
+                        if ts_cnt % 1000 == 0 and cls.check_itask_terminate_status(it):
+                            break
 
         working_hosts_number = 5
         for i in range(working_hosts_number * 200):

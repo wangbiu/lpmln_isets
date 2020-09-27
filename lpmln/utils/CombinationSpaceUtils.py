@@ -9,6 +9,7 @@
 
 import copy
 import itertools
+from lpmln.utils.counter.CombinaryCounter import CombinaryCounter
 
 
 class CombinationSearchingSpaceSplitter:
@@ -181,7 +182,9 @@ def near_uniform_vandermonde_generator_checker(max_elements_size=10):
         slice_cnt = 0
         for ts in searching_slices:
             slice_cnt += 1
-            slices_search_number += CombinaryCounter.compute_comb(len(ts[1]), ts[2])
+            ts_size = CombinaryCounter.compute_comb(len(ts[1]), ts[2])
+            print(ts, "size: ", ts_size)
+            slices_search_number += ts_size
 
         msg_text = "C(%d, %d), search slices number %d: real = %d, slices sum = %d, is same %s" % (
             max_elements_size, choice_number, slice_cnt, total_search_number, slices_search_number,
@@ -217,13 +220,12 @@ def yanghui_split_checker(max_elements_size=10):
 
 
 if __name__ == '__main__':
-    from lpmln.utils.counter.CombinaryCounter import CombinaryCounter
     import random
 
     # vandermonde_split_checker(60)
     # yanghui_split_checker(20)
     # vandermonde_generator_checker(60)
-    near_uniform_vandermonde_generator_checker(40)
+    near_uniform_vandermonde_generator_checker(20)
 
 
     pass

@@ -25,48 +25,6 @@ config = cfg.load_configuration()
 
 class RawIConditionSearchMaster(FinalIConditionsSearchMaster):
     @staticmethod
-    def itask_slices_generator(cls, isc_config_file):
-        msg_text = "%s init task slices generator ..." % str(cls)
-        logging.info(msg_text)
-        msg.send_message(msg_text)
-
-        manager, task_queue, ht_task_queue, result_queue = \
-            SearchQueueManager.init_task_worker_queue_manager()
-
-        isc_tasks_cfg = ITaskConfig(isc_config_file)
-        isc_tasks = isc_tasks_cfg.isc_tasks
-
-        for tid in range(len(isc_tasks)):
-            it = isc_tasks[tid]
-            min_ne = it.min_ne
-            max_ne = it.max_ne
-
-            right_zone_iset_ids = set(copy.deepcopy(it.meta_data.search_space_iset_ids))
-            left_zone_iset_ids = set(it.meta_data.search_i4_composed_iset_ids)
-
-            max_left_zone_length = 12
-            if len(left_zone_iset_ids) > max_left_zone_length:
-                left_zone_iset_ids = list(left_zone_iset_ids)[0:max_left_zone_length]
-                left_zone_iset_ids = set(left_zone_iset_ids)
-
-            right_zone_iset_ids = right_zone_iset_ids.difference(left_zone_iset_ids)
-
-            for ne_iset_number in range(min_ne, max_ne + 1):
-                task_slices = CombinationSearchingSpaceSplitter.near_uniform_vandermonde_generator(
-                    left_zone_iset_ids, right_zone_iset_ids, ne_iset_number)
-
-                for ts in task_slices:
-                    task_queue.put((tid, ts))
-
-        working_hosts_number = 5
-        for i in range(working_hosts_number * 200):
-            task_queue.put((ITaskSignal.kill_signal, -1))
-        logging.info("all itasks has been dispatched")
-
-
-
-
-    @staticmethod
     def init_kmn_isc_task_master_from_config(cls, isc_config_file="isets-tasks.json", sleep_time=30):
         manager, task_queue, ht_task_queue, result_queue = \
             SearchQueueManager.init_task_master_queue_manager()
