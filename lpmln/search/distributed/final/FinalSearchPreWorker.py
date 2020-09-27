@@ -95,33 +95,6 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
         """
         original_left_isets = set(task_slice[0])
         remained_nse_isets = nse_isets.difference(original_left_isets)
-
-        is_yang_split, yang_task_slices = CombinationSearchingSpaceSplitter.yanghui_split(
-            task_slice[1], task_slice[2], remained_nse_isets)
-
-        if is_yang_split:
-            nse_slice = yang_task_slices[-1]
-            yang_task_slices = yang_task_slices[0:-1]
-            skip_number = CombinaryCounter.compute_comb(len(nse_slice[1]), nse_slice[2])
-        else:
-            skip_number = 0
-
-        for yts in yang_task_slices:
-            for iset in original_left_isets:
-                yts[0].add(iset)
-
-        return skip_number, yang_task_slices
-
-    @staticmethod
-    def process_one_nse_subpart_task_slice2(cls, nse_isets, task_slice):
-        """
-        :param cls:
-        :param nse_isets:
-        :param task_slice: (left_iset_ids, right_zone_iset_ids, right_zone_choice_number)
-        :return:
-        """
-        original_left_isets = set(task_slice[0])
-        remained_nse_isets = nse_isets.difference(original_left_isets)
         yang_task_slices = list()
 
         if len(remained_nse_isets) == 0:
@@ -161,7 +134,7 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
         for nse in itask.non_se_conditions:
             nse_new_task_slices = list()
             for ts in processed_task_slices:
-                ts_skip_number, ts_new_task_slices = cls.process_one_nse_subpart_task_slice2(cls, nse, ts)
+                ts_skip_number, ts_new_task_slices = cls.process_one_nse_subpart_task_slice(cls, nse, ts)
                 # print("nse: ", nse, ", task slice: ", ts, ", skip ", ts_skip_number)
                 skip_number += ts_skip_number
                 nse_new_task_slices.extend(ts_new_task_slices)
