@@ -111,13 +111,13 @@ class HTCheckingMaster(FinalIConditionsSearchMaster):
         localhost_ip = ssh.get_host_ip()
         ts_generator_pool = cls.init_task_slices_generator_pool(cls, isc_config_file)
         working_hosts_number = 0
-        ht_checking_results = list()
+        # ht_checking_results = list()
 
         isc_tasks_cfg = ITaskConfig(isc_config_file)
         isc_tasks = isc_tasks_cfg.isc_tasks
-        for itask in isc_tasks:
-            itask.init_task_numbers()
-            ht_checking_results.append(list())
+        # for itask in isc_tasks:
+        #     itask.init_task_numbers()
+        #     ht_checking_results.append(list())
 
         msg_text = "isc task master start, load %d isc tasks from %s" % (len(isc_tasks), isc_config_file)
         logging.info(msg_text)

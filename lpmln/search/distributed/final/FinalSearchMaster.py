@@ -230,16 +230,18 @@ class FinalIConditionsSearchMaster:
             SearchQueueManager.init_task_master_queue_manager()
         manager_tuple = (manager, task_queue, ht_task_queue, result_queue)
         localhost_ip = ssh.get_host_ip()
-        ts_generator_pool = cls.init_task_slices_generator_pool(cls, isc_config_file)
-
-        pre_task_pool = cls.init_pre_task_worker_pool(cls, isc_config_file, result_queue)
-
-        working_hosts_number = 0
 
         isc_tasks_cfg = ITaskConfig(isc_config_file)
         isc_tasks = isc_tasks_cfg.isc_tasks
         for itask in isc_tasks:
             itask.init_task_numbers()
+            isnse.clear_task_terminate_flag_files(*itask.k_m_n)
+
+        ts_generator_pool = cls.init_task_slices_generator_pool(cls, isc_config_file)
+
+        pre_task_pool = cls.init_pre_task_worker_pool(cls, isc_config_file, result_queue)
+
+        working_hosts_number = 0
 
         msg_text = "isc task master start, load %d isc tasks from %s" % (len(isc_tasks), isc_config_file)
         logging.info(msg_text)
