@@ -50,6 +50,32 @@ class CombinationSearchingSpaceSplitter:
         return True
 
     @staticmethod
+    def near_uniform_vandermonde_generator(left_zone_elements, right_zone_elements, choice_number):
+        max_space_size = 10000000
+        spaces = list()
+        spaces.append((set(), left_zone_elements, right_zone_elements, choice_number))
+
+        while len(spaces) > 0:
+            new_spaces = list()
+
+            for sp in spaces:
+                space_slices = CombinationSearchingSpaceSplitter.vandermonde_generator(sp[1], sp[2], sp[3])
+                for s_slice in space_slices:
+                    space_size = CombinaryCounter.compute_comb(len(s_slice[1]), s_slice[2])
+                    if space_size <= max_space_size:
+                        for ele in sp[0]:
+                            s_slice[0].add(ele)
+                        yield s_slice
+                    else:
+                        new_all_zone = list(s_slice[1])
+                        new_left_zone = set(new_all_zone[0:s_slice[2]])
+                        new_right_zone = set(new_all_zone[s_slice[2]:])
+                        new_ts = (s_slice[0].union(sp[0]), new_left_zone, new_right_zone, s_slice[2])
+                        new_spaces.append(new_ts)
+
+            spaces = new_spaces
+
+    @staticmethod
     def yanghui_split(all_elements, choice_number, split_elements):
         searching_slices = list()
         split_elements_size = len(split_elements)
@@ -140,6 +166,32 @@ def vandermonde_generator_checker(max_elements_size=10):
             raise RuntimeError(msg_text)
 
 
+def near_uniform_vandermonde_generator_checker(max_elements_size=10):
+    elements = [i for i in range(max_elements_size)]
+    left_length = max_elements_size // 3
+    if left_length > 12:
+        left_length = 12
+    left_zone = elements[0:left_length]
+    right_zone = elements[left_length:]
+    for choice_number in range(max_elements_size + 1):
+        total_search_number = CombinaryCounter.compute_comb(max_elements_size, choice_number)
+        slices_search_number = 0
+        searching_slices = CombinationSearchingSpaceSplitter.near_uniform_vandermonde_generator(
+            left_zone, right_zone, choice_number)
+        slice_cnt = 0
+        for ts in searching_slices:
+            slice_cnt += 1
+            slices_search_number += CombinaryCounter.compute_comb(len(ts[1]), ts[2])
+
+        msg_text = "C(%d, %d), search slices number %d: real = %d, slices sum = %d, is same %s" % (
+            max_elements_size, choice_number, slice_cnt, total_search_number, slices_search_number,
+            str(total_search_number == slices_search_number))
+        print(msg_text)
+
+        if total_search_number != slices_search_number:
+            raise RuntimeError(msg_text)
+
+
 def yanghui_split_checker(max_elements_size=10):
     all_elements = {i for i in range(max_elements_size)}
     split_size = random.randint(0, max_elements_size + 1)
@@ -169,8 +221,9 @@ if __name__ == '__main__':
     import random
 
     # vandermonde_split_checker(60)
-    yanghui_split_checker(20)
+    # yanghui_split_checker(20)
     # vandermonde_generator_checker(60)
+    near_uniform_vandermonde_generator_checker(40)
 
 
     pass
