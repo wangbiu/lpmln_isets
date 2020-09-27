@@ -26,6 +26,16 @@ config = cfg.load_configuration()
 
 class HTCheckingMaster(FinalIConditionsSearchMaster):
     @staticmethod
+    def update_itask_running_info(itask, info):
+        task_complete_number = info[2]
+        task_running_time = info[3]
+
+        itask.set_task_complete_number(task_complete_number, 1)
+
+        if task_running_time is not None:
+            itask.set_task_running_time(task_running_time, 1)
+
+    @staticmethod
     def dump_isc_task_results(itasks):
         msg_texts = []
         for it in itasks:

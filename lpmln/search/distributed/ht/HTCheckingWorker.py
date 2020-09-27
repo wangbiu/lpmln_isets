@@ -90,8 +90,7 @@ class HTCheckingWorker(FinalIConditionsSearchHTWorker):
             if len(nse_conditions_cache) > 0:
                 result_queue.put((ITaskSignal.nse_condition_signal, itask_id, nse_conditions_cache))
 
-            result_tuple = (ITaskSignal.stat_signal, itask_id, task_check_number,
-                            task_check_number, 0, (start_time, end_time))
+            result_tuple = (ITaskSignal.stat_signal, itask_id, task_check_number, (start_time, end_time))
             result_queue.put(result_tuple)
 
         logging.info("%s processes  %d ht itask slices" % (worker_name, processed_ht_task_slices_number))

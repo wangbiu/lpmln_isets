@@ -203,7 +203,7 @@ class FinalIConditionsSearchMaster:
                         task_queue.put((tid, ts))
 
                         ts_cnt += 1
-                        if ts_cnt % 1000 == 0 and cls.check_itask_terminate_status(it):
+                        if ts_cnt % 10000 == 0 and cls.check_itask_terminate_status(it):
                             break
 
         working_hosts_number = 5
