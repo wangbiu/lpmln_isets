@@ -106,7 +106,7 @@ class HTCheckingMaster(FinalIConditionsSearchMaster):
 
     @staticmethod
     def init_pre_task_worker_pool(cls, isc_config_file, result_queue):
-        worker_pool, result_queue, host_ip = HTCheckingWorker.init_kmn_isc_task_workers(
+        worker_pool, result_queue, host_ip = HTCheckingWorker.inner_init_kmn_isc_task_workers(
             HTCheckingWorker, isc_config_file, is_check_valid_rules=False, result_queue=result_queue)
         return worker_pool
 
