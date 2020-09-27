@@ -20,6 +20,7 @@ from lpmln.utils.counter.CombinaryCounter import CombinaryCounter
 import lpmln.iset.ISetCompositionUtils as iscm
 from lpmln.search.distributed.final.FinalSearchBase import FinalIConditionsSearchBaseWorker, ITaskSignal, SearchQueueManager
 import itertools
+from datetime import datetime
 config = cfg.load_configuration()
 
 
@@ -310,7 +311,7 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
         for data_key in results:
             data_item = [ITaskSignal.stat_signal]
             data_item.extend(results[data_key])
-            data_item.append(None)
+            data_item.append((datetime.now(), datetime.now()))
             data_item = tuple(data_item)
             result_queue.put(data_item)
 
