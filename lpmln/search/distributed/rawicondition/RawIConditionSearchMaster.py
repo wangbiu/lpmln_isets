@@ -9,7 +9,7 @@
 
 from lpmln.search.distributed.final.FinalSearchBase import ITaskSignal, SearchQueueManager
 from lpmln.search.distributed.final.FinalSearchMaster import FinalIConditionsSearchMaster
-from multiprocessing import Pool
+from lpmln.search.distributed.rawicondition.RawIConditionSearchWorker import RawIConditionSearchWorker
 import logging
 import time
 import lpmln.message.Messager as msg
@@ -62,6 +62,12 @@ class RawIConditionSearchMaster(FinalIConditionsSearchMaster):
         return is_finish
 
     @staticmethod
+    def init_pre_task_worker_pool(cls, isc_config_file, result_queue):
+        worker_pool, result_queue, host_ip = RawIConditionSearchWorker.init_kmn_isc_task_workers(
+            RawIConditionSearchWorker, isc_config_file, is_check_valid_rules=True, result_queue=result_queue)
+        return worker_pool
+
+    @staticmethod
     def init_kmn_isc_task_master_from_config(cls, isc_config_file="isets-tasks.json", sleep_time=30):
         manager, task_queue, ht_task_queue, result_queue = \
             SearchQueueManager.init_task_master_queue_manager()
@@ -75,7 +81,7 @@ class RawIConditionSearchMaster(FinalIConditionsSearchMaster):
             isnse.clear_task_terminate_flag_files(*itask.k_m_n)
 
         ts_generator_pool = cls.init_task_slices_generator_pool(cls, isc_config_file)
-        # pre_pool = cls.init_pre_task_worker_pool(cls, isc_config_file, result_queue)
+        pre_pool = cls.init_pre_task_worker_pool(cls, isc_config_file, result_queue)
         working_hosts_number = 0
 
         msg_text = "isc task master start, load %d isc tasks from %s" % (len(isc_tasks), isc_config_file)
@@ -123,6 +129,8 @@ class RawIConditionSearchMaster(FinalIConditionsSearchMaster):
                     online_hosts.remove(host_ip)
 
         ts_generator_pool.join()
+        pre_pool.join()
+        RawIConditionSearchWorker.send_worker_terminate_info(RawIConditionSearchWorker, localhost_ip, result_queue)
 
         while working_hosts_number > 0:
             if sleep_cnt == 10:
