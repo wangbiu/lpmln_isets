@@ -27,6 +27,7 @@ class ITask:
         self.min_ne = min_ne
         self.max_ne = max_ne
         self.is_use_extended_rules = is_use_extended_rules
+        self.ht_task_number = 0
         if self.is_use_extended_rules:
             self.rule_set_size = 4
         else:
@@ -386,6 +387,12 @@ class ITaskConfig:
                 min_ne = task["min_ne"]
                 max_ne = task["max_ne"]
 
+                ht_task_key = "ht_task_number"
+                if ht_task_key in task:
+                    ht_task_number = task[ht_task_key]
+                else:
+                    ht_task_number = 0
+
                 kmns_key = "kmns"
                 if kmns_key in task:
                     kmns = self.get_kmn_from_config(task[kmns_key])
@@ -394,6 +401,7 @@ class ITaskConfig:
 
                 for kmn in kmns:
                     itask = ITask(min_ne, max_ne, kmn, is_use_extended_rules, lp_type)
+                    itask.ht_task_number = ht_task_number
                     self.isc_tasks.append(itask)
 
     def get_kmn_by_rule_number(self, rule_number):
