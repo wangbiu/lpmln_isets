@@ -52,7 +52,7 @@ class CombinationSearchingSpaceSplitter:
 
     @staticmethod
     def near_uniform_vandermonde_generator(left_zone_elements, right_zone_elements, choice_number):
-        max_space_size = 1000000000
+        max_space_size = 2000000000
         spaces = list()
         spaces.append((set(), left_zone_elements, right_zone_elements, choice_number))
 

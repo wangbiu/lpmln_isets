@@ -12,6 +12,7 @@ from lpmln.search.distributed.final.FinalSearchMaster import FinalIConditionsSea
 from lpmln.search.distributed.rawicondition.RawIConditionSearchWorker import RawIConditionSearchWorker
 import logging
 import time
+from datetime import datetime
 import lpmln.message.Messager as msg
 import lpmln.config.GlobalConfig as cfg
 from lpmln.itask.ITask import ITaskConfig
@@ -70,6 +71,7 @@ class RawIConditionSearchMaster(FinalIConditionsSearchMaster):
 
     @staticmethod
     def init_kmn_isc_task_master_from_config(cls, isc_config_file="isets-tasks.json", sleep_time=30):
+        start_time = datetime.now()
         manager, task_queue, ht_task_queue, result_queue = \
             SearchQueueManager.init_task_master_queue_manager()
         manager_tuple = (manager, task_queue, ht_task_queue, result_queue)
@@ -146,9 +148,8 @@ class RawIConditionSearchMaster(FinalIConditionsSearchMaster):
             whn_diff = cls.process_result_queue(cls, result_queue, isc_tasks)
             working_hosts_number += whn_diff[0]
 
-
-
-        msg_text = "isc tasks finish!"
+        end_time = datetime.now()
+        msg_text = "isc tasks finish, running time: %s" % str(end_time - start_time)
         logging.info(msg_text)
         msg.send_message(msg=msg_text)
 
