@@ -8,7 +8,7 @@
 """
 
 from lpmln.search.distributed.final.FinalSearchMaster import FinalIConditionsSearchMaster
-from multiprocessing import Pool
+from lpmln.search.distributed.ht.HTCheckingWorker import HTCheckingWorker
 import logging
 import time
 import lpmln.message.Messager as msg
@@ -104,6 +104,11 @@ class HTCheckingMaster(FinalIConditionsSearchMaster):
             ht_task_queue.put((ITaskSignal.kill_signal, -1))
         logging.info("all itasks has been dispatched")
 
+    @staticmethod
+    def init_pre_task_worker_pool(cls, isc_config_file, result_queue):
+        worker_pool, result_queue, host_ip = HTCheckingWorker.init_kmn_isc_task_workers(
+            HTCheckingWorker, isc_config_file, is_check_valid_rules=False, result_queue=result_queue)
+        return worker_pool
 
     @staticmethod
     def init_kmn_isc_task_master_from_config(cls, isc_config_file="isets-tasks.json", sleep_time=30):
@@ -112,6 +117,7 @@ class HTCheckingMaster(FinalIConditionsSearchMaster):
         manager_tuple = (manager, task_queue, ht_task_queue, result_queue)
         localhost_ip = ssh.get_host_ip()
         ts_generator_pool = cls.init_task_slices_generator_pool(cls, isc_config_file)
+        ht_pool = cls.init_pre_task_worker_pool(cls, isc_config_file, result_queue)
         working_hosts_number = 0
         # ht_checking_results = list()
 
@@ -166,6 +172,8 @@ class HTCheckingMaster(FinalIConditionsSearchMaster):
                     online_hosts.remove(host_ip)
 
         ts_generator_pool.join()
+        ht_pool.join()
+        HTCheckingWorker.send_worker_terminate_info(HTCheckingWorker, localhost_ip, result_queue)
 
         while working_hosts_number > 0:
             if sleep_cnt == 10:

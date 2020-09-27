@@ -177,10 +177,15 @@ class FinalIConditionsSearchHTWorker(FinalIConditionsSearchBaseWorker):
 
     @staticmethod
     def init_kmn_isc_task_workers(cls, isc_config_file="isets-tasks.json", is_check_valid_rules=True, result_queue=None):
-        worker_pool, result_queue, host_ip = super().init_kmn_isc_task_workers(cls, isc_config_file, is_check_valid_rules)
+        worker_pool, result_queue, host_ip = super().init_kmn_isc_task_workers(cls, isc_config_file, is_check_valid_rules, result_queue)
         worker_pool.join()
         cls.send_worker_terminate_info(cls, host_ip, result_queue)
 
+    @staticmethod
+    def inner_init_kmn_isc_task_workers(cls,  isc_config_file="isets-tasks.json", is_check_valid_rules=True, result_queue=None):
+        worker_pool, result_queue, host_ip = super().init_kmn_isc_task_workers(cls, isc_config_file,
+                                                                               is_check_valid_rules, result_queue)
+        return worker_pool, result_queue, host_ip
 
 
 if __name__ == '__main__':
