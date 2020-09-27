@@ -7,8 +7,7 @@
 @File    : __init__.py.py
 """
 
-from lpmln.search.distributed.final.ht.HTCheckingMaster import HTCheckingMaster
-from lpmln.search.distributed.final.ht.HTCheckingWorker import HTCheckingWorker
+from lpmln.search.distributed.ht.HTCheckingWorker import HTCheckingWorker
 
 
 if __name__ == '__main__':

@@ -29,7 +29,7 @@ def get_non_se_isets(k_size, m_size, n_size, iset_ids, is_use_extended_rules=Fal
     validator = ISetConditionValidator(is_use_extended_rules=is_use_extended_rules, lp_type=lp_type)
     non_se_isets = list()
     for id in iset_ids:
-        is_contain_valid_rule, is_se_sat, icondition = validator.validate_isets_kmn_program_from_non_empty_ids(
+        is_contain_valid_rule, is_se_sat, icondition = validator.validate_isets_kmn_program_from_non_empty_ids_return_str(
             {id}, k_size, m_size, n_size, is_check_valid_rule=False)
         if not is_se_sat:
             non_se_isets.append(id)

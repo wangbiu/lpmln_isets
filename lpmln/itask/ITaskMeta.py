@@ -199,7 +199,7 @@ class ITaskMetaGenerator:
 
         for id in range(self.max_iset_id + 1):
             if id not in self.meta_data.empty_iset_ids:
-                is_contain_valid_rule, is_se_sat, icondition = validator.validate_isets_kmn_program_from_non_empty_ids(
+                is_contain_valid_rule, is_se_sat, icondition = validator.validate_isets_kmn_program_from_non_empty_ids_return_str(
                 {id}, k_size, m_size, n_size, is_check_valid_rule=False)
                 if not is_se_sat:
                     non_se_isets.add(id)

@@ -9,6 +9,7 @@
 
 import os
 import lpmln.config.GlobalConfig as cfg
+import pathlib
 config = cfg.load_configuration()
 
 
@@ -33,6 +34,13 @@ def get_all_raw_icondition_file_parts(k_size, m_size, n_size, lp_type, is_use_ex
         file_part = get_raw_icondition_file(k_size, m_size, n_size, lp_type, is_use_extended_rules, str(fid))
         files.append(file_part)
     return files
+
+
+def get_empty_raw_icondition_file(k_size, m_size, n_size, lp_type, is_use_extended_rules, postfix):
+    file_path = get_raw_icondition_file(k_size, m_size, n_size, lp_type, is_use_extended_rules, postfix)
+    if pathlib.Path(file_path).exists():
+        os.remove(file_path)
+    return file_path
 
 
 if __name__ == '__main__':

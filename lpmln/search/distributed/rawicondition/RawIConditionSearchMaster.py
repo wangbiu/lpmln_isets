@@ -25,6 +25,43 @@ config = cfg.load_configuration()
 
 class RawIConditionSearchMaster(FinalIConditionsSearchMaster):
     @staticmethod
+    def check_itasks_status(cls, itasks, host_ips, manager_tuple, working_host_number):
+        is_finish = True
+        for tid in range(len(itasks)):
+            it = itasks[tid]
+            if not it.is_task_finish:
+                rule_number = sum(it.k_m_n)
+                current_ne_number = it.working_ne_iset_numbers
+                if it.is_no_new_se_condition() and current_ne_number > 1:
+                    isnse.create_and_send_task_early_terminate_flag_file(*it.k_m_n, current_ne_number, host_ips)
+                    it.is_task_finish = True
+                    it.save_progress_info()
+                    continue
+
+                task_complete = it.hierarchical_task_complete_number[current_ne_number]
+                task_total = it.hierarchical_task_number[current_ne_number]
+                if task_complete == task_total:
+                    it.save_progress_info()
+
+                    if current_ne_number <= rule_number:
+                        nse_file = it.flush_non_se_condition()
+                        isnse.transport_non_se_results([nse_file], host_ips)
+                        isnse.create_and_send_transport_complete_flag_file(*it.k_m_n, current_ne_number, host_ips)
+
+                    cls.send_itasks_progress_info(cls, itasks, manager_tuple, working_host_number, False)
+
+                    if current_ne_number < it.max_ne:
+                        it.working_ne_iset_numbers += 1
+                        is_finish = False
+                    else:
+                        it.is_task_finish = True
+                        isnse.create_and_send_task_early_terminate_flag_file(*it.k_m_n, current_ne_number, host_ips)
+                        it.save_progress_info()
+                else:
+                    is_finish = False
+        return is_finish
+
+    @staticmethod
     def init_kmn_isc_task_master_from_config(cls, isc_config_file="isets-tasks.json", sleep_time=30):
         manager, task_queue, ht_task_queue, result_queue = \
             SearchQueueManager.init_task_master_queue_manager()
