@@ -32,7 +32,8 @@ class RawIConditionSearchMaster(FinalIConditionsSearchMaster):
             if not it.is_task_finish:
                 rule_number = sum(it.k_m_n)
                 current_ne_number = it.working_ne_iset_numbers
-                if it.is_no_new_se_condition() and current_ne_number > 1:
+
+                if it.is_no_new_ht_check_task() and current_ne_number > 1:
                     isnse.create_and_send_task_early_terminate_flag_file(*it.k_m_n, current_ne_number, host_ips)
                     it.is_task_finish = True
                     it.save_progress_info()
@@ -145,16 +146,19 @@ class RawIConditionSearchMaster(FinalIConditionsSearchMaster):
             whn_diff = cls.process_result_queue(cls, result_queue, isc_tasks)
             working_hosts_number += whn_diff[0]
 
-        msg_texts = []
-        attached_files = []
+
+
+        msg_text = "isc tasks finish!"
+        logging.info(msg_text)
+        msg.send_message(msg=msg_text)
+
         for it in isc_tasks:
             it.task_finish()
-            msg_texts.append(it.get_final_detail_progress_info())
+            msg_text = it.get_final_detail_progress_info()
+            logging.info(msg_text)
+            msg.send_message(msg=msg_text)
             # attached_files.append(it.result_file)
 
-        msg_text = "isc tasks finish! \n\t\t%s" % "\n\t\t".join(msg_texts)
-        logging.info(msg_text)
-        msg.send_message(msg=msg_text, attached_files=attached_files)
         return isc_tasks
 
 

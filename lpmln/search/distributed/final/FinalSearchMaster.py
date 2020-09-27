@@ -305,16 +305,16 @@ class FinalIConditionsSearchMaster:
             whn_diff = cls.process_result_queue(cls, result_queue, isc_tasks)
             working_hosts_number += whn_diff[0]
 
-        msg_texts = []
-        attached_files = []
+        msg_text = "isc tasks finish!"
+        logging.info(msg_text)
+        msg.send_message(msg=msg_text)
+
         for it in isc_tasks:
             it.task_finish()
-            msg_texts.append(it.get_final_detail_progress_info())
-            # attached_files.append(it.result_file)
+            msg_text = it.get_final_detail_progress_info()
+            logging.info(msg_text)
+            msg.send_message(msg=msg_text)
 
-        msg_text = "isc tasks finish! \n\t\t%s" % "\n\t\t".join(msg_texts)
-        logging.info(msg_text)
-        msg.send_message(msg=msg_text, attached_files=attached_files)
         return isc_tasks
 
 
