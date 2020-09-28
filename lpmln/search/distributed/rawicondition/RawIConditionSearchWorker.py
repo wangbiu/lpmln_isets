@@ -98,6 +98,7 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
 
             if task_slice_cache is None:
                 if task_queue.empty():
+                    print("result queue cache size ", len(result_queue_cache))
                     result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache,
                                                                                  manager_tuple[3])
                     if is_process_task_queue:
