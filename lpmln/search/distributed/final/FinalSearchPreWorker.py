@@ -302,7 +302,7 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
         key = "%d-%d"
         results = dict()
 
-        print("result queue has %d items " % len(result_queue_cache))
+        # print("result queue has %d items " % len(result_queue_cache))
 
         for rq in result_queue_cache:
             data_key = key % (rq[0], rq[1])
@@ -315,8 +315,8 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
             for i in range(2, len(rq)):
                 data_item[i] += rq[i]
 
-            if data_item[2] == 0 and datetime[3] == 0 and data_item[4] == 0:
-                print("wrong stat result item: ", rq)
+            # if data_item[2] == 0 and datetime[3] == 0 and data_item[4] == 0:
+            #     print("wrong stat result item: ", rq)
 
         # print("batch stat info ", results)
 
@@ -327,9 +327,11 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
             data_item.append((start_time, datetime.now()))
             data_item = tuple(data_item)
 
-            print("send stat info", data_item)
-            if data_item[3] == 0 and data_item[4] == 0 and data_item[5] == 0:
-                print("wrong stat result item: ", data_item)
+            # print("send stat info", data_item)
+            # if data_item[3] == 0 and data_item[4] == 0 and data_item[5] == 0:
+            #     print("wrong stat result item: ", data_item)
+
+            logging.error(("sended stat info", data_item))
 
             result_queue.put(data_item)
 

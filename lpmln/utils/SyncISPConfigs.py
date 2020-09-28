@@ -32,7 +32,17 @@ def sync_all_files(host_ips, files):
         ssh.transport_files(ip, port, username, password, files)
 
 
+def sync_log_config_file(host_ips):
+    username = config.ssh_user_name
+    password = config.ssh_password
+    port = 22
+    file = [(r"W:\my_projects\lpmln_isets\logging.ini", "/home/wangbin/experiments/lpmln_isets/lpmln_isets/logging.ini")]
+    for ip in host_ips:
+        ssh.transport_files(ip, port, username, password, file)
+
+
 if __name__ == '__main__':
     sync_all_files(host_ips, sync_files[0:1])
+    # sync_log_config_file(host_ips)
     pass
     

@@ -98,7 +98,9 @@ class FinalIConditionsSearchMaster:
 
     @staticmethod
     def update_itask_running_info(itask, info):
-        print(info)
+
+        logging.error(("received stat info ", info))
+
         ne_iset_number = info[2]
         task_check_number = info[3]
         task_complete_number = info[4]
