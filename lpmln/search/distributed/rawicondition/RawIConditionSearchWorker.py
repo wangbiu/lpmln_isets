@@ -86,9 +86,8 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
         task_slice_cache = None
         last_nse_iset_number = 0
         result_queue_cache = list()
-        loop_cnt = 0
+        single_round_processed_task_number = 0
         while True:
-            loop_cnt += 1
             if not pathlib.Path(config.task_host_lock_file).exists():
                 break
 
@@ -107,6 +106,7 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
                 else:
                     task_slice_cache = task_queue.get()
                     processed_task_slices_number += 1
+                    single_round_processed_task_number += 1
                     is_process_task_queue = True
 
             itask_id = task_slice_cache[0]
@@ -148,8 +148,15 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
 
             result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, manager_tuple[3])
 
-        logging.info(
-            "%s processes %d isc task slices ... " % (worker_name, processed_task_slices_number))
+            if single_round_processed_task_number == 10000:
+                msg_text = "%s:%s processes %d isc task slices, new round process %d task slices ... " % (
+                    worker_host_name, worker_name, processed_task_slices_number, single_round_processed_task_number)
+                single_round_processed_task_number = 0
+                logging.info(msg_text)
+
+        msg_text = "%s:%s processes %d isc task slices, new round process %d task slices ... " % (
+            worker_host_name, worker_name, processed_task_slices_number, single_round_processed_task_number)
+        logging.info(msg_text)
 
 
     @staticmethod
