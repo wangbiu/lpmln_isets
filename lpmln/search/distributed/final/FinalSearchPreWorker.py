@@ -218,6 +218,7 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
         manager_tuple = SearchQueueManager.init_task_worker_queue_manager()
         # manager_tuple = (manager, task_queue, ht_task_queue, result_queue)
         task_queue = manager_tuple[1]
+        start_time = datetime.now()
 
         worker_name = "worker-%d" % worker_id
         worker_host_name = config.worker_host_name
@@ -279,7 +280,7 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
                                   "%s:%s waiting for %d-%d-%d nse complete file %d" % (
                                       worker_host_name, worker_name, *itask.k_m_n, nse_iset_number)
                                   ))
-                result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, manager_tuple[3])
+                result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, manager_tuple[3], start_time)
                 time.sleep(1)
                 continue
 
@@ -288,13 +289,13 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
             task_slice_cache = None
 
             if len(result_queue_cache) > 2000:
-                result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, manager_tuple[3])
+                result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, manager_tuple[3], start_time)
 
         logging.info(
             "%s processes %d isc task slices ... " % (worker_name, processed_task_slices_number))
 
     @staticmethod
-    def batch_send_stat_info_2_result_queue(cls, result_queue_cache, result_queue):
+    def batch_send_stat_info_2_result_queue(cls, result_queue_cache, result_queue, start_time):
         if len(result_queue_cache) == 0:
             return result_queue_cache
 
@@ -316,7 +317,7 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
         for data_key in results:
             data_item = [ITaskSignal.stat_signal]
             data_item.extend(results[data_key])
-            data_item.append((datetime.now(), datetime.now()))
+            data_item.append((start_time, datetime.now()))
             data_item = tuple(data_item)
             result_queue.put(data_item)
 
