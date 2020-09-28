@@ -97,6 +97,8 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
 
             if task_slice_cache is None:
                 if task_queue.empty():
+                    result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache,
+                                                                                 manager_tuple[3])
                     if is_process_task_queue:
                         logging.info("%s:%s waiting for task queue ... " % (worker_host_name, worker_name))
                         is_process_task_queue = False
@@ -125,11 +127,6 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
 
             ne_iset_number = task_slice[2] + len(task_slice[0])
             nse_ne_iset_number = ne_iset_number - 1
-
-            if last_nse_iset_number != nse_ne_iset_number:
-                last_nse_iset_number = nse_ne_iset_number
-                result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, manager_tuple[3])
-
 
             load_nse_complete = cls.task_worker_load_nse_conditions(itask, task_slice)
             if not load_nse_complete:
