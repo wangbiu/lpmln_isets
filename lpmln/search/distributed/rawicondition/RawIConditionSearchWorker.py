@@ -61,6 +61,7 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
         manager_tuple = SearchQueueManager.init_task_worker_queue_manager()
         # manager_tuple = (manager, task_queue, ht_task_queue, result_queue)
         task_queue = manager_tuple[1]
+        result_queue = manager_tuple[3]
         start_time = datetime.now()
 
         worker_name = "worker-%d" % worker_id
@@ -94,8 +95,9 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
             if sleep_cnt == 10:
                 sleep_cnt = 0
                 logging.error(("result queue cache size ", len(result_queue_cache)))
+                logging.error("result queue cache has %d items, send sleep cnt 10", len(result_queue_cache))
                 result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache,
-                                                                             manager_tuple[3], start_time)
+                                                                             result_queue, start_time)
 
             if not pathlib.Path(config.task_host_lock_file).exists():
                 break
@@ -107,8 +109,10 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
 
             if task_slice_cache is None:
                 if task_queue.empty():
+                    logging.error("result queue cache has %d items, send task queue empty",
+                                  len(result_queue_cache))
                     result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache,
-                                                                                 manager_tuple[3], start_time)
+                                                                                 result_queue, start_time)
                     if is_process_task_queue:
                         logging.info("%s:%s waiting for task queue ... " % (worker_host_name, worker_name))
                         is_process_task_queue = False
@@ -142,7 +146,8 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
 
             load_nse_complete = cls.task_worker_load_nse_conditions(itask, task_slice)
             if not load_nse_complete:
-                result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, manager_tuple[3], start_time)
+                logging.error("result queue cache has %d items, send load nse not complete", len(result_queue_cache))
+                result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, result_queue, start_time)
                 if last_nse_iset_number != nse_ne_iset_number:
                     last_nse_iset_number = nse_ne_iset_number
                     logging.info((task_slice,
@@ -163,9 +168,10 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
                 result_queue_cache.append(ht_stat)
 
             if len(result_queue_cache) > 20000:
+                logging.error("result queue cache has %d items, send cache size > 20000", len(result_queue_cache))
                 result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, manager_tuple[3], start_time)
 
-            if single_round_processed_task_number == 10000:
+            if single_round_processed_task_number == 1000:
                 msg_text = "%s:%s processes %d isc task slices, new round process %d task slices ... " % (
                     worker_host_name, worker_name, processed_task_slices_number, single_round_processed_task_number)
                 single_round_processed_task_number = 0
@@ -189,7 +195,7 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
         ht_task_stat = (ITaskSignal.stat_signal, itask_id, ne_iset_number,
                         ht_task_number, ht_task_number, 0, (datetime.now(), datetime.now()))
         # result_queue.put(ht_task_stat)
-        logging.error(("send ht stat ", ht_task_stat))
+        # logging.error(("send ht stat ", ht_task_stat))
 
         with open(raw_data_file, encoding="utf-8", mode="a") as rf:
             for ht in ht_task_items:
