@@ -118,6 +118,11 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
                 continue
 
             task_slice = task_slice_cache[1]
+
+            right_zone_isets = set(itask.meta_data.search_space_iset_ids[task_slice[1]:])
+
+            task_slice = (set(task_slice[0]), right_zone_isets, task_slice[2])
+
             ne_iset_number = task_slice[2] + len(task_slice[0])
             nse_ne_iset_number = ne_iset_number - 1
 

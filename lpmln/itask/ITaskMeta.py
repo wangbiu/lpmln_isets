@@ -14,6 +14,7 @@ import json
 import lpmln.config.GlobalConfig as cfg
 config = cfg.load_configuration()
 import lpmln.iset.ISetCompositionUtils as iscm
+import copy
 
 
 class ITaskMeta:
@@ -41,8 +42,8 @@ class ITaskMeta:
 
         self.empty_iset_ids = set()
         self.non_se_iset_ids = set()
-        self.search_space_iset_ids = set()
-        self.search_i4_composed_iset_ids = set()
+        self.search_space_iset_ids = list()
+        self.search_i4_composed_iset_ids = list()
         self.minmal_i4_isets_tuples = list()
 
     def to_map(self):
@@ -77,9 +78,6 @@ class ITaskMeta:
 
         return "\n".join(string_buffer)
 
-
-
-
     @staticmethod
     def load_data_from_json(data):
         obj = ITaskMeta()
@@ -94,6 +92,17 @@ class ITaskMeta:
         for tp in obj.minmal_i4_isets_tuples:
             minmal_i4_isets_tuples.append(set(tp))
         obj.minmal_i4_isets_tuples = minmal_i4_isets_tuples
+
+        search_isets = copy.deepcopy(obj.search_space_iset_ids)
+        search_isets = set(search_isets)
+
+        search_i4_isets = copy.deepcopy(obj.search_i4_composed_iset_ids)
+        non_i4_isets = list(search_isets.difference(set(search_i4_isets)))
+
+        search_i4_isets.sort()
+        non_i4_isets.sort()
+        search_i4_isets.extend(non_i4_isets)
+        obj.search_space_iset_ids = search_i4_isets
         return obj
 
     @staticmethod
@@ -286,6 +295,13 @@ def generate_itask_meta_data():
 
 if __name__ == '__main__':
     # generator = ITaskMetaGenerator([0, 1, 1], "lpmln", False)
-    generate_itask_meta_data()
+    # generate_itask_meta_data()
+    meta = ITaskMeta.load_itask_meta_data_from_file(config.isc_meta_data_file)
+    for key in meta:
+        print(key)
+        meta[key].search_i4_composed_iset_ids.sort()
+        print(meta[key].search_i4_composed_iset_ids)
+        print(meta[key].search_space_iset_ids)
+        print("\n")
     pass
     

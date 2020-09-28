@@ -45,16 +45,15 @@ class CombinationSearchingSpaceSplitter:
 
             split_iter = itertools.combinations(left_zone_elements, left_choice_number)
             for lce in split_iter:
-                left_choice = set(copy.deepcopy(lce))
+                left_choice = list(copy.deepcopy(lce))
                 slice = (left_choice, right_zone_elements, right_choice_number)
                 yield slice
         return True
 
     @staticmethod
-    def near_uniform_vandermonde_generator(left_zone_elements, right_zone_elements, choice_number):
-        max_space_size = 2000000000
+    def near_uniform_vandermonde_generator(left_zone_elements, right_zone_elements, choice_number, max_space_size=2000000000):
         spaces = list()
-        spaces.append((set(), left_zone_elements, right_zone_elements, choice_number))
+        spaces.append((list(), left_zone_elements, right_zone_elements, choice_number))
 
         while len(spaces) > 0:
             new_spaces = list()
@@ -64,14 +63,14 @@ class CombinationSearchingSpaceSplitter:
                 for s_slice in space_slices:
                     space_size = CombinaryCounter.compute_comb(len(s_slice[1]), s_slice[2])
                     if space_size <= max_space_size:
-                        for ele in sp[0]:
-                            s_slice[0].add(ele)
+                        s_slice[0].extend(sp[0])
                         yield s_slice
                     else:
-                        new_all_zone = list(s_slice[1])
-                        new_left_zone = set(new_all_zone[0:s_slice[2]])
-                        new_right_zone = set(new_all_zone[s_slice[2]:])
-                        new_ts = (s_slice[0].union(sp[0]), new_left_zone, new_right_zone, s_slice[2])
+                        new_all_zone = s_slice[1]
+                        new_left_zone = new_all_zone[0:s_slice[2]]
+                        new_right_zone = new_all_zone[s_slice[2]:]
+                        s_slice[0].extend(sp[0])
+                        new_ts = (s_slice[0], new_left_zone, new_right_zone, s_slice[2])
                         new_spaces.append(new_ts)
 
             spaces = new_spaces
@@ -178,7 +177,7 @@ def near_uniform_vandermonde_generator_checker(max_elements_size=10):
         total_search_number = CombinaryCounter.compute_comb(max_elements_size, choice_number)
         slices_search_number = 0
         searching_slices = CombinationSearchingSpaceSplitter.near_uniform_vandermonde_generator(
-            left_zone, right_zone, choice_number)
+            left_zone, right_zone, choice_number, 20)
         slice_cnt = 0
         for ts in searching_slices:
             slice_cnt += 1
@@ -225,7 +224,7 @@ if __name__ == '__main__':
     # vandermonde_split_checker(60)
     # yanghui_split_checker(20)
     # vandermonde_generator_checker(60)
-    near_uniform_vandermonde_generator_checker(20)
+    near_uniform_vandermonde_generator_checker(16)
 
 
     pass

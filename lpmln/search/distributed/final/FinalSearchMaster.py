@@ -200,7 +200,8 @@ class FinalIConditionsSearchMaster:
                         left_zone_iset_ids, right_zone_iset_ids, ne_iset_number)
                     ts_cnt = 0
                     for ts in task_slices:
-                        task_queue.put((tid, ts))
+                        new_ts = (set(ts[0]), set(ts[1]), ts[2])
+                        task_queue.put((tid, new_ts))
 
                         ts_cnt += 1
                         if ts_cnt % 10000 == 0 and cls.check_itask_terminate_status(it):

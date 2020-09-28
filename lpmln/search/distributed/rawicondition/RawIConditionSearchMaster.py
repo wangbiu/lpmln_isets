@@ -44,23 +44,25 @@ class RawIConditionSearchMaster(FinalIConditionsSearchMaster):
             max_ne = it.max_ne
             isnse.clear_task_space_layer_finish_flag_files(*it.k_m_n, min_ne, max_ne)
 
-            right_zone_iset_ids = set(copy.deepcopy(it.meta_data.search_space_iset_ids))
-            left_zone_iset_ids = set(it.meta_data.search_i4_composed_iset_ids)
+            left_zone_length = len(it.meta_data.search_i4_composed_iset_ids)
+            search_isets = copy.deepcopy(it.meta_data.search_space_iset_ids)
+            search_isets_length = len(search_isets)
 
             max_left_zone_length = 12
-            if len(left_zone_iset_ids) > max_left_zone_length:
-                left_zone_iset_ids = list(left_zone_iset_ids)[0:max_left_zone_length]
-                left_zone_iset_ids = set(left_zone_iset_ids)
+            if left_zone_length > max_left_zone_length:
+                left_zone_length = 12
 
-            right_zone_iset_ids = right_zone_iset_ids.difference(left_zone_iset_ids)
             rule_number = sum(it.k_m_n)
+            left_zone_iset_ids = search_isets[0:left_zone_length]
+            right_zone_iset_ids = search_isets[left_zone_length:]
 
             for ne_iset_number in range(min_ne, max_ne + 1):
                 if ne_iset_number <= rule_number:
                     task_slices = CombinationSearchingSpaceSplitter.vandermonde_generator(
                         left_zone_iset_ids, right_zone_iset_ids, ne_iset_number)
                     for ts in task_slices:
-                        task_queue.put((tid, ts))
+                        new_ts = (set(ts[0]), left_zone_length, ts[2])
+                        task_queue.put((tid, new_ts))
                 else:
                     if not cls.check_itask_terminate_status(it):
                         flag_file = isnse.get_task_space_layer_finish_flag_file(*it.k_m_n, ne_iset_number - 2)
@@ -74,7 +76,8 @@ class RawIConditionSearchMaster(FinalIConditionsSearchMaster):
                             left_zone_iset_ids, right_zone_iset_ids, ne_iset_number)
                         ts_cnt = 0
                         for ts in task_slices:
-                            task_queue.put((tid, ts))
+                            new_ts = (set(ts[0]), search_isets_length - len(ts[1]), ts[2])
+                            task_queue.put((tid, new_ts))
 
                             ts_cnt += 1
                             if ts_cnt % 10000 == 0 and cls.check_itask_terminate_status(it):

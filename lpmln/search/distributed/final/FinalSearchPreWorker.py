@@ -71,8 +71,10 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
 
             for vts in v_generator:
                 for iset in left_isets:
-                    vts[0].add(iset)
-                ht_task_queue.put((itask_id, vts))
+                    vts[0].append(iset)
+
+                new_ts = (set(vts[0]), set(vts[1]), vts[2])
+                ht_task_queue.put((itask_id, new_ts))
 
     @staticmethod
     def single_split_ht_tasks(cls, itask_id, ht_check_task_slices, ht_task_queue):
@@ -119,9 +121,10 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
                 continue
 
             for a in original_left_isets:
-                slice[0].add(a)
+                slice[0].append(a)
 
-            yang_task_slices.append(slice)
+            new_slice = (set(slice[0]), set(slice[1]), slice[2])
+            yang_task_slices.append(new_slice)
 
         return skip_number, yang_task_slices
 
@@ -177,13 +180,13 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
                 right_zone_i4_isets, right_zone_non_i4_isets, right_zone_choice_number)
 
         for ts in v_generator:
-            new_left_ids = left_isets.union(ts[0])
+            new_left_ids = left_isets.union(set(ts[0]))
             is_contain_semi_valid_rule = iscm.check_contain_rules_without_i_n_iset(
                 4, new_left_ids, itask.rule_number, itask.is_use_extended_rules)
             if is_contain_semi_valid_rule:
                 skip_number += CombinaryCounter.compute_comb(len(ts[1]), ts[2])
             else:
-                new_task_slices.append((new_left_ids, ts[1], ts[2]))
+                new_task_slices.append((new_left_ids, set(ts[1]), ts[2]))
 
         valid_skip_result = None
         if skip_number > 0:
