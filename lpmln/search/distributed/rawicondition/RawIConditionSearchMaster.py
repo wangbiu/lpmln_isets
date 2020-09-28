@@ -28,6 +28,7 @@ class RawIConditionSearchMaster(FinalIConditionsSearchMaster):
 
     @staticmethod
     def itask_slices_generator(cls, isc_config_file):
+        max_space_size = 10000000000
         msg_text = "%s init task slices generator ..." % str(cls)
         logging.info(msg_text)
         msg.send_message(msg_text)
@@ -74,7 +75,7 @@ class RawIConditionSearchMaster(FinalIConditionsSearchMaster):
                             time.sleep(1)
 
                         task_slices = CombinationSearchingSpaceSplitter.near_uniform_vandermonde_generator(
-                            left_zone_iset_ids, right_zone_iset_ids, ne_iset_number)
+                            left_zone_iset_ids, right_zone_iset_ids, ne_iset_number, max_space_size=max_space_size)
                         ts_cnt = 0
                         for ts in task_slices:
                             new_ts = (set(ts[0]), search_isets_length - len(ts[1]), ts[2])
