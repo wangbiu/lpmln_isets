@@ -98,6 +98,8 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
 
             if task_slice_cache is None:
                 if task_queue.empty():
+                    result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache,
+                                                                                 manager_tuple[3])
                     if is_process_task_queue:
                         logging.info("%s:%s waiting for task queue ... " % (worker_host_name, worker_name))
                         is_process_task_queue = False
@@ -130,6 +132,7 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
 
             load_nse_complete = cls.task_worker_load_nse_conditions(itask, task_slice)
             if not load_nse_complete:
+                result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, manager_tuple[3])
                 if last_nse_iset_number != nse_ne_iset_number:
                     last_nse_iset_number = nse_ne_iset_number
                     logging.info((task_slice,
@@ -146,7 +149,8 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
             raw_data_file = raw_condition_files[itask_id]
             cls.process_ht_tasks(cls, ht_check_items, itask_id, itask, ne_iset_number, manager_tuple[3], raw_data_file)
 
-            result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, manager_tuple[3])
+            if len(result_queue_cache) > 20000:
+                result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, manager_tuple[3])
 
             if single_round_processed_task_number == 10000:
                 msg_text = "%s:%s processes %d isc task slices, new round process %d task slices ... " % (
