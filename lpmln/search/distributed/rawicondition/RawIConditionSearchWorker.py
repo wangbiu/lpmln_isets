@@ -187,6 +187,7 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
         ht_task_stat = (ITaskSignal.stat_signal, itask_id, ne_iset_number,
                         ht_task_number, ht_task_number, 0, (datetime.now(), datetime.now()))
         result_queue.put(ht_task_stat)
+        logging.error(("send ht stat ", ht_task_stat))
 
         with open(raw_data_file, encoding="utf-8", mode="a") as rf:
             for ht in ht_task_items:
