@@ -92,6 +92,7 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
         while True:
 
             if sleep_cnt == 10:
+                sleep_cnt = 0
                 print("result queue cache size ", len(result_queue_cache))
                 result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache,
                                                                              manager_tuple[3], start_time)
