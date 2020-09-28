@@ -97,15 +97,8 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
                 logging.info("%s:%s all itasks terminate ..." % (worker_host_name, worker_name))
                 break
 
-            if loop_cnt == 10:
-                result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache,
-                                                                             manager_tuple[3])
-                loop_cnt = 0
-
             if task_slice_cache is None:
                 if task_queue.empty():
-                    result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache,
-                                                                                 manager_tuple[3])
                     if is_process_task_queue:
                         logging.info("%s:%s waiting for task queue ... " % (worker_host_name, worker_name))
                         is_process_task_queue = False
@@ -143,7 +136,6 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
                                   "%s:%s waiting for %d-%d-%d nse complete file %d" % (
                                       worker_host_name, worker_name, *itask.k_m_n, nse_ne_iset_number)
                                   ))
-                result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, manager_tuple[3])
                 time.sleep(1)
                 continue
 
@@ -154,8 +146,7 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
             raw_data_file = raw_condition_files[itask_id]
             cls.process_ht_tasks(cls, ht_check_items, itask_id, itask, ne_iset_number, manager_tuple[3], raw_data_file)
 
-            if len(result_queue_cache) > 2000:
-                result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, manager_tuple[3])
+            result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, manager_tuple[3])
 
         logging.info(
             "%s processes %d isc task slices ... " % (worker_name, processed_task_slices_number))
