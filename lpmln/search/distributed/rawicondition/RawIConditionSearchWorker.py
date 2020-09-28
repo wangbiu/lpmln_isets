@@ -158,10 +158,12 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
             task_slice_cache = None
 
             raw_data_file = raw_condition_files[itask_id]
-            cls.process_ht_tasks(cls, ht_check_items, itask_id, itask, ne_iset_number, manager_tuple[3], raw_data_file)
+            ht_stat = cls.process_ht_tasks(cls, ht_check_items, itask_id, itask, ne_iset_number, manager_tuple[3], raw_data_file)
+            if ht_stat is not None:
+                result_queue_cache.append(ht_stat)
 
-            # if len(result_queue_cache) > 20000:
-            result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, manager_tuple[3], start_time)
+            if len(result_queue_cache) > 20000:
+                result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, manager_tuple[3], start_time)
 
             if single_round_processed_task_number == 10000:
                 msg_text = "%s:%s processes %d isc task slices, new round process %d task slices ... " % (
@@ -177,8 +179,8 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
     @staticmethod
     def process_ht_tasks(cls, ht_task_items, itask_id, itask, ne_iset_number, result_queue, raw_data_file):
         ht_task_number = len(ht_task_items)
-        if ht_task_number < 0:
-            return True
+        if ht_task_number <= 0:
+            return None
 
         rule_number = sum(itask.k_m_n)
         if ne_iset_number <= rule_number:
@@ -186,7 +188,7 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
 
         ht_task_stat = (ITaskSignal.stat_signal, itask_id, ne_iset_number,
                         ht_task_number, ht_task_number, 0, (datetime.now(), datetime.now()))
-        result_queue.put(ht_task_stat)
+        # result_queue.put(ht_task_stat)
         logging.error(("send ht stat ", ht_task_stat))
 
         with open(raw_data_file, encoding="utf-8", mode="a") as rf:
@@ -194,6 +196,8 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
                 data = [str(s) for s in ht]
                 rf.write(",".join(data))
                 rf.write("\n")
+
+        return ht_task_stat
 
     @staticmethod
     def check_ht_task_items(ht_task_items, task_id, itask, result_queue):
