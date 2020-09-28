@@ -87,12 +87,10 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
         last_nse_iset_number = 0
         result_queue_cache = list()
         single_round_processed_task_number = 0
-        debug_loop_cnt = 0
         while True:
-            debug_loop_cnt += 1
-            if debug_loop_cnt == 10000:
-                print("result queue cache size ", len(result_queue_cache))
-                debug_loop_cnt = 0
+
+            print("result queue cache size ", len(result_queue_cache))
+
 
             if not pathlib.Path(config.task_host_lock_file).exists():
                 break
@@ -109,7 +107,7 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
                     if is_process_task_queue:
                         logging.info("%s:%s waiting for task queue ... " % (worker_host_name, worker_name))
                         is_process_task_queue = False
-                    # time.sleep(1)
+                    time.sleep(1)
                     continue
                 else:
                     task_slice_cache = task_queue.get()
