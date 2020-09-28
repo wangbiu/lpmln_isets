@@ -26,6 +26,33 @@ config = cfg.load_configuration()
 
 class RawIConditionSearchMaster(FinalIConditionsSearchMaster):
 
+
+    @staticmethod
+    def process_result_queue(cls, result_queue, isc_tasks):
+        working_hosts_diff = (0, 0)
+        result_cnt = 100000
+
+        while not result_queue.empty() and result_cnt > 0:
+            result_cnt -= 1
+            result = result_queue.get()
+            result_state = result[0]
+            isc_task_id = result[1]
+
+            if result_state == ITaskSignal.kill_signal:
+                working_hosts_diff = cls.process_working_host_change(result, False)
+                break
+            elif result_state == ITaskSignal.add_worker_signal:
+                working_hosts_diff = cls.process_working_host_change(result, True)
+                break
+            elif result_state == ITaskSignal.stat_signal:
+                cls.update_itask_running_info(isc_tasks[isc_task_id], result)
+            elif result_state == ITaskSignal.se_condition_signal:
+                cls.insert_found_conditions(isc_tasks[isc_task_id], result[2], True)
+            elif result_state == ITaskSignal.nse_condition_signal:
+                cls.insert_found_conditions(isc_tasks[isc_task_id], result[2], False)
+
+        return working_hosts_diff
+
     @staticmethod
     def itask_slices_generator(cls, isc_config_file):
         max_space_size = 10000000000
