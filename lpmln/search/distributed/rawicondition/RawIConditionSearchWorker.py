@@ -167,7 +167,7 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
             if ht_stat is not None:
                 result_queue_cache.append(ht_stat)
 
-            if len(result_queue_cache) > 20000:
+            if len(result_queue_cache) > 2000:
                 # logging.error("result queue cache has %d items, send cache size > 20000", len(result_queue_cache))
                 result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, result_queue, start_time)
 
