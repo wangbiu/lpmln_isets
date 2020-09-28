@@ -311,6 +311,8 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
             for i in range(2, len(rq)):
                 data_item[i] += rq[i]
 
+        # print("batch stat info ", results)
+
         for data_key in results:
             data_item = [ITaskSignal.stat_signal]
             data_item.extend(results[data_key])

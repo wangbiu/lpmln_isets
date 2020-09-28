@@ -57,6 +57,8 @@ class RawIConditionSearchMaster(FinalIConditionsSearchMaster):
             right_zone_iset_ids = search_isets[left_zone_length:]
 
             for ne_iset_number in range(min_ne, max_ne + 1):
+                msg_text = "generating %d-%d-%d %d layer task slices" % (*it.k_m_n, ne_iset_number)
+                logging.info(msg_text)
                 if ne_iset_number <= rule_number:
                     task_slices = CombinationSearchingSpaceSplitter.vandermonde_generator(
                         left_zone_iset_ids, right_zone_iset_ids, ne_iset_number)
@@ -105,6 +107,7 @@ class RawIConditionSearchMaster(FinalIConditionsSearchMaster):
 
                 task_complete = it.hierarchical_task_complete_number[current_ne_number]
                 task_total = it.hierarchical_task_number[current_ne_number]
+                isnse.create_task_space_layer_finish_flag_file(*it.k_m_n, 0)
                 if task_complete == task_total:
                     it.save_progress_info()
                     isnse.create_task_space_layer_finish_flag_file(*it.k_m_n, current_ne_number)
