@@ -97,13 +97,15 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
                 logging.info("%s:%s all itasks terminate ..." % (worker_host_name, worker_name))
                 break
 
-            if loop_cnt == 100:
+            if loop_cnt == 10:
                 result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache,
                                                                              manager_tuple[3])
                 loop_cnt = 0
 
             if task_slice_cache is None:
                 if task_queue.empty():
+                    result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache,
+                                                                                 manager_tuple[3])
                     if is_process_task_queue:
                         logging.info("%s:%s waiting for task queue ... " % (worker_host_name, worker_name))
                         is_process_task_queue = False
