@@ -300,17 +300,18 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
             return result_queue_cache
 
         key = "%d-%d"
-        results = dict()
+        merge = dict()
 
-        # print("result queue has %d items " % len(result_queue_cache))
+        logging.error("result queue has %d items ", len(result_queue_cache))
+        logging.error(result_queue_cache)
 
         for rq in result_queue_cache:
             data_key = key % (rq[0], rq[1])
-            if data_key in results:
-                data_item = results[data_key]
+            if data_key in merge:
+                data_item = merge[data_key]
             else:
                 data_item = [rq[0], rq[1], 0, 0, 0]
-                results[data_key] = data_item
+                merge[data_key] = data_item
 
             for i in range(2, len(rq)):
                 data_item[i] += rq[i]
@@ -318,12 +319,12 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
             # if data_item[2] == 0 and datetime[3] == 0 and data_item[4] == 0:
             #     print("wrong stat result item: ", rq)
 
-        # print("batch stat info ", results)
+        logging.error(("stat merge result", merge))
 
-        for data_key in results:
+        for data_key in merge:
             data_item = list()
             data_item.append(ITaskSignal.stat_signal)
-            data_item.extend(results[data_key])
+            data_item.extend(merge[data_key])
             data_item.append((start_time, datetime.now()))
             data_item = tuple(data_item)
 
