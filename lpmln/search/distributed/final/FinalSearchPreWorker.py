@@ -301,6 +301,9 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
 
         key = "%d-%d"
         results = dict()
+
+        print("result queue has %d items " % len(result_queue_cache))
+
         for rq in result_queue_cache:
             data_key = key % (rq[0], rq[1])
             if data_key in results:
