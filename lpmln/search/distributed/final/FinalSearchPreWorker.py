@@ -315,6 +315,9 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
             for i in range(2, len(rq)):
                 data_item[i] += rq[i]
 
+            if data_item[2] == 0 and datetime[3] == 0 and data_item[4] == 0:
+                print(rq)
+
         # print("batch stat info ", results)
 
         for data_key in results:
