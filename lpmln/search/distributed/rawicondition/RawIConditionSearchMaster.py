@@ -20,11 +20,71 @@ import lpmln.iset.ISetNonSEUtils as isnse
 import lpmln.utils.SSHClient as ssh
 import copy
 from lpmln.utils.CombinationSpaceUtils import CombinationSearchingSpaceSplitter
-from lpmln.utils.counter.CombinaryCounter import CombinaryCounter
+import pathlib
 config = cfg.load_configuration()
 
 
 class RawIConditionSearchMaster(FinalIConditionsSearchMaster):
+
+    @staticmethod
+    def itask_slices_generator(cls, isc_config_file):
+        msg_text = "%s init task slices generator ..." % str(cls)
+        logging.info(msg_text)
+        msg.send_message(msg_text)
+
+        manager, task_queue, ht_task_queue, result_queue = \
+            SearchQueueManager.init_task_worker_queue_manager()
+
+        isc_tasks_cfg = ITaskConfig(isc_config_file)
+        isc_tasks = isc_tasks_cfg.isc_tasks
+
+        for tid in range(len(isc_tasks)):
+            it = isc_tasks[tid]
+            min_ne = it.min_ne
+            max_ne = it.max_ne
+            isnse.clear_task_space_layer_finish_flag_files(*it.k_m_n, min_ne, max_ne)
+
+            right_zone_iset_ids = set(copy.deepcopy(it.meta_data.search_space_iset_ids))
+            left_zone_iset_ids = set(it.meta_data.search_i4_composed_iset_ids)
+
+            max_left_zone_length = 12
+            if len(left_zone_iset_ids) > max_left_zone_length:
+                left_zone_iset_ids = list(left_zone_iset_ids)[0:max_left_zone_length]
+                left_zone_iset_ids = set(left_zone_iset_ids)
+
+            right_zone_iset_ids = right_zone_iset_ids.difference(left_zone_iset_ids)
+            rule_number = sum(it.k_m_n)
+
+            for ne_iset_number in range(min_ne, max_ne + 1):
+                if ne_iset_number <= rule_number:
+                    task_slices = CombinationSearchingSpaceSplitter.vandermonde_generator(
+                        left_zone_iset_ids, right_zone_iset_ids, ne_iset_number)
+                    for ts in task_slices:
+                        task_queue.put((tid, ts))
+                else:
+                    if not cls.check_itask_terminate_status(it):
+                        flag_file = isnse.get_task_space_layer_finish_flag_file(*it.k_m_n, ne_iset_number - 2)
+                        print(flag_file)
+                        while not pathlib.Path(flag_file).exists():
+                            if cls.check_itask_terminate_status(it):
+                                break
+                            time.sleep(1)
+
+                        task_slices = CombinationSearchingSpaceSplitter.near_uniform_vandermonde_generator(
+                            left_zone_iset_ids, right_zone_iset_ids, ne_iset_number)
+                        ts_cnt = 0
+                        for ts in task_slices:
+                            task_queue.put((tid, ts))
+
+                            ts_cnt += 1
+                            if ts_cnt % 10000 == 0 and cls.check_itask_terminate_status(it):
+                                break
+
+        working_hosts_number = 5
+        for i in range(working_hosts_number * 200):
+            task_queue.put((ITaskSignal.kill_signal, -1))
+        logging.info("all itasks has been dispatched")
+
     @staticmethod
     def check_itasks_status(cls, itasks, host_ips, manager_tuple, working_host_number):
         is_finish = True
@@ -44,6 +104,7 @@ class RawIConditionSearchMaster(FinalIConditionsSearchMaster):
                 task_total = it.hierarchical_task_number[current_ne_number]
                 if task_complete == task_total:
                     it.save_progress_info()
+                    isnse.create_task_space_layer_finish_flag_file(*it.k_m_n, current_ne_number)
 
                     if current_ne_number <= rule_number:
                         nse_file = it.flush_non_se_condition()

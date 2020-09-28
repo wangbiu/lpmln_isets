@@ -26,6 +26,24 @@ def check_lock(pid):
         return False
 
 
+def get_task_space_layer_finish_flag_file(k_size, m_size, n_size, layer_id):
+    name = "kmn-tq-%d-%d-%d-l%d.finish" % (k_size, m_size, n_size, layer_id)
+    return os.path.join(config.isc_non_se_icondition_path, name)
+
+
+def create_task_space_layer_finish_flag_file(k_size, m_size, n_size, layer_id):
+    file_path = get_task_space_layer_finish_flag_file(k_size, m_size, n_size, layer_id)
+    pathlib.Path(file_path).touch()
+    return file_path
+
+
+def clear_task_space_layer_finish_flag_files(k_size, m_size, n_size, min_layer_id, max_layer_id):
+    for i in range(min_layer_id, max_layer_id + 1):
+        file_path = get_task_space_layer_finish_flag_file(k_size, m_size, n_size, i)
+        if pathlib.Path(file_path).exists():
+            os.remove(file_path)
+
+
 def get_task_early_terminate_flag_file(k_size, m_size, n_size):
     name = "kmn-%d-%d-%d.terminate" % (k_size, m_size, n_size)
     path = os.path.join(config.isc_non_se_icondition_path, name)
