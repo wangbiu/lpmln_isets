@@ -82,10 +82,19 @@ def check_itask_meta(k_size, m_size, n_size, lp_type="lpmln", is_use_extended_ru
     return data
 
 
+def report_itask_meta():
+    file = config.isc_meta_data_file
+    all_meta_data = ITaskMeta.load_itask_meta_data_from_file(file)
+    for key in all_meta_data:
+        meta = all_meta_data[key]
+        print(key)
+        print("search isets ", len(meta.search_space_iset_ids))
+
 if __name__ == '__main__':
     # check_itask(0, 2, 1)
-    data = check_itask_meta(0, 1, 1)
-    print(data.search_space_iset_ids)
-    print(data.non_se_iset_ids)
+    # data = check_itask_meta(0, 1, 1)
+    # print(data.search_space_iset_ids)
+    # print(data.non_se_iset_ids)
+    report_itask_meta()
     pass
     
