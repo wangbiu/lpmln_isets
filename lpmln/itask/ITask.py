@@ -139,7 +139,6 @@ class ITask:
     def is_no_new_ht_check_task(self):
         task_complete_number = self.hierarchical_task_complete_number[self.working_ne_iset_numbers]
         task_number = self.hierarchical_task_number[self.working_ne_iset_numbers]
-        se_condition_number = len(self.hierarchical_se_conditions[self.working_ne_iset_numbers])
         task_check_number = self.hierarchical_task_check_number[self.working_ne_iset_numbers]
 
         if task_complete_number == task_number and task_check_number == 0:
