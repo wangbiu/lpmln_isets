@@ -316,15 +316,20 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
                 data_item[i] += rq[i]
 
             if data_item[2] == 0 and datetime[3] == 0 and data_item[4] == 0:
-                print(rq)
+                print("wrong stat result item: ", rq)
 
         # print("batch stat info ", results)
 
         for data_key in results:
-            data_item = [ITaskSignal.stat_signal]
+            data_item = list()
+            data_item.append(ITaskSignal.stat_signal)
             data_item.extend(results[data_key])
             data_item.append((start_time, datetime.now()))
             data_item = tuple(data_item)
+
+            if data_item[3] == 0 and data_item[4] == 0 and data_item[5] == 0:
+                print("wrong stat result item: ", data_item)
+
             result_queue.put(data_item)
 
         result_queue_cache = list()
