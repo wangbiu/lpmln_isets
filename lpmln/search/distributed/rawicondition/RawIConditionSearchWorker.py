@@ -160,8 +160,8 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
             raw_data_file = raw_condition_files[itask_id]
             cls.process_ht_tasks(cls, ht_check_items, itask_id, itask, ne_iset_number, manager_tuple[3], raw_data_file)
 
-            if len(result_queue_cache) > 20000:
-                result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, manager_tuple[3], start_time)
+            # if len(result_queue_cache) > 20000:
+            result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, manager_tuple[3], start_time)
 
             if single_round_processed_task_number == 10000:
                 msg_text = "%s:%s processes %d isc task slices, new round process %d task slices ... " % (
