@@ -68,7 +68,6 @@ class RawIConditionSearchMaster(FinalIConditionsSearchMaster):
                 else:
                     if not cls.check_itask_terminate_status(it):
                         flag_file = isnse.get_task_space_layer_finish_flag_file(*it.k_m_n, ne_iset_number - 2)
-                        print(flag_file)
                         while not pathlib.Path(flag_file).exists():
                             if cls.check_itask_terminate_status(it):
                                 break
