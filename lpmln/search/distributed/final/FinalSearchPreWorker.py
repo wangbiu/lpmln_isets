@@ -302,8 +302,8 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
         key = "%d-%d"
         merge = dict()
 
-        logging.error("result queue has %d items ", len(result_queue_cache))
-        logging.error(result_queue_cache)
+        # logging.error("result queue has %d items ", len(result_queue_cache))
+        # logging.error(result_queue_cache)
 
         for rq in result_queue_cache:
             data_key = key % (rq[0], rq[1])
@@ -319,7 +319,7 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
             # if data_item[2] == 0 and datetime[3] == 0 and data_item[4] == 0:
             #     print("wrong stat result item: ", rq)
 
-        logging.error(("stat merge result", merge))
+        # logging.error(("stat merge result", merge))
 
         for data_key in merge:
             data_item = list()
@@ -332,7 +332,7 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
             # if data_item[3] == 0 and data_item[4] == 0 and data_item[5] == 0:
             #     print("wrong stat result item: ", data_item)
 
-            logging.error(("sended stat info", data_item))
+            # logging.error(("sended stat info", data_item))
 
             result_queue.put(data_item)
 

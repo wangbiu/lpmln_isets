@@ -92,12 +92,12 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
         sleep_cnt = 0
         while True:
 
-            if sleep_cnt == 10:
-                sleep_cnt = 0
-                # logging.error(("result queue cache size ", len(result_queue_cache)))
-                # logging.error("result queue cache has %d items, send sleep cnt 10", len(result_queue_cache))
-                result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache,
-                                                                             result_queue, start_time)
+            # if sleep_cnt == 10:
+            #     sleep_cnt = 0
+            #     # logging.error(("result queue cache size ", len(result_queue_cache)))
+            #     # logging.error("result queue cache has %d items, send sleep cnt 10", len(result_queue_cache))
+            #     result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache,
+            #                                                                  result_queue, start_time)
 
             if not pathlib.Path(config.task_host_lock_file).exists():
                 break
@@ -146,8 +146,8 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
 
             load_nse_complete = cls.task_worker_load_nse_conditions(itask, task_slice)
             if not load_nse_complete:
-                # logging.error("result queue cache has %d items, send load nse not complete", len(result_queue_cache))
-                result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, result_queue, start_time)
+                # # logging.error("result queue cache has %d items, send load nse not complete", len(result_queue_cache))
+                # result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, result_queue, start_time)
                 if last_nse_iset_number != nse_ne_iset_number:
                     last_nse_iset_number = nse_ne_iset_number
                     logging.info((task_slice,
@@ -167,9 +167,9 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
             if ht_stat is not None:
                 result_queue_cache.append(ht_stat)
 
-            if len(result_queue_cache) > 2000:
+            # if len(result_queue_cache) > 2000:
                 # logging.error("result queue cache has %d items, send cache size > 20000", len(result_queue_cache))
-                result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, result_queue, start_time)
+            result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, result_queue, start_time)
 
             if single_round_processed_task_number == 1000:
                 msg_text = "%s:%s processes %d isc task slices, new round process %d task slices ... " % (
