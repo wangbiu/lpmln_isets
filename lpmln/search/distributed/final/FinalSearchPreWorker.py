@@ -327,7 +327,7 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
             data_item.append((start_time, datetime.now()))
             data_item = tuple(data_item)
 
-            print(data_item)
+            print("send stat info", data_item)
             if data_item[3] == 0 and data_item[4] == 0 and data_item[5] == 0:
                 print("wrong stat result item: ", data_item)
 
