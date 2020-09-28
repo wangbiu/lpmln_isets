@@ -109,7 +109,7 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
                     if is_process_task_queue:
                         logging.info("%s:%s waiting for task queue ... " % (worker_host_name, worker_name))
                         is_process_task_queue = False
-                    time.sleep(1)
+                    # time.sleep(1)
                     continue
                 else:
                     task_slice_cache = task_queue.get()
