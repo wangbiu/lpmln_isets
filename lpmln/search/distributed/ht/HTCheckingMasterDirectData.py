@@ -48,12 +48,12 @@ class HTCheckingDirectMaster(HTCheckingMaster):
                     if data_cnt == batch_size:
                         data_cnt = 0
                         send_tuple = (tid, tuple(data_batch))
-                        task_queue.put(send_tuple)
+                        ht_task_queue.put(send_tuple)
                         data_batch = list()
 
                 if len(data_batch) > 0:
                     send_tuple = (tid, tuple(data_batch))
-                    task_queue.put(send_tuple)
+                    ht_task_queue.put(send_tuple)
 
         working_hosts_number = 5
         for i in range(working_hosts_number * 200):

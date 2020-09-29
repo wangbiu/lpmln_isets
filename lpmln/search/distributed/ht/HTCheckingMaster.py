@@ -44,8 +44,9 @@ class HTCheckingMaster(FinalIConditionsSearchMaster):
             task_complete_number = it.task_complete_number
             se_number = it.se_condition_number
             nse_number = task_complete_number - se_number
-            msg_text = ":rocket: %s: total tasks: %d, complete tasks: %d, find %d se conditions, %d nse condition" % (
-                it.task_flag, total_number, task_complete_number, se_number, nse_number)
+            running_time = it.task_end_time - it.task_start_time
+            msg_text = ":rocket: %s (running time: %s): total tasks: %d, complete tasks: %d, find %d se conditions, %d nse condition" % (
+                it.task_flag, str(running_time), total_number, task_complete_number, se_number, nse_number)
             msg_texts.append(msg_text)
         return msg_texts
 

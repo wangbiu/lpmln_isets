@@ -20,7 +20,7 @@ class HTCheckingDirectWorker(HTCheckingWorker):
         se_conditions_cache = list()
         nse_conditions_cache = list()
         validator = ISetConditionValidator(lp_type=itask.lp_type, is_use_extended_rules=itask.is_use_extended_rules)
-        task_check_number = 0
+        task_check_number = len(task_slice)
 
         for data in task_slice:
             ne_isets = data.strip("\r\n ").split(",")
