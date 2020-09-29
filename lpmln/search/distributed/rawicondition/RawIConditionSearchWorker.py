@@ -57,6 +57,16 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
         return ht_check_items
 
     @staticmethod
+    def compute_ne_iset_number(task_slice):
+        left_split = task_slice[0]
+        if left_split:
+            left_iset_size = len(task_slice[1])
+        else:
+            left_iset_size = task_slice[1]
+
+        return left_iset_size + task_slice[3]
+
+    @staticmethod
     def kmn_isc_task_worker(cls, isc_config_file="isets-tasks.json", worker_id=1, is_check_valid_rules=True):
         manager_tuple = SearchQueueManager.init_task_worker_queue_manager()
         # manager_tuple = (manager, task_queue, ht_task_queue, result_queue)
@@ -135,14 +145,16 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
                 task_slice_cache = None
                 continue
 
+            """
+            task_slice = (left_split, left, left_zone_length, right_choice_number)
+            if left_split = True, left is left_isets
+            else left is left_isets_size
+            """
+
             task_slice = task_slice_cache[1]
 
-            right_zone_isets = set(itask.meta_data.search_space_iset_ids[task_slice[1]:])
-
-            task_slice = (set(task_slice[0]), right_zone_isets, task_slice[2])
-
             rule_number = sum(itask.k_m_n)
-            ne_iset_number = task_slice[2] + len(task_slice[0])
+            ne_iset_number = cls.compute_ne_iset_number(task_slice)
             nse_ne_iset_number = ne_iset_number - 1
 
             load_nse_complete = cls.task_worker_load_nse_conditions(itask, task_slice)
@@ -159,7 +171,7 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
                 sleep_cnt += 1
                 continue
 
-            rq_cache, ht_check_items = cls.process_task_slice(cls, itask_id, itask, task_slice, manager_tuple)
+            rq_cache, ht_check_items = cls.process_merge_small_task_slices(cls, itask_id, itask, task_slice, manager_tuple)
             result_queue_cache.extend(rq_cache)
             task_slice_cache = None
 
@@ -187,6 +199,31 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
         msg_text = "%s:%s processes %d isc task slices, new round process %d task slices ... " % (
             worker_host_name, worker_name, processed_task_slices_number, single_round_processed_task_number)
         logging.info(msg_text)
+
+    @staticmethod
+    def process_merge_small_task_slices(cls, itask_id, itask, task_slice, manager_tuple):
+        left_split = task_slice[0]
+        right_zone_isets = set(itask.meta_data.search_space_iset_ids[task_slice[2]:])
+        total_rq_cache = list()
+        total_ht_check_items = list()
+
+        if left_split:
+            new_task_slice = (set(task_slice[1]), right_zone_isets, task_slice[3])
+            total_rq_cache, total_ht_check_items = cls.process_task_slice(cls, itask_id, itask, new_task_slice, manager_tuple)
+        else:
+            left_zone_isets = itask.meta_data.search_space_iset_ids[0:task_slice[2]]
+            left_choice_number = task_slice[1]
+            task_iter = itertools.combinations(left_zone_isets, left_choice_number)
+            for left_isets in task_iter:
+                new_task_slice = (set(left_isets), right_zone_isets, task_slice[3])
+                rq_cache, ht_check_items = cls.process_task_slice(cls, itask_id, itask, new_task_slice,
+                                                                               manager_tuple)
+                total_rq_cache.extend(rq_cache)
+                total_ht_check_items.extend(ht_check_items)
+
+        return total_rq_cache, total_ht_check_items
+
+
 
 
     @staticmethod

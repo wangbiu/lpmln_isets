@@ -76,6 +76,36 @@ class CombinationSearchingSpaceSplitter:
             spaces = new_spaces
 
     @staticmethod
+    def merge_small_near_uniform_vandermonde_generator(left_zone_elements, right_zone_elements, choice_number, max_space_size=2000000000):
+        left_zone_length = len(left_zone_elements)
+        right_zone_length = len(right_zone_elements)
+
+        if choice_number > left_zone_length + right_zone_length:
+            raise RuntimeError("choice_number > left_zone_length + right_zone_length")
+
+        for left_choice_number in range(choice_number + 1):
+            right_choice_number = choice_number - left_choice_number
+            if left_choice_number > left_zone_length or right_choice_number > right_zone_length:
+                continue
+
+            sub_space_size = CombinaryCounter.compute_comb(left_zone_length, left_choice_number) * \
+                             CombinaryCounter.compute_comb(right_zone_length, right_choice_number)
+
+            if sub_space_size / max_space_size < 100:
+                left_split = False
+                slice = (left_split, left_choice_number, left_zone_length, right_choice_number)
+                yield slice
+            else:
+                left_split = True
+                split_iter = itertools.combinations(left_zone_elements, left_choice_number)
+                for lce in split_iter:
+                    left_choice = list(copy.deepcopy(lce))
+                    slice = (left_split, left_choice, left_zone_length, right_choice_number)
+                    yield slice
+        return True
+
+
+    @staticmethod
     def yanghui_split(all_elements, choice_number, split_elements):
         searching_slices = list()
         split_elements_size = len(split_elements)

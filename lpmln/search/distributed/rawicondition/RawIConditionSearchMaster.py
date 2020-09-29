@@ -101,12 +101,11 @@ class RawIConditionSearchMaster(FinalIConditionsSearchMaster):
                                 break
                             time.sleep(1)
 
-                        task_slices = CombinationSearchingSpaceSplitter.near_uniform_vandermonde_generator(
+                        task_slices = CombinationSearchingSpaceSplitter.merge_small_near_uniform_vandermonde_generator(
                             left_zone_iset_ids, right_zone_iset_ids, ne_iset_number, max_space_size=max_space_size)
                         ts_cnt = 0
                         for ts in task_slices:
-                            new_ts = (set(ts[0]), search_isets_length - len(ts[1]), ts[2])
-                            task_queue.put((tid, new_ts))
+                            task_queue.put((tid, ts))
 
                             ts_cnt += 1
                             if ts_cnt % 10000 == 0 and cls.check_itask_terminate_status(it):
