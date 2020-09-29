@@ -10,7 +10,7 @@
 import lpmln.config.GlobalConfig as cfg
 config = cfg.load_configuration()
 import os
-import pathlib
+import lpmln.iset.RawIConditionUtils as riu
 
 
 def get_kmn_raw_data_dirs(k_size, m_size, n_size):
@@ -24,6 +24,11 @@ def get_kmn_raw_data_dirs(k_size, m_size, n_size):
             kmn_raw_data_dirs.append(ab_path)
 
     return kmn_raw_data_dirs
+
+
+def get_kmn_raw_data_slices_dir(k_size, m_size, n_size):
+    kmn_dir = "%d-%d-%d" % (k_size, m_size, n_size)
+    return os.path.join(config.isc_raw_results_path, kmn_dir, "ht-slices")
 
 
 def get_all_kmn_raw_data_files(k_size, m_size, n_size):
@@ -89,6 +94,22 @@ def count_all_kmn_raw_condition_number(k_size, m_size, n_size):
     print("%d-%d-%d raw data files has %d data items" % (k_size, m_size, n_size, total_remove_number))
 
 
+def merge_all_kmn_raw_conditions(k_size, m_size, n_size):
+    data_files = get_all_kmn_raw_data_files(k_size, m_size, n_size)
+    complete_data_file = riu.get_complete_raw_icondition_file(k_size, m_size, n_size, "lpmln", False)
+    outf = open(complete_data_file, mode="w", encoding="utf-8")
+    for df in data_files:
+        print("merge %s ..." % df)
+        with open(df, mode="r", encoding="utf-8") as sub_data:
+            for data in sub_data:
+                outf.write(data)
+
+    outf.close()
+
+
+
+
+
 if __name__ == '__main__':
     kmn = (2, 1, 0)
     ne_iset_numbers = {18}
@@ -97,6 +118,9 @@ if __name__ == '__main__':
     # print(files[0])
     # remove_conditions_contain_k_ne_isets_from_data_file(files[0], ne_iset_numbers)
     # remove_all_kmn_raw_conditions_contain_k_ne_isets(*kmn, ne_iset_numbers)
-    count_all_kmn_raw_condition_number(*kmn)
+    # count_all_kmn_raw_condition_number(*kmn)
+    # ht_slices_dir = get_kmn_raw_data_slices_dir(*kmn)
+    # print(ht_slices_dir)
+    merge_all_kmn_raw_conditions(*kmn)
     pass
     
