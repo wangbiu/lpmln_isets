@@ -12,7 +12,7 @@ import lpmln.config.GlobalConfig as cfg
 config = cfg.load_configuration()
 
 
-host_ips = ["10.201.186.98", "10.201.162.49", "10.201.162.69", "10.201.31.76"]
+host_ips = ["10.201.158.0", "10.201.150.184", "10.201.31.76", "10.201.186.98"]
 
 sync_files = [
     (r"W:\my_projects\lpmln_isets\isets-tasks.json", "/home/wangbin/experiments/lpmln_isets/lpmln_isets/isets-tasks.json"),
