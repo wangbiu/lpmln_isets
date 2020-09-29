@@ -141,6 +141,7 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
 
             task_slice = (set(task_slice[0]), right_zone_isets, task_slice[2])
 
+            rule_number = sum(itask.k_m_n)
             ne_iset_number = task_slice[2] + len(task_slice[0])
             nse_ne_iset_number = ne_iset_number - 1
 
@@ -169,9 +170,15 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
 
             # if len(result_queue_cache) > 2000:
                 # logging.error("result queue cache has %d items, send cache size > 20000", len(result_queue_cache))
-            result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, result_queue, start_time)
 
-            if single_round_processed_task_number == 1000:
+            if ne_iset_number <= rule_number:
+                result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, result_queue, start_time)
+            else:
+                if task_queue.qsize() < 1000 or len(result_queue_cache) > 100000:
+                    result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, result_queue,
+                                                                                 start_time)
+
+            if single_round_processed_task_number == 10000:
                 msg_text = "%s:%s processes %d isc task slices, new round process %d task slices ... " % (
                     worker_host_name, worker_name, processed_task_slices_number, single_round_processed_task_number)
                 single_round_processed_task_number = 0
