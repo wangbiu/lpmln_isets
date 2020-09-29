@@ -30,7 +30,7 @@ class RawIConditionSearchMaster(FinalIConditionsSearchMaster):
     @staticmethod
     def process_result_queue(cls, result_queue, isc_tasks):
         working_hosts_diff = (0, 0)
-        result_cnt = 100000
+        result_cnt = 1000000
 
         while not result_queue.empty() and result_cnt > 0:
             result_cnt -= 1
@@ -190,18 +190,22 @@ class RawIConditionSearchMaster(FinalIConditionsSearchMaster):
 
         progress_msg_cnt = 10
         task_finish = False
-        print_loop = 100000
+        print_loop = 100
         print_cnt = 0
         while not task_finish:
             print_cnt += 1
 
             if print_cnt == print_loop:
                 cls.send_itasks_progress_info(cls, isc_tasks, manager_tuple, working_hosts_number, False)
+                for it in isc_tasks:
+                    it.save_progress_info()
                 sleep_cnt = 0
                 print_cnt = 0
 
             if sleep_cnt == progress_msg_cnt:
                 cls.send_itasks_progress_info(cls, isc_tasks, manager_tuple, working_hosts_number, False)
+                for it in isc_tasks:
+                    it.save_progress_info()
                 sleep_cnt = 0
                 print_cnt = 0
 
