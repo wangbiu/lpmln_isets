@@ -88,10 +88,11 @@ class RawIConditionSearchMaster(FinalIConditionsSearchMaster):
                 msg_text = "generating %d-%d-%d %d layer task slices" % (*it.k_m_n, ne_iset_number)
                 logging.info(msg_text)
                 if ne_iset_number <= rule_number:
+                    left_split = True
                     task_slices = CombinationSearchingSpaceSplitter.vandermonde_generator(
                         left_zone_iset_ids, right_zone_iset_ids, ne_iset_number)
                     for ts in task_slices:
-                        new_ts = (set(ts[0]), left_zone_length, ts[2])
+                        new_ts = (left_split, set(ts[0]), left_zone_length, ts[2])
                         task_queue.put((tid, new_ts))
                 else:
                     if not cls.check_itask_terminate_status(it):

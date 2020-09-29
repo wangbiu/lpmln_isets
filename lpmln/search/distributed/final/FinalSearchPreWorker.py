@@ -197,8 +197,7 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
         return new_task_slices, valid_skip_result
 
     @staticmethod
-    def task_worker_load_nse_conditions(itask, task_slice):
-        ne_iset_number = task_slice[2] + len(task_slice[0])
+    def task_worker_load_nse_conditions(itask, ne_iset_number):
         load_complete = True
         for i in range(1, ne_iset_number):
             if i not in itask.loaded_non_se_condition_files:
@@ -272,7 +271,7 @@ class FinalIConditionsSearchPreWorker(FinalIConditionsSearchBaseWorker):
             task_slice = task_slice_cache[1]
             nse_iset_number = task_slice[2] + len(task_slice[0]) - 1
 
-            load_nse_complete = cls.task_worker_load_nse_conditions(itask, task_slice)
+            load_nse_complete = cls.task_worker_load_nse_conditions(itask, nse_iset_number + 1)
             if not load_nse_complete:
                 if last_nse_iset_number != nse_iset_number:
                     last_nse_iset_number = nse_iset_number

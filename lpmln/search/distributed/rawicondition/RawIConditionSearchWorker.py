@@ -157,7 +157,7 @@ class RawIConditionSearchWorker(FinalIConditionsSearchPreWorker):
             ne_iset_number = cls.compute_ne_iset_number(task_slice)
             nse_ne_iset_number = ne_iset_number - 1
 
-            load_nse_complete = cls.task_worker_load_nse_conditions(itask, task_slice)
+            load_nse_complete = cls.task_worker_load_nse_conditions(itask, ne_iset_number)
             if not load_nse_complete:
                 # # logging.error("result queue cache has %d items, send load nse not complete", len(result_queue_cache))
                 # result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, result_queue, start_time)
