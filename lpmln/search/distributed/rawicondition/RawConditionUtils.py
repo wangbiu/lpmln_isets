@@ -97,7 +97,7 @@ def count_all_kmn_raw_condition_number(k_size, m_size, n_size):
 def merge_all_kmn_raw_conditions(k_size, m_size, n_size):
     data_files = get_all_kmn_raw_data_files(k_size, m_size, n_size)
     complete_data_file = riu.get_complete_raw_icondition_file(k_size, m_size, n_size, "lpmln", False)
-    outf = open(complete_data_file, mode="w", encoding="utf-8")
+    outf = open(complete_data_file, mode="a", encoding="utf-8")
     for df in data_files:
         print("merge %s ..." % df)
         with open(df, mode="r", encoding="utf-8") as sub_data:
