@@ -72,6 +72,23 @@ def remove_all_kmn_raw_conditions_contain_k_ne_isets(k_size, m_size, n_size, ne_
     print("totally remove %d data items " % total_remove_number)
 
 
+def count_raw_data_number_in_file(data_file):
+    cnt = 0
+    with open(data_file, encoding="utf-8", mode="r") as df:
+        for f in df:
+            cnt += 1
+    return cnt
+
+
+def count_all_kmn_raw_condition_number(k_size, m_size, n_size):
+    data_files = get_all_kmn_raw_data_files(k_size, m_size, n_size)
+    total_remove_number = 0
+    for df in data_files:
+        print("counting %d ..." % df)
+        total_remove_number += count_raw_data_number_in_file(df)
+    print("%d-%d-%d raw data files has %d data items" % (k_size, m_size, n_size, total_remove_number))
+
+
 if __name__ == '__main__':
     kmn = (2, 1, 0)
     ne_iset_numbers = {18}
@@ -79,6 +96,7 @@ if __name__ == '__main__':
     files = get_all_kmn_raw_data_files(*kmn)
     # print(files[0])
     # remove_conditions_contain_k_ne_isets_from_data_file(files[0], ne_iset_numbers)
-    remove_all_kmn_raw_conditions_contain_k_ne_isets(*kmn, ne_iset_numbers)
+    # remove_all_kmn_raw_conditions_contain_k_ne_isets(*kmn, ne_iset_numbers)
+    count_all_kmn_raw_condition_number(*kmn)
     pass
     
