@@ -88,10 +88,12 @@ def report_itask_meta():
     for key in all_meta_data:
         meta = all_meta_data[key]
         print(key)
-        print("search isets ", len(meta.search_space_iset_ids))
+        print("\t search isets ", len(meta.search_space_iset_ids))
+        print("\t search i4 isets ", len(meta.search_i4_composed_iset_ids))
+
 
 if __name__ == '__main__':
-    # check_itask(0, 2, 1)
+    # check_itask(2, 1, 0)
     # data = check_itask_meta(0, 1, 1)
     # print(data.search_space_iset_ids)
     # print(data.non_se_iset_ids)
