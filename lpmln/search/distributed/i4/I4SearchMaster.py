@@ -50,7 +50,7 @@ class I4SearchMaster(FinalIConditionsSearchMaster):
 
     @staticmethod
     def process_i4_result_queue(cls, result_queue, result_record):
-        result_cnt = 100000
+        result_cnt = 10000000
         working_hosts_diff = (0, 0)
 
         while not result_queue.empty() and result_cnt > 0:
