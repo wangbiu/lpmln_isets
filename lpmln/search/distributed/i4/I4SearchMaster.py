@@ -70,6 +70,7 @@ class I4SearchMaster(FinalIConditionsSearchMaster):
             elif result_state == ITaskSignal.se_condition_signal:
                 cls.insert_i4_conditions(result[2], result_record[isc_task_id])
 
+        cls.dump_isc_task_results(result_record)
         return working_hosts_diff
 
     @staticmethod
@@ -131,8 +132,6 @@ class I4SearchMaster(FinalIConditionsSearchMaster):
         task_queue = manager_tuple[1]
         ht_task_queue = manager_tuple[2]
         result_queue = manager_tuple[3]
-
-        cls.dump_isc_task_results(result_records)
 
         msg_texts = list()
         for i in range(len(result_records)):
