@@ -23,6 +23,7 @@ class GlobalConfiguration:
         self.isc_task_path = "isc-tasks"
         self.isc_results_path = "isc-results"
         self.isc_raw_results_path = "isc-raw"
+        self.isc_i4_results_path = "isc-i4"
         self.isc_non_se_icondition_path = "isc-non-se-results"
         self.isc_meta_data_file = "isc-meta.json"
 
@@ -100,6 +101,9 @@ class GlobalConfiguration:
 
         self.isc_raw_results_path = os.path.join(self.io_data_dir, self.isc_raw_results_path)
         self.create_dirs(self.isc_raw_results_path)
+
+        self.isc_i4_results_path = os.path.join(self.io_data_dir, self.isc_i4_results_path)
+        self.create_dirs(self.isc_i4_results_path)
 
         self.task_host_lock_file = os.path.join(self.project_base_dir, self.task_host_lock_file)
 

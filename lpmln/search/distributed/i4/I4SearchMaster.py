@@ -22,6 +22,8 @@ import pathlib
 import os
 from lpmln.utils.CombinationSpaceUtils import CombinationSearchingSpaceSplitter
 from lpmln.search.distributed.final.FinalSearchBase import SearchQueueManager, ITaskSignal
+import lpmln.iset.I4SetUtils as i4u
+
 config = cfg.load_configuration()
 
 
@@ -48,19 +50,25 @@ class I4SearchMaster(FinalIConditionsSearchMaster):
 
     @staticmethod
     def process_i4_result_queue(cls, result_queue, result_record):
+        result_cnt = 100000
         working_hosts_diff = (0, 0)
-        result = result_queue.get()
-        result_state = result[0]
-        isc_task_id = result[1]
 
-        if result_state == ITaskSignal.kill_signal:
-            working_hosts_diff = cls.process_working_host_change(result, False)
-        elif result_state == ITaskSignal.add_worker_signal:
-            working_hosts_diff = cls.process_working_host_change(result, True)
-        elif result_state == ITaskSignal.stat_signal:
-            cls.update_i4_result_record(result_record[isc_task_id], result)
-        elif result_state == ITaskSignal.se_condition_signal:
-            cls.insert_i4_conditions(result[2], result_record[isc_task_id])
+        while not result_queue.empty() and result_cnt > 0:
+            result_cnt -= 1
+            result = result_queue.get()
+            result_state = result[0]
+            isc_task_id = result[1]
+
+            if result_state == ITaskSignal.kill_signal:
+                working_hosts_diff = cls.process_working_host_change(result, False)
+                break
+            elif result_state == ITaskSignal.add_worker_signal:
+                working_hosts_diff = cls.process_working_host_change(result, True)
+                break
+            elif result_state == ITaskSignal.stat_signal:
+                cls.update_i4_result_record(result_record[isc_task_id], result)
+            elif result_state == ITaskSignal.se_condition_signal:
+                cls.insert_i4_conditions(result[2], result_record[isc_task_id])
 
         return working_hosts_diff
 
@@ -154,7 +162,7 @@ class I4SearchMaster(FinalIConditionsSearchMaster):
         for itask in isc_tasks:
             isnse.clear_task_terminate_flag_files(*itask.k_m_n)
             i4_iset_size = len(itask.meta_data.search_i4_composed_iset_ids)
-            file = os.path.join(config.isc_results_path, "kmn-%d-%d-%d-i4.txt" % (*itask.k_m_n,))
+            file = i4u.get_kmn_i4_all_result_file(*itask.k_m_n)
             if os.path.exists(file):
                 os.remove(file)
             record = [2 ** i4_iset_size - 1, 0, list(), file]
@@ -175,7 +183,7 @@ class I4SearchMaster(FinalIConditionsSearchMaster):
 
         progress_msg_cnt = 10
         task_finish = False
-        print_loop = 100000
+        print_loop = 10
         print_cnt = 0
         while not task_finish:
             print_cnt += 1
