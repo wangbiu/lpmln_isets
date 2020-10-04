@@ -117,7 +117,7 @@ class I4RawSearchWorker(RawIConditionSearchWorker):
 
             raw_data_file = raw_condition_files[itask_id]
             rq_cache = cls.process_task_slice_saving_mem(cls, itask_id, itask, task_slice, raw_data_file, result_queue)
-            result_queue_cache.extend(rq_cache)
+            result_queue_cache.append(rq_cache)
             task_slice_cache = None
 
             if ne_iset_number <= rule_number:
@@ -140,13 +140,12 @@ class I4RawSearchWorker(RawIConditionSearchWorker):
 
     @staticmethod
     def process_task_slice_saving_mem(cls, itask_id, itask, task_slice, raw_data_file, result_queue):
-        result_queue_cache = list()
         left_choice_number = task_slice[0]
         i4_data_from = task_slice[1]
         i4_data_end = task_slice[2]
         right_choice_number = task_slice[3]
-
         ne_iset_number = left_choice_number + right_choice_number
+        result_queue_cache = (itask_id, ne_iset_number, 0, 0, 0)
 
         right_zone_isets = set(itask.meta_data.search_space_iset_ids)
         search_i4_isets = set(itask.meta_data.search_i4_composed_iset_ids)
@@ -162,15 +161,25 @@ class I4RawSearchWorker(RawIConditionSearchWorker):
 
             ht_slices, nse_skip_result = cls.process_nse_subparts_task_slices(cls, itask_id, itask, ts)
             if nse_skip_result is not None:
-                result_queue_cache.append(nse_skip_result)
+                result_queue_cache = cls.merge_result_stat(result_queue_cache, nse_skip_result)
 
             ht_check_items = cls.single_split_ht_tasks(cls, itask_id, ht_slices, None)
             ht_stat = cls.process_ht_tasks(cls, ht_check_items, itask_id, itask, ne_iset_number, result_queue,
                                            raw_data_file)
             if ht_stat is not None:
-                result_queue_cache.append(ht_stat)
+                result_queue_cache = cls.merge_result_stat(result_queue_cache, ht_stat)
 
         return result_queue_cache
+
+    @staticmethod
+    def merge_result_stat(stat1, stat2):
+        if stat1[0] != stat2[0] or stat1[1] != stat2[1]:
+            raise RuntimeError(("cannot merge stat info ", stat1, stat2))
+
+        stat = [stat1[0], stat1[1]]
+        for i in range(2, len(stat1)):
+            stat.append(stat1[i] + stat2[i])
+        return tuple(stat)
 
 
     @staticmethod
