@@ -45,6 +45,7 @@ def split_kmn_i4_all_results_by_ne_iset_number(k_size, m_size, n_size):
 
 def extract_kmn_i4_meta_data(k_size, m_size, n_size, min_ne, max_ne):
     meta = [0]
+    kmn_key = "%d-%d-%d" % (k_size, m_size, n_size)
     for i in range(min_ne, max_ne + 1):
         file = get_kmn_i4_result_file_by_ne_iset_number(k_size, m_size, n_size, i)
         cnt = 0
@@ -52,12 +53,12 @@ def extract_kmn_i4_meta_data(k_size, m_size, n_size, min_ne, max_ne):
             for data in f:
                 cnt += 1
             meta.append(cnt)
-    print(meta)
+    print("\"%s\":" % kmn_key, meta, ",")
     return meta
 
 
 
 if __name__ == '__main__':
-    kmns = [(0, 1, 1), (1, 1, 0), (0, 2, 1), (1, 2, 0), (1, 1, 1)]
+    kmns = [(0, 1, 1, 1, 1), (1, 1, 0, 1, 5), (0, 2, 1, 1, 7), (1, 2, 0, 1, 16), (1, 1, 1, 1, 19)]
     for kmn in kmns:
-        split_kmn_i4_all_results_by_ne_iset_number(*kmn)
+        extract_kmn_i4_meta_data(*kmn)
