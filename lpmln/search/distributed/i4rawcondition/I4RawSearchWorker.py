@@ -20,7 +20,6 @@ import itertools
 from datetime import datetime
 import lpmln.iset.RawIConditionUtils as riu
 import lpmln.iset.I4SetUtils as i4u
-import linecache
 import copy
 config = cfg.load_configuration()
 
@@ -153,8 +152,15 @@ class I4RawSearchWorker(RawIConditionSearchWorker):
 
         i4_data_file = i4u.get_kmn_i4_result_file_by_ne_iset_number(*itask.k_m_n, left_choice_number)
 
-        left_isets_queue = linecache.getlines(i4_data_file)[i4_data_from:i4_data_end]
-        for ls in left_isets_queue:
+        data_file = open(i4_data_file, encoding="utf-8", mode="r")
+        current_line = 0
+        for ls in data_file:
+            if current_line < i4_data_from:
+                continue
+
+            if current_line >= i4_data_end:
+                break
+
             left_isets = ls.strip("\r\n ").split(",")
             left_isets = [int(s) for s in left_isets]
             ts = (set(left_isets), copy.deepcopy(right_zone_isets), right_choice_number)
@@ -169,6 +175,8 @@ class I4RawSearchWorker(RawIConditionSearchWorker):
             if ht_stat is not None:
                 result_queue_cache = cls.merge_result_stat(result_queue_cache, ht_stat)
 
+        data_file.close()
+
         return result_queue_cache
 
     @staticmethod
@@ -181,42 +189,6 @@ class I4RawSearchWorker(RawIConditionSearchWorker):
             stat.append(stat1[i] + stat2[i])
         return tuple(stat)
 
-
-    @staticmethod
-    def process_task_slice(cls, itask_id, itask, task_slice, manager_tuple):
-        result_queue_cache = list()
-        left_choice_number = task_slice[0]
-        i4_data_from = task_slice[1]
-        i4_data_end = task_slice[2]
-        right_choice_number = task_slice[3]
-
-        right_zone_isets = set(itask.meta_data.search_space_iset_ids)
-        search_i4_isets = set(itask.meta_data.search_i4_composed_iset_ids)
-        right_zone_isets = right_zone_isets.difference(search_i4_isets)
-
-        i4_data_file = i4u.get_kmn_i4_result_file_by_ne_iset_number(*itask.k_m_n, left_choice_number)
-
-        no_sv_task_slices = list()
-        left_isets_queue = linecache.getlines(i4_data_file)[i4_data_from:i4_data_end]
-        for ls in left_isets_queue:
-            left_isets = ls.strip("\r\n ").split(",")
-            left_isets = [int(s) for s in left_isets]
-            ts = (set(left_isets), copy.deepcopy(right_zone_isets), right_choice_number)
-            no_sv_task_slices.append(ts)
-
-        ht_check_task_slices = list()
-        for ts in no_sv_task_slices:
-            ht_slices, nse_skip_result = cls.process_nse_subparts_task_slices(cls, itask_id, itask, ts)
-            ht_check_task_slices.extend(ht_slices)
-            if nse_skip_result is not None:
-                result_queue_cache.append(nse_skip_result)
-
-        if len(ht_check_task_slices) == 0:
-            return result_queue_cache, list()
-
-        ht_check_items = cls.single_split_ht_tasks(cls, itask_id, ht_check_task_slices, None)
-
-        return result_queue_cache, ht_check_items
 
 
 if __name__ == '__main__':
