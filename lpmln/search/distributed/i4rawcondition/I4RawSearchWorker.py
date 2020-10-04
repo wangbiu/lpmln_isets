@@ -116,7 +116,7 @@ class I4RawSearchWorker(RawIConditionSearchWorker):
                 continue
 
             raw_data_file = raw_condition_files[itask_id]
-            rq_cache = cls.process_task_slice_saving_mem(cls, itask_id, itask, task_slice, raw_data_file, manager_tuple)
+            rq_cache = cls.process_task_slice_saving_mem(cls, itask_id, itask, task_slice, raw_data_file, result_queue)
             result_queue_cache.extend(rq_cache)
             task_slice_cache = None
 
