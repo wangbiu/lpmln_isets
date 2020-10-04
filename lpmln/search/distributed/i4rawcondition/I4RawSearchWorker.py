@@ -118,14 +118,16 @@ class I4RawSearchWorker(RawIConditionSearchWorker):
             rq_cache = cls.process_task_slice_saving_mem(cls, itask_id, itask, task_slice, raw_data_file, result_queue)
             result_queue_cache.append(rq_cache)
             task_slice_cache = None
+            result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, result_queue,
+                                                                         start_time)
 
-            if ne_iset_number <= rule_number:
-                result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, result_queue,
-                                                                             start_time)
-            else:
-                if task_queue.qsize() < 1000 or len(result_queue_cache) > 1000:
-                    result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, result_queue,
-                                                                                 start_time)
+            # if ne_iset_number <= rule_number:
+            #     result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, result_queue,
+            #                                                                  start_time)
+            # else:
+            #     if task_queue.qsize() < 1000 or len(result_queue_cache) > 1000:
+            #         result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, result_queue,
+            #                                                                      start_time)
 
             if single_round_processed_task_number == 10000:
                 msg_text = "%s:%s processes %d isc task slices, new round process %d task slices ... " % (

@@ -72,14 +72,13 @@ class I4RawSearchMaster(RawIConditionSearchMaster):
         search_isets_length = len(itask.meta_data.search_space_iset_ids)
         right_zone_length = search_isets_length - left_zone_length
 
-
+        task_slice_cnt = 0
         if ne_iset_number <= right_zone_length:
             semi_valid_i4_slices_size = CombinaryCounter.compute_comb(right_zone_length, ne_iset_number)
             valid_skip_number = CombinaryCounter.compute_comb(right_zone_length, ne_iset_number)
             result_tuple = (
             ITaskSignal.stat_signal, itask_id, ne_iset_number, 0, valid_skip_number, valid_skip_number, None)
             result_queue.put(result_tuple)
-
 
         for left_choice in range(1, left_zone_length + 1):
             right_choice = ne_iset_number - left_choice
@@ -109,6 +108,7 @@ class I4RawSearchMaster(RawIConditionSearchMaster):
                 itask_slice_tuple = (left_choice, itask_splitting_points[i-1], itask_splitting_points[i], right_choice)
                 itask_slice_tuple = (itask_id, itask_slice_tuple)
                 task_queue.put(itask_slice_tuple)
+                task_slice_cnt += 1
 
             total_i4_silces_size = CombinaryCounter.compute_comb(left_zone_length, left_choice)
             semi_valid_i4_slices_size = total_i4_silces_size - non_semi_valid_i4_slices_size
@@ -116,6 +116,10 @@ class I4RawSearchMaster(RawIConditionSearchMaster):
                 valid_skip_number = semi_valid_i4_slices_size * single_slice_right_task_number
                 result_tuple = (ITaskSignal.stat_signal, itask_id, ne_iset_number, 0, valid_skip_number, valid_skip_number, None)
                 result_queue.put(result_tuple)
+
+        msg_text = "itask %d-%d-%d ne iset number %d, put %d task slices" % (*itask.k_m_n, ne_iset_number, task_slice_cnt)
+        logging.info(msg_text)
+        msg.send_message(msg_text)
 
     @staticmethod
     def itask_slices_generator(cls, isc_config_file):
