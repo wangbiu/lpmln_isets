@@ -111,7 +111,7 @@ class I4RawSearchMaster(RawIConditionSearchMaster):
 
     @staticmethod
     def itask_slices_generator(cls, isc_config_file):
-        max_space_size = 100000000000
+        max_space_size = 10000000000
         msg_text = "%s init task slices generator ..." % str(cls)
         logging.info(msg_text)
         msg.send_message(msg_text)
