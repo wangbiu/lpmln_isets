@@ -115,16 +115,10 @@ class I4RawSearchWorker(RawIConditionSearchWorker):
                 time.sleep(1)
                 continue
 
-            rq_cache, ht_check_items = cls.process_task_slice(cls, itask_id, itask, task_slice,
-                                                                           manager_tuple)
+            raw_data_file = raw_condition_files[itask_id]
+            rq_cache = cls.process_task_slice_saving_mem(cls, itask_id, itask, task_slice, raw_data_file, manager_tuple)
             result_queue_cache.extend(rq_cache)
             task_slice_cache = None
-
-            raw_data_file = raw_condition_files[itask_id]
-            ht_stat = cls.process_ht_tasks(cls, ht_check_items, itask_id, itask, ne_iset_number, result_queue,
-                                           raw_data_file)
-            if ht_stat is not None:
-                result_queue_cache.append(ht_stat)
 
             if ne_iset_number <= rule_number:
                 result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, result_queue,
@@ -143,6 +137,41 @@ class I4RawSearchWorker(RawIConditionSearchWorker):
         msg_text = "%s:%s processes %d isc task slices, new round process %d task slices ... " % (
             worker_host_name, worker_name, processed_task_slices_number, single_round_processed_task_number)
         logging.info(msg_text)
+
+    @staticmethod
+    def process_task_slice_saving_mem(cls, itask_id, itask, task_slice, raw_data_file, result_queue):
+        result_queue_cache = list()
+        left_choice_number = task_slice[0]
+        i4_data_from = task_slice[1]
+        i4_data_end = task_slice[2]
+        right_choice_number = task_slice[3]
+
+        ne_iset_number = left_choice_number + right_choice_number
+
+        right_zone_isets = set(itask.meta_data.search_space_iset_ids)
+        search_i4_isets = set(itask.meta_data.search_i4_composed_iset_ids)
+        right_zone_isets = right_zone_isets.difference(search_i4_isets)
+
+        i4_data_file = i4u.get_kmn_i4_result_file_by_ne_iset_number(*itask.k_m_n, left_choice_number)
+
+        left_isets_queue = linecache.getlines(i4_data_file)[i4_data_from:i4_data_end]
+        for ls in left_isets_queue:
+            left_isets = ls.strip("\r\n ").split(",")
+            left_isets = [int(s) for s in left_isets]
+            ts = (set(left_isets), copy.deepcopy(right_zone_isets), right_choice_number)
+
+            ht_slices, nse_skip_result = cls.process_nse_subparts_task_slices(cls, itask_id, itask, ts)
+            if nse_skip_result is not None:
+                result_queue_cache.append(nse_skip_result)
+
+            ht_check_items = cls.single_split_ht_tasks(cls, itask_id, ht_slices, None)
+            ht_stat = cls.process_ht_tasks(cls, ht_check_items, itask_id, itask, ne_iset_number, result_queue,
+                                           raw_data_file)
+            if ht_stat is not None:
+                result_queue_cache.append(ht_stat)
+
+        return result_queue_cache
+
 
     @staticmethod
     def process_task_slice(cls, itask_id, itask, task_slice, manager_tuple):
