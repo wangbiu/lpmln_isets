@@ -43,6 +43,20 @@ def split_kmn_i4_all_results_by_ne_iset_number(k_size, m_size, n_size):
         out_file[key].close()
 
 
+def extract_kmn_i4_meta_data(k_size, m_size, n_size, min_ne, max_ne):
+    meta = [0]
+    for i in range(min_ne, max_ne + 1):
+        file = get_kmn_i4_result_file_by_ne_iset_number(k_size, m_size, n_size, i)
+        cnt = 0
+        with open(file, mode="r", encoding="utf-8") as f:
+            for data in f:
+                cnt += 1
+            meta.append(cnt)
+    print(meta)
+    return meta
+
+
+
 if __name__ == '__main__':
     kmns = [(0, 1, 1), (1, 1, 0), (0, 2, 1), (1, 2, 0), (1, 1, 1)]
     for kmn in kmns:
