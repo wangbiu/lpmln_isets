@@ -90,6 +90,14 @@ class I4RawSearchMaster(RawIConditionSearchMaster):
             task_i4_slice_number = max_space_size // single_slice_right_task_number + 1
             non_semi_valid_i4_slices_size = i4_meta[left_choice]
             itask_sizes = non_semi_valid_i4_slices_size // task_i4_slice_number
+
+            if itask_sizes < 200:
+                itask_sizes = 200
+                if itask_sizes > non_semi_valid_i4_slices_size:
+                    itask_sizes = non_semi_valid_i4_slices_size
+
+            task_i4_slice_number = non_semi_valid_i4_slices_size // itask_sizes
+
             itask_splitting_points = [i * task_i4_slice_number for i in range(itask_sizes)]
             if len(itask_splitting_points) == 0:
                 itask_splitting_points.append(0)
