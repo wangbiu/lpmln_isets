@@ -26,6 +26,7 @@ class GlobalConfiguration:
         self.isc_i4_results_path = "isc-i4"
         self.isc_non_se_icondition_path = "isc-non-se-results"
         self.isc_meta_data_file = "isc-meta.json"
+        self.max_space_size = 10000000000
 
         #ssh
         self.ssh_user_name = ""

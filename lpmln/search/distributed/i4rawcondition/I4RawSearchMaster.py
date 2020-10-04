@@ -91,8 +91,8 @@ class I4RawSearchMaster(RawIConditionSearchMaster):
             non_semi_valid_i4_slices_size = i4_meta[left_choice]
             itask_sizes = non_semi_valid_i4_slices_size // task_i4_slice_number
 
-            if itask_sizes < 200:
-                itask_sizes = 200
+            if itask_sizes < 120:
+                itask_sizes = 120
                 if itask_sizes > non_semi_valid_i4_slices_size:
                     itask_sizes = non_semi_valid_i4_slices_size
 
@@ -141,17 +141,19 @@ class I4RawSearchMaster(RawIConditionSearchMaster):
                 msg_text = "generating %d-%d-%d %d layer task slices" % (*it.k_m_n, ne_iset_number)
                 logging.info(msg_text)
 
-                if ne_iset_number <= rule_number:
-                    cls.itask_slice_generator_by_i4_meta(ne_iset_number, tid, it, max_space_size, manager_tuple)
-                else:
-                    if not cls.check_itask_terminate_status(it):
-                        flag_file = isnse.get_task_space_layer_finish_flag_file(*it.k_m_n, ne_iset_number - 2)
-                        while not pathlib.Path(flag_file).exists():
-                            if cls.check_itask_terminate_status(it):
-                                break
-                            time.sleep(1)
+                cls.itask_slice_generator_by_i4_meta(ne_iset_number, tid, it, max_space_size, manager_tuple)
 
-                        cls.itask_slice_generator_by_i4_meta(ne_iset_number, tid, it, max_space_size, manager_tuple)
+                # if ne_iset_number <= rule_number:
+                #     cls.itask_slice_generator_by_i4_meta(ne_iset_number, tid, it, max_space_size, manager_tuple)
+                # else:
+                #     if not cls.check_itask_terminate_status(it):
+                #         flag_file = isnse.get_task_space_layer_finish_flag_file(*it.k_m_n, ne_iset_number - 2)
+                #         while not pathlib.Path(flag_file).exists():
+                #             if cls.check_itask_terminate_status(it):
+                #                 break
+                #             time.sleep(1)
+                #
+                #         cls.itask_slice_generator_by_i4_meta(ne_iset_number, tid, it, max_space_size, manager_tuple)
 
         working_hosts_number = 5
         for i in range(working_hosts_number * 200):
