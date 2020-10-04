@@ -52,6 +52,7 @@ class I4RawSearchWorker(RawIConditionSearchWorker):
             for i in range(rule_number + 1, search_space_iset_number + 1):
                 itask.loaded_non_se_condition_files.add(i)
 
+            logging.info(("itask %d-%d-%d loaded nse condition files " % (*itask.k_m_n, ), itask.loaded_non_se_condition_files))
             rf = riu.get_empty_raw_icondition_file(*itask.k_m_n, itask.lp_type, itask.is_use_extended_rules,
                                                    str(worker_id))
             raw_condition_files.append(rf)
