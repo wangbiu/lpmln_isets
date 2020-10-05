@@ -130,11 +130,11 @@ class I4RawSearchWorker(RawIConditionSearchWorker):
             #         result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, result_queue,
             #                                                                      start_time)
 
-            if single_round_processed_task_number == 10000:
-                msg_text = "%s:%s processes %d isc task slices, new round process %d task slices ... " % (
-                    worker_host_name, worker_name, processed_task_slices_number, single_round_processed_task_number)
-                single_round_processed_task_number = 0
-                logging.info(msg_text)
+            # if single_round_processed_task_number == 10000:
+            msg_text = "%s:%s processes %d isc task slices, new round process %d task slices ... " % (
+                worker_host_name, worker_name, processed_task_slices_number, single_round_processed_task_number)
+            single_round_processed_task_number = 0
+            logging.info(msg_text)
 
         msg_text = "%s:%s processes %d isc task slices, new round process %d task slices ... " % (
             worker_host_name, worker_name, processed_task_slices_number, single_round_processed_task_number)
