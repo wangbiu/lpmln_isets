@@ -90,7 +90,7 @@ class I4RawSearchMaster(RawIConditionSearchMaster):
             non_semi_valid_i4_slices_size = i4_meta[left_choice]
             itask_sizes = non_semi_valid_i4_slices_size // task_i4_slice_number
 
-            if itask_sizes < 120 or itask_sizes > 120:
+            if itask_sizes < 92 or itask_sizes > 120:
                 itask_sizes = 120
                 if itask_sizes > non_semi_valid_i4_slices_size:
                     itask_sizes = non_semi_valid_i4_slices_size
