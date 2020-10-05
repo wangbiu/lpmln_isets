@@ -200,7 +200,7 @@ class ITask:
     def get_progress_info(self):
         task_running_time = self.get_running_time(-1)
         if not self.is_task_finish:
-            if self.hierarchical_task_check_number[self.min_ne] == 0:
+            if self.hierarchical_task_complete_number[self.min_ne] == 0:
                 prg_info = ":timer_clock:  %s: total tasks: %d, waiting for resources !" % (
                 self.task_flag, self.task_total_number)
             else:
