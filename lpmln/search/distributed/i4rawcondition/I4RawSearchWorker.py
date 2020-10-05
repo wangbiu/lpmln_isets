@@ -173,7 +173,9 @@ class I4RawSearchWorker(RawIConditionSearchWorker):
             if nse_skip_result is not None:
                 result_queue_cache = cls.merge_result_stat(result_queue_cache, nse_skip_result)
 
-            ht_stat = cls.quick_process_ht_tasks(cls, itask_id, itask, ht_slices, ne_iset_number, result_queue,
+
+            ht_check_items = cls.single_split_ht_tasks(cls, itask_id, ht_slices, None)
+            ht_stat = cls.process_ht_tasks(cls, ht_check_items, itask_id, itask, ne_iset_number, result_queue,
                                            raw_data_file)
             if ht_stat is not None:
                 result_queue_cache = cls.merge_result_stat(result_queue_cache, ht_stat)
