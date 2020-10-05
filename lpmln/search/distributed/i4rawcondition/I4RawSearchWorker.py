@@ -21,6 +21,7 @@ from datetime import datetime
 import lpmln.iset.RawIConditionUtils as riu
 import lpmln.iset.I4SetUtils as i4u
 import copy
+from lpmln.utils.counter.CombinaryCounter import CombinaryCounter
 config = cfg.load_configuration()
 
 
@@ -130,7 +131,7 @@ class I4RawSearchWorker(RawIConditionSearchWorker):
             #         result_queue_cache = cls.batch_send_stat_info_2_result_queue(cls, result_queue_cache, result_queue,
             #                                                                      start_time)
 
-            if single_round_processed_task_number == 10:
+            if single_round_processed_task_number == 100:
                 msg_text = "%s:%s processes %d isc task slices, new round process %d task slices ... " % (
                     worker_host_name, worker_name, processed_task_slices_number, single_round_processed_task_number)
                 single_round_processed_task_number = 0
@@ -181,6 +182,48 @@ class I4RawSearchWorker(RawIConditionSearchWorker):
         data_file.close()
 
         return result_queue_cache
+
+    @staticmethod
+    def quick_process_ht_tasks(cls, itask_id, itask, ht_check_task_slices, ne_iset_number, result_queue, raw_data_file):
+        ht_check_items = list()
+        rule_number = sum(itask.k_m_n)
+        outf = open(raw_data_file, encoding="utf-8", mode="a")
+        if len(ht_check_task_slices) == 0:
+            return None
+
+        ht_task_number = 0
+        for ts in ht_check_task_slices:
+            left_isets = ts[0]
+            right_zone_isets = ts[1]
+            choice_number = ts[2]
+            ne_iset_number = choice_number + len(left_isets)
+
+            if ne_iset_number <= rule_number:
+                task_iter = itertools.combinations(right_zone_isets, choice_number)
+                for right_iset in task_iter:
+                    ne_isets = left_isets.union(set(right_iset))
+                    ht_check_items.append(ne_isets)
+
+                ht_task_number += len(ht_check_items)
+                ht_check_items = cls.check_ht_task_items(ht_check_items, itask_id, itask, result_queue)
+
+                for ht in ht_check_items:
+                    data = [str(s) for s in ht]
+                    outf.write(",".join(data))
+                    outf.write("\n")
+            else:
+                ht_task_number += CombinaryCounter.compute_comb(len(right_zone_isets), choice_number)
+
+                left_isets = [str(s) for s in left_isets]
+                right_zone_isets = [str(s) for s in right_zone_isets]
+                data = [",".join(left_isets), ",".join(right_zone_isets), str(choice_number)]
+                data = ":".join(data)
+                outf.write(data)
+                outf.write("\n")
+
+        outf.close()
+        ht_stat = (itask_id, ne_iset_number, ht_task_number, ht_task_number, 0)
+        return ht_stat
 
     @staticmethod
     def merge_result_stat(stat1, stat2):
