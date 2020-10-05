@@ -94,9 +94,9 @@ def count_all_kmn_raw_condition_number(k_size, m_size, n_size):
     print("%d-%d-%d raw data files has %d data items" % (k_size, m_size, n_size, total_remove_number))
 
 
-def merge_all_kmn_raw_conditions(k_size, m_size, n_size):
+def merge_all_kmn_raw_conditions(k_size, m_size, n_size, lp_type, is_use_extended_rules):
     data_files = get_all_kmn_raw_data_files(k_size, m_size, n_size)
-    complete_data_file = riu.get_complete_raw_icondition_file(k_size, m_size, n_size, "lpmln", False)
+    complete_data_file = riu.get_complete_raw_icondition_file(k_size, m_size, n_size, lp_type, is_use_extended_rules)
     outf = open(complete_data_file, mode="a", encoding="utf-8")
     for df in data_files:
         print("merge %s ..." % df)
@@ -107,7 +107,39 @@ def merge_all_kmn_raw_conditions(k_size, m_size, n_size):
     outf.close()
 
 
+def merge_worker_kmn_raw_conditions(k_size, m_size, n_size, lp_type, is_use_extened_rules):
+    payload = config.worker_payload
+    hostname = config.worker_host_name
+    outf = riu.get_raw_icondition_file(k_size, m_size, n_size, lp_type, is_use_extened_rules, hostname)
+    outf = open(outf, encoding="utf-8", mode="w")
 
+    for i in range(1, payload + 1):
+        dataf = riu.get_raw_icondition_file(k_size, m_size, n_size, lp_type, is_use_extened_rules, str(i))
+        print("merge %s ..." % dataf)
+        with open(dataf, encoding="utf-8", mode="r") as df:
+            for data in df:
+                outf.write(data)
+    outf.close()
+
+
+def merge_and_clean_worker_kmn_raw_conditions(k_size, m_size, n_size, lp_type, is_use_extened_rules, clean_ne_iset_numbers):
+    payload = config.worker_payload
+    hostname = config.worker_host_name
+    outf = riu.get_raw_icondition_file(k_size, m_size, n_size, lp_type, is_use_extened_rules, hostname)
+    outf = open(outf, encoding="utf-8", mode="w")
+    cnt = 0
+    for i in range(1, payload + 1):
+        dataf = riu.get_raw_icondition_file(k_size, m_size, n_size, lp_type, is_use_extened_rules, str(i))
+        print("merge %s ..." % dataf)
+        with open(dataf, encoding="utf-8", mode="r") as df:
+            for data in df:
+                ne_isets = data.strip("\r\n ").split(",")
+                if len(ne_isets) not in clean_ne_iset_numbers:
+                    cnt += 1
+                    outf.write(data)
+    outf.close()
+    print("worker %s has %d raw conditions" % (hostname, cnt))
+    return cnt
 
 
 if __name__ == '__main__':
