@@ -89,7 +89,7 @@ def count_all_kmn_raw_condition_number(k_size, m_size, n_size):
     data_files = get_all_kmn_raw_data_files(k_size, m_size, n_size)
     total_remove_number = 0
     for df in data_files:
-        print("counting %d ..." % df)
+        print("counting %s ..." % df)
         total_remove_number += count_raw_data_number_in_file(df)
     print("%d-%d-%d raw data files has %d data items" % (k_size, m_size, n_size, total_remove_number))
 
