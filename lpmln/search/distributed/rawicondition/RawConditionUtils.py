@@ -85,6 +85,18 @@ def count_raw_data_number_in_file(data_file):
     return cnt
 
 
+def count_raw_data_number_in_file_by_ne_iset_number(data_file):
+    results = dict()
+    with open(data_file, encoding="utf-8", mode="r") as df:
+        for f in df:
+            data = f.strip("\r\n ").split(",")
+            ne = len(data)
+            if ne not in results:
+                results[ne] = 0
+            results[ne] += 1
+    return results
+
+
 def count_all_kmn_raw_condition_number(k_size, m_size, n_size):
     data_files = get_all_kmn_raw_data_files(k_size, m_size, n_size)
     total_remove_number = 0
@@ -92,6 +104,24 @@ def count_all_kmn_raw_condition_number(k_size, m_size, n_size):
         print("counting %s ..." % df)
         total_remove_number += count_raw_data_number_in_file(df)
     print("%d-%d-%d raw data files has %d data items" % (k_size, m_size, n_size, total_remove_number))
+
+
+def count_all_kmn_raw_condition_number_by_ne_iset_number(k_size, m_size, n_size):
+    data_files = get_all_kmn_raw_data_files(k_size, m_size, n_size)
+    total_remove_number = 0
+    results = dict()
+    for df in data_files:
+        print("counting %s ..." % df)
+        file_results = count_raw_data_number_in_file_by_ne_iset_number(df)
+        for ne in file_results:
+            if ne not in results:
+                results[ne] = 0
+            results[ne] += file_results[ne]
+
+    for ne in results:
+        total_remove_number += results[ne]
+    print("%d-%d-%d raw data files has %d data items" % (k_size, m_size, n_size, total_remove_number))
+    print(results)
 
 
 def merge_all_kmn_raw_conditions(k_size, m_size, n_size, lp_type, is_use_extended_rules):
