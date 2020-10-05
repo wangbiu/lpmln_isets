@@ -54,6 +54,7 @@ class I4RawSearchWorker(RawIConditionSearchWorker):
             logging.info(("itask %d-%d-%d loaded nse condition files " % (*itask.k_m_n, ), itask.loaded_non_se_condition_files))
             rf = riu.get_empty_raw_icondition_file(*itask.k_m_n, itask.lp_type, itask.is_use_extended_rules,
                                                    str(worker_id))
+            pathlib.Path(rf).touch()
             raw_condition_files.append(rf)
 
         is_process_task_queue = False

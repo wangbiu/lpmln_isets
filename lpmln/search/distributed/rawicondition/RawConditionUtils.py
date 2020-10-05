@@ -131,6 +131,9 @@ def merge_and_clean_worker_kmn_raw_conditions(k_size, m_size, n_size, lp_type, i
     for i in range(1, payload + 1):
         dataf = riu.get_raw_icondition_file(k_size, m_size, n_size, lp_type, is_use_extened_rules, str(i))
         print("merge %s ..." % dataf)
+        if not os.path.exists(dataf):
+            continue
+
         with open(dataf, encoding="utf-8", mode="r") as df:
             for data in df:
                 ne_isets = data.strip("\r\n ").split(",")
