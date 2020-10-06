@@ -175,6 +175,46 @@ def merge_and_clean_worker_kmn_raw_conditions(k_size, m_size, n_size, lp_type, i
     return cnt
 
 
+def split_kmn_raw_conditions_by_ne_iset_numbers(k_size, m_size, n_size, lp_type, is_use_extened_rules):
+    data_file = riu.get_complete_raw_icondition_file(k_size, m_size, n_size, lp_type, is_use_extened_rules)
+    data_file = open(data_file, encoding="utf-8", mode="r")
+    data_dir = riu.get_raw_condition_split_data_dir(k_size, m_size, n_size)
+    if not os.path.exists(data_dir):
+        os.mkdir(data_dir)
+
+    split_files = dict()
+
+    for data in data_file:
+        data_item = data.strip("\r\n ").split(",")
+        ne = len(data_item)
+        if ne not in split_files:
+            outf = os.path.join(data_dir, riu.get_raw_icondition_file(
+                k_size, m_size, n_size, lp_type, is_use_extened_rules, "ne-%d"%ne))
+            outf = open(outf, mode="w", encoding="utf-8")
+            split_files[ne] = outf
+        else:
+            outf= split_files[ne]
+
+        outf.write(data)
+
+    for ne in split_files:
+        split_files[ne].close()
+
+    data_file.close()
+
+
+def count_raw_condition_split_data(k_size, m_size, n_size):
+    files = riu.get_raw_condition_split_data_files(k_size, m_size, n_size)
+    cnt = 0
+    for f in files:
+        print("counting %s ..." % f)
+        with open(f, encoding="utf-8", mode="r") as df:
+            for data in df:
+                cnt += 1
+
+    print("has %d data " % cnt)
+
+
 if __name__ == '__main__':
     kmn = (2, 1, 0)
     ne_iset_numbers = {18}
