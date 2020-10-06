@@ -14,13 +14,9 @@ import time
 import lpmln.message.Messager as msg
 import lpmln.config.GlobalConfig as cfg
 from lpmln.itask.ITask import ITaskConfig
-import lpmln.iset.ISetNonSEUtils as isnse
 import lpmln.utils.SSHClient as ssh
-import copy
-import pathlib
-from lpmln.utils.CombinationSpaceUtils import CombinationSearchingSpaceSplitter
+import os
 from lpmln.search.distributed.final.FinalSearchBase import SearchQueueManager, ITaskSignal
-from lpmln.search.distributed.final.FinalSearchPreWorker import FinalIConditionsSearchPreWorker
 config = cfg.load_configuration()
 
 
@@ -131,6 +127,7 @@ class HTCheckingMaster(FinalIConditionsSearchMaster):
         isc_tasks = isc_tasks_cfg.isc_tasks
         for itask in isc_tasks:
             itask.init_task_numbers()
+            os.remove(itask.result_file)
         #     ht_checking_results.append(list())
 
         msg_text = "isc task master start, load %d isc tasks from %s" % (len(isc_tasks), isc_config_file)
