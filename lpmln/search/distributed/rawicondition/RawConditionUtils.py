@@ -225,6 +225,7 @@ if __name__ == '__main__':
     # count_all_kmn_raw_condition_number(*kmn)
     # ht_slices_dir = get_kmn_raw_data_slices_dir(*kmn)
     # print(ht_slices_dir)
-    merge_all_kmn_raw_conditions(*kmn)
+    # merge_all_kmn_raw_conditions(*kmn)
+    split_kmn_raw_conditions_by_ne_iset_numbers(1, 1, 0, "lpmln", False)
     pass
     

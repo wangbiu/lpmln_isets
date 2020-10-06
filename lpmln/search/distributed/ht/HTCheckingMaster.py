@@ -153,7 +153,8 @@ class HTCheckingMaster(FinalIConditionsSearchMaster):
         isc_tasks = isc_tasks_cfg.isc_tasks
         for itask in isc_tasks:
             itask.init_task_numbers()
-            os.remove(itask.result_file)
+            if os.path.exists(itask.result_file):
+                os.remove(itask.result_file)
         #     ht_checking_results.append(list())
 
         msg_text = "isc task master start, load %d isc tasks from %s" % (len(isc_tasks), isc_config_file)

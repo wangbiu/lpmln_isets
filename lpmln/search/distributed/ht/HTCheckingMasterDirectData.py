@@ -117,6 +117,7 @@ class HTCheckingDirectMaster(HTCheckingMaster):
                             ht_task_queue.put(send_tuple)
                             data_batch = list()
 
+                    task_batch_cnt += 1
                     if len(data_batch) > 0:
                         send_tuple = (tid, tuple(data_batch))
                         ht_task_queue.put(send_tuple)

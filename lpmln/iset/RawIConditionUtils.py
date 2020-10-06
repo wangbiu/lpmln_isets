@@ -29,7 +29,7 @@ def get_raw_condition_split_data_files(k_size, m_size, n_size):
 
 def get_raw_condition_split_data_files_dict(k_size, m_size, n_size):
     data_dir = get_raw_condition_split_data_dir(k_size, m_size, n_size)
-    files = list()
+    files = dict()
     for f in os.listdir(data_dir):
         ne = int(f)
         files[ne] = os.path.join(data_dir, f)
