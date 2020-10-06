@@ -49,7 +49,7 @@ class HTCheckingDirectMaster(HTCheckingMaster):
 
         isc_tasks_cfg = ITaskConfig(isc_config_file)
         isc_tasks = isc_tasks_cfg.isc_tasks
-        batch_size = 100
+        batch_size = 20
         task_batch_cnt = 0
         data_cnt = 0
 
