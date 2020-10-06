@@ -140,11 +140,11 @@ def merge_all_kmn_raw_conditions(k_size, m_size, n_size, lp_type, is_use_extende
 def merge_worker_kmn_raw_conditions(k_size, m_size, n_size, lp_type, is_use_extened_rules):
     payload = config.worker_payload
     hostname = config.worker_host_name
-    outf = riu.get_raw_icondition_file(k_size, m_size, n_size, lp_type, is_use_extened_rules, hostname)
+    outf = riu.get_raw_icondition_file_path(k_size, m_size, n_size, lp_type, is_use_extened_rules, hostname)
     outf = open(outf, encoding="utf-8", mode="w")
 
     for i in range(1, payload + 1):
-        dataf = riu.get_raw_icondition_file(k_size, m_size, n_size, lp_type, is_use_extened_rules, str(i))
+        dataf = riu.get_raw_icondition_file_path(k_size, m_size, n_size, lp_type, is_use_extened_rules, str(i))
         print("merge %s ..." % dataf)
         with open(dataf, encoding="utf-8", mode="r") as df:
             for data in df:
@@ -155,11 +155,11 @@ def merge_worker_kmn_raw_conditions(k_size, m_size, n_size, lp_type, is_use_exte
 def merge_and_clean_worker_kmn_raw_conditions(k_size, m_size, n_size, lp_type, is_use_extened_rules, clean_ne_iset_numbers):
     payload = config.worker_payload
     hostname = config.worker_host_name
-    outf = riu.get_raw_icondition_file(k_size, m_size, n_size, lp_type, is_use_extened_rules, hostname)
+    outf = riu.get_raw_icondition_file_path(k_size, m_size, n_size, lp_type, is_use_extened_rules, hostname)
     outf = open(outf, encoding="utf-8", mode="w")
     cnt = 0
     for i in range(1, payload + 1):
-        dataf = riu.get_raw_icondition_file(k_size, m_size, n_size, lp_type, is_use_extened_rules, str(i))
+        dataf = riu.get_raw_icondition_file_path(k_size, m_size, n_size, lp_type, is_use_extened_rules, str(i))
         print("merge %s ..." % dataf)
         if not os.path.exists(dataf):
             continue
@@ -188,8 +188,7 @@ def split_kmn_raw_conditions_by_ne_iset_numbers(k_size, m_size, n_size, lp_type,
         data_item = data.strip("\r\n ").split(",")
         ne = len(data_item)
         if ne not in split_files:
-            outf = os.path.join(data_dir, riu.get_raw_icondition_file(
-                k_size, m_size, n_size, lp_type, is_use_extened_rules, "ne-%d"%ne))
+            outf = os.path.join(data_dir, str(ne))
             outf = open(outf, mode="w", encoding="utf-8")
             split_files[ne] = outf
         else:

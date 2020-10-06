@@ -27,7 +27,7 @@ def get_raw_condition_split_data_files(k_size, m_size, n_size):
     return files
 
 
-def get_raw_icondition_file(k_size, m_size, n_size, lp_type, is_use_extended_rules, postfix):
+def get_raw_icondition_file_path(k_size, m_size, n_size, lp_type, is_use_extended_rules, postfix):
     rs = 3
     if is_use_extended_rules:
         rs = 4
@@ -37,21 +37,30 @@ def get_raw_icondition_file(k_size, m_size, n_size, lp_type, is_use_extended_rul
     return file_path
 
 
+def get_raw_icondition_file_name(k_size, m_size, n_size, lp_type, is_use_extended_rules, postfix):
+    rs = 3
+    if is_use_extended_rules:
+        rs = 4
+
+    file_name = "%s-%d-kmn-%d-%d-%d-%s.txt" % (lp_type, rs, k_size, m_size, n_size, postfix)
+    return file_name
+
+
 def get_complete_raw_icondition_file(k_size, m_size, n_size, lp_type, is_use_extended_rules):
     postfix = "all"
-    return get_raw_icondition_file(k_size, m_size, n_size, lp_type, is_use_extended_rules, postfix)
+    return get_raw_icondition_file_path(k_size, m_size, n_size, lp_type, is_use_extended_rules, postfix)
 
 
 def get_all_raw_icondition_file_parts(k_size, m_size, n_size, lp_type, is_use_extended_rules, id_begin, id_end):
     files = list()
     for fid in range(id_begin, id_end):
-        file_part = get_raw_icondition_file(k_size, m_size, n_size, lp_type, is_use_extended_rules, str(fid))
+        file_part = get_raw_icondition_file_path(k_size, m_size, n_size, lp_type, is_use_extended_rules, str(fid))
         files.append(file_part)
     return files
 
 
 def get_empty_raw_icondition_file(k_size, m_size, n_size, lp_type, is_use_extended_rules, postfix):
-    file_path = get_raw_icondition_file(k_size, m_size, n_size, lp_type, is_use_extended_rules, postfix)
+    file_path = get_raw_icondition_file_path(k_size, m_size, n_size, lp_type, is_use_extended_rules, postfix)
     if pathlib.Path(file_path).exists():
         os.remove(file_path)
     return file_path
