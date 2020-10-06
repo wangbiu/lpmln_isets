@@ -223,7 +223,7 @@ class HTCheckingMaster(FinalIConditionsSearchMaster):
         msg.send_message(msg=msg_text)
 
         for it in isc_tasks:
-            it.task_finish()
+            it.dump_tmp_se_condition_saving_mem()
             msg_text = it.get_final_detail_progress_info()
             logging.info(msg_text)
             msg.send_message(msg=msg_text)
