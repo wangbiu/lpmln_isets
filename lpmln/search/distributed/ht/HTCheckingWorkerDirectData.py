@@ -30,7 +30,8 @@ class HTCheckingDirectWorker(HTCheckingWorker):
 
         for data_item in task_slice:
             data_id = data_item[0]
-            ne_isets = data_item[1].strip("\r\n ").split(",")
+            ne_iset_number = data_item[1]
+            ne_isets = data_item[2].strip("\r\n ").split(",")
             ne_isets = [int(s) for s in ne_isets]
             ne_isets = set(ne_isets)
 
@@ -39,12 +40,12 @@ class HTCheckingDirectWorker(HTCheckingWorker):
                     ne_isets, *itask.k_m_n, is_check_valid_rule=False)
 
             if is_strongly_equivalent:
-                se_cnt = [data_id]
+                se_cnt = [ne_iset_number, data_id]
                 se_cnt.extend(condition.singletom_iset_ids)
                 se_cnt = [str(d) for d in se_cnt]
                 se_conditions_cache.append(",".join(se_cnt))
             else:
-                nse_conditions_cache.append(str(data_id))
+                nse_conditions_cache.append("%d,%d" % (ne_iset_number, data_id))
 
         # print(task_slice, "complete", "task check number", task_check_number)
         return task_check_number, se_conditions_cache, nse_conditions_cache
