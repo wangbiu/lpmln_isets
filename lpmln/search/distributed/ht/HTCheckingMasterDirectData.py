@@ -93,21 +93,14 @@ class HTCheckingDirectMaster(HTCheckingMaster):
 
         for tid in range(len(isc_tasks)):
             it = isc_tasks[tid]
-            data_files = riu.get_raw_condition_split_data_files(*it.k_m_n)
+            data_files = riu.get_raw_condition_split_data_files_dict(*it.k_m_n)
 
-            for data_file in data_files:
+            for ne_iset_number in data_files:
+                data_file = data_files[ne_iset_number]
                 data_batch = list()
                 data_cnt = 0
                 task_batch_cnt = 0
-                ne_iset_number = 0
                 with open(data_file, mode="r", encoding="utf-8") as df:
-                    for data in df:
-                        data_item = data.strip("\r\n ").split(",")
-                        ne_iset_number = len(data_item)
-                        data_cnt += 1
-                        data_batch.append((data_cnt, ne_iset_number, data))
-                        break
-
                     if ne_iset_number < 5:
                         batch_size = 100
                     elif ne_iset_number < 15:
