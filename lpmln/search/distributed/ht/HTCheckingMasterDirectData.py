@@ -39,7 +39,7 @@ class HTCheckingDirectMaster(HTCheckingMaster):
                 msg.send_message(msg_text)
 
     @staticmethod
-    def itask_slices_generator(cls, isc_config_file):
+    def itask_slices_generator_2(cls, isc_config_file):
         msg_text = "%s init task slices generator ..." % str(cls)
         logging.info(msg_text)
         msg.send_message(msg_text)
@@ -78,6 +78,66 @@ class HTCheckingDirectMaster(HTCheckingMaster):
         msg_text = "all itasks has been dispatched: %d task slices, %d ht tasks" % (task_batch_cnt, data_cnt)
         logging.info(msg_text)
         msg.send_message(msg_text)
+
+    @staticmethod
+    def itask_slices_generator(cls, isc_config_file):
+        msg_text = "%s init task slices generator ..." % str(cls)
+        logging.info(msg_text)
+        msg.send_message(msg_text)
+
+        manager, task_queue, ht_task_queue, result_queue = \
+            SearchQueueManager.init_task_worker_queue_manager()
+
+        isc_tasks_cfg = ITaskConfig(isc_config_file)
+        isc_tasks = isc_tasks_cfg.isc_tasks
+
+        for tid in range(len(isc_tasks)):
+            it = isc_tasks[tid]
+            data_files = riu.get_raw_condition_split_data_files(*it.k_m_n)
+
+            for data_file in data_files:
+                data_batch = list()
+                data_cnt = 0
+                task_batch_cnt = 0
+                ne_iset_number = 0
+                with open(data_file, mode="r", encoding="utf-8") as df:
+                    for data in df:
+                        data_item = data.strip("\r\n ").split(",")
+                        ne_iset_number = len(data_item)
+                        data_cnt += 1
+                        data_batch.append((data_cnt, ne_iset_number, data))
+                        break
+
+                    if ne_iset_number < 5:
+                        batch_size = 100
+                    elif ne_iset_number < 15:
+                        batch_size = 20
+                    else:
+                        batch_size = 2
+
+                    for data in df:
+                        data_cnt += 1
+                        data_batch.append((data_cnt, ne_iset_number, data))
+                        if data_cnt % batch_size == 0:
+                            task_batch_cnt += 1
+                            send_tuple = (tid, tuple(data_batch))
+                            ht_task_queue.put(send_tuple)
+                            data_batch = list()
+
+                    if len(data_batch) > 0:
+                        send_tuple = (tid, tuple(data_batch))
+                        ht_task_queue.put(send_tuple)
+
+                    msg_text = "all itasks of %s has been dispatched: %d task slices, %d ht tasks" % (
+                        data_file, task_batch_cnt, data_cnt)
+                    logging.info(msg_text)
+                    msg.send_message(msg_text)
+
+        working_hosts_number = 5
+        for i in range(working_hosts_number * 200):
+            ht_task_queue.put((ITaskSignal.kill_signal, -1))
+
+
 
     @staticmethod
     def init_pre_task_worker_pool(cls, isc_config_file, result_queue):
