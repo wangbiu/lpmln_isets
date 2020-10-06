@@ -39,7 +39,7 @@ class HTCheckingMaster(FinalIConditionsSearchMaster):
     def dump_isc_task_results(itasks):
         msg_texts = []
         for it in itasks:
-            it.dump_tmp_se_condition()
+            it.dump_tmp_se_condition_saving_mem()
             total_number = it.ht_task_number
             task_complete_number = it.task_complete_number
             se_number = it.se_condition_number
@@ -62,6 +62,7 @@ class HTCheckingMaster(FinalIConditionsSearchMaster):
             for ic in iconditions:
                 msg_text = "%d-%d-%d nse condition: %s" % (*itask.k_m_n, str(ic))
                 logging.error(msg_text)
+                msg.send_message(msg_text)
 
     @staticmethod
     def check_itasks_status(cls, itasks, host_ips, manager_tuple, working_host_number):
@@ -107,6 +108,7 @@ class HTCheckingMaster(FinalIConditionsSearchMaster):
         for i in range(working_hosts_number * 200):
             ht_task_queue.put((ITaskSignal.kill_signal, -1))
         logging.info("all itasks has been dispatched")
+        msg.send_message("all itasks has been dispatched")
 
     @staticmethod
     def init_pre_task_worker_pool(cls, isc_config_file, result_queue):

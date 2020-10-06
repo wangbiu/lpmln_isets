@@ -180,6 +180,11 @@ class ITask:
                 self.se_condition_dump_file = file_name
                 self.save_se_condition(file_name)
 
+    def dump_tmp_se_condition_saving_mem(self):
+        self.save_se_condition(self.result_file, mode="a")
+        for i in self.hierarchical_se_conditions:
+            self.hierarchical_se_conditions[i] = list()
+
     def get_final_detail_progress_info(self):
         self.task_progress_rate = 100.0 * self.task_complete_number / self.task_total_number
         task_running_time = self.get_running_time(-1)
@@ -263,8 +268,8 @@ class ITask:
 
         return self.get_progress_info()
 
-    def save_se_condition(self, file_name):
-        with open(file_name, mode='w', encoding='utf-8') as f:
+    def save_se_condition(self, file_name, mode="w"):
+        with open(file_name, mode=mode, encoding='utf-8') as f:
             for i in self.hierarchical_se_conditions:
                 for se in self.hierarchical_se_conditions[i]:
                     f.write(str(se))

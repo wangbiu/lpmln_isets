@@ -23,6 +23,21 @@ config = cfg.load_configuration()
 
 
 class HTCheckingDirectMaster(HTCheckingMaster):
+
+    @staticmethod
+    def insert_found_conditions(itask, iconditions, is_se_condition=True):
+        if is_se_condition:
+            for ic in iconditions:
+                ne_iset_number = 1
+                itask.hierarchical_se_conditions[ne_iset_number].append(ic)
+                itask.is_find_new_se_condition = True
+                itask.se_condition_number += 1
+        else:
+            for ic in iconditions:
+                msg_text = "%d-%d-%d nse condition: %s" % (*itask.k_m_n, str(ic))
+                logging.error(msg_text)
+                msg.send_message(msg_text)
+
     @staticmethod
     def itask_slices_generator(cls, isc_config_file):
         msg_text = "%s init task slices generator ..." % str(cls)
@@ -35,18 +50,19 @@ class HTCheckingDirectMaster(HTCheckingMaster):
         isc_tasks_cfg = ITaskConfig(isc_config_file)
         isc_tasks = isc_tasks_cfg.isc_tasks
         batch_size = 100
+        task_batch_cnt = 0
+        data_cnt = 0
 
         for tid in range(len(isc_tasks)):
             it = isc_tasks[tid]
             data_file = riu.get_complete_raw_icondition_file(*it.k_m_n, it.lp_type, it.is_use_extended_rules)
-            data_cnt = 0
             data_batch = list()
             with open(data_file, mode="r", encoding="utf-8") as df:
                 for data in df:
                     data_cnt += 1
-                    data_batch.append(data)
-                    if data_cnt == batch_size:
-                        data_cnt = 0
+                    data_batch.append((data_cnt, data))
+                    if data_cnt % batch_size == 0:
+                        task_batch_cnt += 1
                         send_tuple = (tid, tuple(data_batch))
                         ht_task_queue.put(send_tuple)
                         data_batch = list()
@@ -58,7 +74,10 @@ class HTCheckingDirectMaster(HTCheckingMaster):
         working_hosts_number = 5
         for i in range(working_hosts_number * 200):
             ht_task_queue.put((ITaskSignal.kill_signal, -1))
-        logging.info("all itasks has been dispatched")
+
+        msg_text = "all itasks has been dispatched: %d task slices, %d ht tasks" % (task_batch_cnt, data_cnt)
+        logging.info(msg_text)
+        msg.send_message(msg_text)
 
     @staticmethod
     def init_pre_task_worker_pool(cls, isc_config_file, result_queue):
