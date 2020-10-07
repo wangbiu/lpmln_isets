@@ -417,6 +417,7 @@ def refine_iconditions_groups(k_size, m_size, n_size, min_ne, max_ne, type):
 
 def compute_common_isets(k_size, m_size, n_size, min_ne, max_ne, type):
     group_file = get_icondition_refine_group_file(k_size, m_size, n_size, min_ne, max_ne, type)
+    outf = get_icondition_refine_group_file(k_size, m_size, n_size, min_ne, max_ne, type, 1)
     groups = load_iconditions_groups(group_file)
     ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, type)
     iconditions = load_iconditions_from_file(ic_file)
@@ -428,6 +429,31 @@ def compute_common_isets(k_size, m_size, n_size, min_ne, max_ne, type):
             ic_ne_isets = copy.deepcopy(iconditions[g].ne_iset_ids)
             ic_ne_isets = list(ic_ne_isets)
             groups[g].group_common_isets = ic_ne_isets
+
+
+
+
+
+def get_common_elements(element_lists):
+    all_elements = list()
+    common = list()
+    for ele in element_lists:
+        all_elements.extend(ele)
+
+    all_elements = set(all_elements)
+
+    for e in all_elements:
+        is_common = True
+        for ele in element_lists:
+            if e not in ele:
+                is_common = False
+        if is_common:
+            common.append(e)
+
+    return common
+
+
+
 
 
 
