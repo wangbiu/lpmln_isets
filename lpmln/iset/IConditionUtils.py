@@ -331,7 +331,7 @@ def preliminary_group_kmn_iconditions(k_size, m_size, n_size, min_ne, max_ne):
 
     check_cnt = size * (size - 1) // 2
     logging.info("check %d pairs" % check_cnt)
-    print_loop = 1000
+    print_loop = 100000
     print_cnt = 0
 
     for i in range(size):
@@ -354,7 +354,7 @@ def preliminary_group_kmn_iconditions(k_size, m_size, n_size, min_ne, max_ne):
                 continue
 
             groups[parent].group_childern.append(child)
-            groups[child].group_childern.append(parent)
+            groups[child].group_parents.append(parent)
 
             if print_cnt % print_loop == 0:
                 logging.info("check %d / %d pairs" % (print_cnt, check_cnt))
@@ -362,6 +362,19 @@ def preliminary_group_kmn_iconditions(k_size, m_size, n_size, min_ne, max_ne):
     logging.info("check %d / %d pairs" % (print_cnt, check_cnt))
 
     dump_iconditions_groups(groups, group_file)
+
+
+def refine_iconditions_groups(k_size, m_size, n_size, min_ne, max_ne):
+    group_file = get_icondition_group_file(k_size, m_size, n_size, min_ne, max_ne)
+    ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne)
+    iconditions = load_iconditions_from_file(ic_file)
+    groups = load_iconditions_groups(group_file)
+    ic_id = 1
+    print(iconditions[ic_id])
+    print(groups[ic_id])
+
+
+
 
 
 def dump_iconditions_groups(groups, group_file):
@@ -378,11 +391,20 @@ def load_iconditions_groups(group_file):
         data = json.load(f)
         groups = dict()
         for d in data:
-            groups[d] = data[d]
+            gp = IConditionGroup(0)
+            gp.load_from_map(data[d])
+            groups[int(d)] = gp
+        return groups
 
 
 
 if __name__ == '__main__':
-    preliminary_group_kmn_iconditions(0, 2, 1, 1, 33)
+    params = (0, 2, 1, 1, 33)
+    # preliminary_group_kmn_iconditions(*params)
+    group_file = get_icondition_group_file(*params)
+    # groups = load_iconditions_groups(group_file)
+    # print(len(groups))
+    # print(groups[0])
+    refine_iconditions_groups(*params)
     pass
     

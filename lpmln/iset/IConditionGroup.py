@@ -12,7 +12,7 @@ class IConditionGroup:
     def __init__(self, icondition_id):
         self.group_icondition_id = icondition_id
         self.group_childern = list()
-        self.group_parent_icondition_ids = list()
+        self.group_parents = list()
         self.group_common_isets = list()
 
     def to_map(self):
@@ -25,6 +25,10 @@ class IConditionGroup:
     def load_from_map(self, data):
         for v in data:
             self.__setattr__(v, data[v])
+
+    def __str__(self):
+        data = self.to_map()
+        return str(data)
 
 
 if __name__ == '__main__':
