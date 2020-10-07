@@ -341,6 +341,11 @@ def check_111_icondition_3_3():
     iscu.count_ne_iset_occurrences(conditions)
     print("\n")
 
+
+def group_111_iconditions():
+    iscu.preliminary_group_kmn_iconditions(*kmn_data["1-1-1"])
+
+
 if __name__ == '__main__':
     # check_isc_data("0-2-1")
     # check_isc_data("1-1-0")
@@ -352,6 +357,7 @@ if __name__ == '__main__':
     # check_120_icondition_no_292()
     # check_120_icondition_with_292()
     # check_isc_data("1-1-1", False)
-    check_111_icondition_3_3()
+    # check_111_icondition_3_3()
+    group_111_iconditions()
     pass
     

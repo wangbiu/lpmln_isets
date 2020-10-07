@@ -15,6 +15,8 @@ config = cfg.load_configuration()
 from sympy import symbols, simplify, true, false
 from sympy.logic.boolalg import And, Or, Not, to_dnf
 import itertools
+from lpmln.iset.IConditionGroup import IConditionGroup
+import json
 
 
 def load_iconditions_from_file(ic_file, is_ne_formate=True):
@@ -311,6 +313,43 @@ def compute_isets_compostions(comp_data, isets, label, rule_sets):
         for i in range(len(comp)):
             if comp[i] == 1:
                 comp_data[rule_sets[i]].append(s)
+
+
+def preliminary_group_kmn_iconditions(k_size, m_size, n_size, min_ne, max_ne):
+    ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne)
+    iconditions = load_iconditions_from_file(ic_file)
+    group_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, "group")
+
+    groups = dict()
+    size = len(iconditions)
+
+    for i in range(size):
+        gp = IConditionGroup(i)
+        groups[i] = gp
+
+    for i in range(size):
+        for j in range(i+1, size):
+            ne1 = set(iconditions[i].ne_iset_ids)
+            ne2 = set(iconditions[j].ne_iset_ids)
+
+            if ne1.issubset(ne2):
+                parent = j
+                child = i
+            elif ne2.issubset(ne1):
+                parent = i
+                child = j
+            else:
+                continue
+
+            groups[parent].group_childern.append(child)
+            groups[child].group_childern.append(parent)
+
+    group_json = dict()
+    for g in groups:
+        group_json[g] = groups[g].to_map()
+
+    with open(group_file, encoding="utf-8", mode="w") as f:
+        json.dump(group_json, f, indent=2)
 
 
 if __name__ == '__main__':
