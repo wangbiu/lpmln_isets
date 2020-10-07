@@ -17,6 +17,7 @@ from sympy.logic.boolalg import And, Or, Not, to_dnf
 import itertools
 from lpmln.iset.IConditionGroup import IConditionGroup
 import json
+import logging
 
 
 def load_iconditions_from_file(ic_file, is_ne_formate=True):
@@ -328,12 +329,18 @@ def preliminary_group_kmn_iconditions(k_size, m_size, n_size, min_ne, max_ne):
     groups = dict()
     size = len(iconditions)
 
+    check_cnt = size * (size - 1) // 2
+    logging.info("check %d pairs" % check_cnt)
+    print_loop = 1000
+    print_cnt = 0
+
     for i in range(size):
         gp = IConditionGroup(i)
         groups[i] = gp
 
     for i in range(size):
         for j in range(i+1, size):
+            print_cnt += 1
             ne1 = set(iconditions[i].ne_iset_ids)
             ne2 = set(iconditions[j].ne_iset_ids)
 
@@ -348,6 +355,11 @@ def preliminary_group_kmn_iconditions(k_size, m_size, n_size, min_ne, max_ne):
 
             groups[parent].group_childern.append(child)
             groups[child].group_childern.append(parent)
+
+            if print_cnt % print_loop == 0:
+                logging.info("check %d / %d pairs" % (print_cnt, check_cnt))
+
+    logging.info("check %d / %d pairs" % (print_cnt, check_cnt))
 
     dump_iconditions_groups(groups, group_file)
 
