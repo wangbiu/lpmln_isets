@@ -430,8 +430,21 @@ def compute_common_isets(k_size, m_size, n_size, min_ne, max_ne, type):
             ic_ne_isets = list(ic_ne_isets)
             groups[g].group_common_isets = ic_ne_isets
 
+    while len(leaves) > 0:
+        new_leaves = list()
+        for g in leaves:
+            parents = groups[g].group_parents
+            for p in parents:
+                new_leaves.append(p)
+                element_list = list()
+                children = groups[p].group_children
+                for ch in children:
+                    element_list.append(copy.deepcopy(groups[ch].group_common_isets))
+                common = get_common_elements(element_list)
+                groups[p].group_common_isets = common
+        leaves = new_leaves
 
-
+    dump_iconditions_groups(groups, outf)
 
 
 def get_common_elements(element_lists):
@@ -525,12 +538,13 @@ def split_iconditions(k_size, m_size, n_size, min_ne, max_ne, type):
 
 if __name__ == '__main__':
     params = (0, 2, 1, 1, 33)
-    # preliminary_group_kmn_iconditions(*params)
-    group_file = get_icondition_group_file(*params)
-    # groups = load_iconditions_groups(group_file)
+    preliminary_group_kmn_iconditions(*params, "")
+    group_file = get_icondition_group_file(*params, "")
+    # groups = load_iconditions_groups(group_file, "")
     # print(len(groups))
     # print(groups[0])
-    # refine_iconditions_groups(*params)
-    split_iconditions(1,1,1,1,45, "")
+    refine_iconditions_groups(*params, "")
+    # split_iconditions(1,1,1,1,45, "")
+    compute_common_isets(*params, "")
     pass
     
