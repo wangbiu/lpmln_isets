@@ -18,6 +18,7 @@ import itertools
 from lpmln.iset.IConditionGroup import IConditionGroup
 import json
 import logging
+import copy
 
 
 def load_iconditions_from_file(ic_file, is_ne_formate=True):
@@ -353,7 +354,7 @@ def preliminary_group_kmn_iconditions(k_size, m_size, n_size, min_ne, max_ne):
             else:
                 continue
 
-            groups[parent].group_childern.append(child)
+            groups[parent].group_children.append(child)
             groups[child].group_parents.append(parent)
 
             if print_cnt % print_loop == 0:
@@ -369,12 +370,57 @@ def refine_iconditions_groups(k_size, m_size, n_size, min_ne, max_ne):
     ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne)
     iconditions = load_iconditions_from_file(ic_file)
     groups = load_iconditions_groups(group_file)
-    ic_id = 1
-    print(iconditions[ic_id])
-    print(groups[ic_id])
+    # ic_id = 1
+    # print(iconditions[ic_id])
+    # print(groups[ic_id])
+
+    roots = list()
+    for g in groups:
+        groups[g].to_set()
+        if len(groups[g].group_parents) == 0:
+            roots.append(g)
+
+    # for r in roots:
+    #     print(r, iconditions[r])
 
 
+    for g in groups:
+        current = groups[g]
+        parents = current.group_parents
+        redundant_parents = set()
+        for p in parents:
+            pa = groups[p]
+            pa_parents = pa.group_parents
+            common_parents = parents.intersection(pa_parents)
+            redundant_parents = redundant_parents.union(common_parents)
+            for cp in common_parents:
+                cp_pa = groups[cp]
+                if g in cp_pa.group_children:
+                    cp_pa.group_children.remove(g)
 
+        current.group_parents = parents.difference(redundant_parents)
+
+
+    for g in groups:
+        groups[g].to_list()
+    group_file = group_file + ".refine"
+    dump_iconditions_groups(groups, group_file)
+
+
+def process_children(groups, roots):
+    for r in roots:
+        parent = groups[r]
+        children = parent.group_children
+        new_childern = copy.deepcopy(children)
+        for ch in children:
+            child = groups[ch]
+            if len(child.group_parents) > 1:
+                new_childern.remove(ch)
+                child.group_parents.remove(r)
+
+        parent.group_children = new_childern
+        new_roots = copy.deepcopy(new_childern)
+        process_children(groups, new_roots)
 
 
 def dump_iconditions_groups(groups, group_file):
