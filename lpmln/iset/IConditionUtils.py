@@ -35,8 +35,17 @@ def load_iconditions_from_file(ic_file, is_ne_formate=True):
     return conditions
 
 
-def get_icondition_group_file(k_size, m_size, n_size, min_ne, max_ne):
-    group_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, "group")
+def get_icondition_group_file(k_size, m_size, n_size, min_ne, max_ne, type):
+    group_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, type)
+    group_file = group_file + ".group"
+    return group_file
+
+
+def get_icondition_refine_group_file(k_size, m_size, n_size, min_ne, max_ne, type,level=0):
+    group_file = get_icondition_group_file(k_size, m_size, n_size, min_ne, max_ne, type)
+    group_file = group_file + ".refine"
+    if level != 0:
+        group_file = group_file + "-%d" % level
     return group_file
 
 
@@ -322,10 +331,10 @@ def compute_isets_compostions(comp_data, isets, label, rule_sets):
                 comp_data[rule_sets[i]].append(s)
 
 
-def preliminary_group_kmn_iconditions(k_size, m_size, n_size, min_ne, max_ne):
-    ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne)
+def preliminary_group_kmn_iconditions(k_size, m_size, n_size, min_ne, max_ne, type):
+    ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, type)
     iconditions = load_iconditions_from_file(ic_file)
-    group_file = get_icondition_group_file(k_size, m_size, n_size, min_ne, max_ne)
+    group_file = get_icondition_group_file(k_size, m_size, n_size, min_ne, max_ne, type)
 
     groups = dict()
     size = len(iconditions)
@@ -365,9 +374,9 @@ def preliminary_group_kmn_iconditions(k_size, m_size, n_size, min_ne, max_ne):
     dump_iconditions_groups(groups, group_file)
 
 
-def refine_iconditions_groups(k_size, m_size, n_size, min_ne, max_ne):
-    group_file = get_icondition_group_file(k_size, m_size, n_size, min_ne, max_ne)
-    ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne)
+def refine_iconditions_groups(k_size, m_size, n_size, min_ne, max_ne, type):
+    group_file = get_icondition_group_file(k_size, m_size, n_size, min_ne, max_ne, type)
+    ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, type)
     iconditions = load_iconditions_from_file(ic_file)
     groups = load_iconditions_groups(group_file)
     # ic_id = 1
@@ -400,11 +409,31 @@ def refine_iconditions_groups(k_size, m_size, n_size, min_ne, max_ne):
 
         current.group_parents = parents.difference(redundant_parents)
 
-
     for g in groups:
         groups[g].to_list()
-    group_file = group_file + ".refine"
+    group_file = get_icondition_refine_group_file(k_size, m_size, n_size, min_ne, max_ne, type)
     dump_iconditions_groups(groups, group_file)
+
+
+def compute_common_isets(k_size, m_size, n_size, min_ne, max_ne, type):
+    group_file = get_icondition_refine_group_file(k_size, m_size, n_size, min_ne, max_ne, type)
+    groups = load_iconditions_groups(group_file)
+    ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, type)
+    iconditions = load_iconditions_from_file(ic_file)
+
+    leaves = list()
+    for g in groups:
+        if len(groups[g].group_children) == 0:
+            leaves.append(g)
+            ic_ne_isets = copy.deepcopy(iconditions[g].ne_iset_ids)
+            ic_ne_isets = list(ic_ne_isets)
+            groups[g].group_common_isets = ic_ne_isets
+
+
+
+
+
+
 
 
 def process_children(groups, roots):
@@ -443,6 +472,30 @@ def load_iconditions_groups(group_file):
         return groups
 
 
+def split_iconditions(k_size, m_size, n_size, min_ne, max_ne, type):
+    ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, type)
+    iconditions = load_iconditions_from_file(ic_file)
+    ns_ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, "ns")
+    s_ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, "s")
+
+    ns_ic_file = open(ns_ic_file, mode="w", encoding="utf-8")
+    s_ic_file = open(s_ic_file, mode="w", encoding="utf-8")
+
+    for ic in iconditions:
+        if len(ic.singletom_iset_ids) == 0:
+            ns_ic_file.write(str(ic))
+            ns_ic_file.write("\n")
+        else:
+            s_ic_file.write(str(ic))
+            s_ic_file.write("\n")
+
+    ns_ic_file.close()
+    s_ic_file.close()
+
+
+
+
+
 
 if __name__ == '__main__':
     params = (0, 2, 1, 1, 33)
@@ -451,6 +504,7 @@ if __name__ == '__main__':
     # groups = load_iconditions_groups(group_file)
     # print(len(groups))
     # print(groups[0])
-    refine_iconditions_groups(*params)
+    # refine_iconditions_groups(*params)
+    split_iconditions(1,1,1,1,45, "")
     pass
     

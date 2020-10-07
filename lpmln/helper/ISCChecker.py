@@ -343,8 +343,8 @@ def check_111_icondition_3_3():
 
 
 def group_111_iconditions():
-    iscu.preliminary_group_kmn_iconditions(*kmn_data["1-1-1"])
-    iscu.refine_iconditions_groups(*kmn_data["1-1-1"])
+    iscu.preliminary_group_kmn_iconditions(*kmn_data["1-1-1"], type="ns")
+    iscu.refine_iconditions_groups(*kmn_data["1-1-1"], type="ns")
 
 
 if __name__ == '__main__':
