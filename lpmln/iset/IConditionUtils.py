@@ -14,6 +14,7 @@ import lpmln.iset.ISetCompositionUtils as iscom
 config = cfg.load_configuration()
 from sympy import symbols, simplify, true, false
 from sympy.logic.boolalg import And, Or, Not, to_dnf
+import itertools
 
 
 def load_iconditions_from_file(ic_file, is_ne_formate=True):
@@ -113,7 +114,8 @@ def simplify_iconditions(iconditions, ignore_ne_isets=set()):
     ne_symbols = get_iconditions_ne_isets_logic_symbols(iconditions, ignore_ne_isets)
     dnf = convert_iconditions_2_disjunctive_formula(iconditions, ne_symbols)
     simplified_dnf = simplify(dnf)
-    return simplified_dnf
+    sim_dnf = to_dnf(dnf)
+    return simplified_dnf, sim_dnf
 
 
 def find_common_ne_isets_from_iconditions(iconditions):
@@ -133,6 +135,136 @@ def find_common_ne_isets_from_iconditions(iconditions):
 
     return common_ne_isets
 
+
+def normalize_iconditions(iconditions, outf=None):
+    ne_isets = get_iconditions_ne_isets(iconditions)
+    ne_isets = list(ne_isets)
+    ne_isets.sort()
+    normalized_iconditions = list()
+    tmp_iconditions = dict()
+    ne_numbers = set()
+    for ic in iconditions:
+        ic_ne_isets = list()
+        ne_number = len(ic.ne_iset_ids)
+        ne_numbers.add(ne_number)
+        for ne in ne_isets:
+            if ne in ic.ne_iset_ids:
+                ic_ne_isets.append(ne)
+            else:
+                ic_ne_isets.append(-2)
+        if ne_number not in tmp_iconditions:
+            tmp_iconditions[ne_number] = list()
+
+        tmp_iconditions[ne_number].append(ic_ne_isets)
+
+    ne_numbers = list(ne_numbers)
+    ne_numbers.sort()
+    for ne in ne_numbers:
+        for ic in tmp_iconditions[ne]:
+            normalized_iconditions.append(ic)
+
+    nm_ic_str = list()
+    for ic in normalized_iconditions:
+        ic_str = [str(int(s)+1) for s in ic]
+        nm_ic_str.append(",".join(ic_str))
+        # print(",".join(ic_str))
+
+    if outf is not None:
+        with open(outf, encoding="utf-8", mode="w") as f:
+            for ic in nm_ic_str:
+                f.write(ic)
+                f.write("\n")
+    return nm_ic_str
+
+
+def count_ne_iset_occurrences(iconditions):
+    ne_isets = get_iconditions_ne_isets(iconditions)
+    ne_isets = list(ne_isets)
+    ne_isets.sort()
+
+    stat = dict()
+    for ne in ne_isets:
+        stat[ne] = 0
+
+    for ic in iconditions:
+        for ne in ne_isets:
+            if ne in ic.ne_iset_ids:
+                stat[ne] += 1
+
+    for ne in stat:
+        print("ne %d : %d" % (ne+1, stat[ne]))
+
+    return stat
+
+
+def count_ne_iset_co_occurrences(iconditions, order=2):
+    ne_isets = get_iconditions_ne_isets(iconditions)
+    ne_isets = list(ne_isets)
+    ne_isets.sort()
+
+    co_ne_iter = itertools.combinations(ne_isets, order)
+
+    for co_ne in co_ne_iter:
+        cnt = 0
+        for ic in iconditions:
+            is_co_occur = True
+            for ne in set(co_ne):
+                if ne not in ic.ne_iset_ids:
+                    is_co_occur = False
+            if is_co_occur:
+                cnt += 1
+        print(co_ne, ": %d" % cnt)
+
+
+def get_iconditions_not_contains_all_ne_isets(iconditions, ne_isets):
+    conditions = list()
+    for ic in iconditions:
+        is_remove = False
+        for ne in ne_isets:
+            if ne in ic.ne_iset_ids:
+                is_remove = True
+                break
+        if not is_remove:
+            conditions.append(ic)
+
+    return conditions
+
+
+def get_iconditions_contains_all_ne_isets(iconditions, ne_isets):
+    conditions = list()
+    for ic in iconditions:
+        is_remove = False
+        for ne in ne_isets:
+            if ne not in ic.ne_iset_ids:
+                is_remove = True
+                break
+        if not is_remove:
+            conditions.append(ic)
+
+    return conditions
+
+
+def get_iconditions_contains_at_least_one_of_ne_isets(iconditions, ne_isets):
+    conditions = list()
+    for ic in iconditions:
+        contain = icondition_contains_at_least_one_of_ne_isets(ic, ne_isets)
+        if contain:
+            conditions.append(ic)
+    return conditions
+
+
+def icondition_contains_all_ne_isets(icondition, ne_isets):
+    for ne in ne_isets:
+        if ne not in icondition.ne_iset_ids:
+            return False
+    return True
+
+
+def icondition_contains_at_least_one_of_ne_isets(icondition, ne_isets):
+    for ne in ne_isets:
+        if ne in icondition.ne_iset_ids:
+            return True
+    return False
 
 def get_rule_sets(rule_number, is_use_extended_rules):
     rule_sets_names = ["h(%d)", "pb(%d)", "nb(%d)"]
