@@ -205,6 +205,142 @@ def check_111_icondition_2():
     iscu.count_ne_iset_occurrences(conditions)
 
 
+def check_111_icondition_3():
+    file = config.get_isc_results_file_path(*kmn_data["1-1-1"])
+    conditions = iscu.load_iconditions_from_file(file)
+    total_ne_isets = {1, 2, 8, 9, 10, 16, 17, 18, 36, 64, 73, 82, 100, 128, 137, 146, 164, 256, 258, 265, 268, 272, 274, 289, 292}
+    # iscu.normalize_iconditions(conditions)
+    # iscu.count_ne_iset_occurrences(conditions)
+    ne_isets = {291, 35, 63, 81, 99, 127, 136, 163}
+    conditions = iscu.get_iconditions_contains_at_least_one_of_ne_isets(conditions, ne_isets)
+
+    ne_isets = {35, 63, 81, 99, 127, 136, 163, 255, 257, 271, 273}
+    conditions = iscu.get_iconditions_contains_at_least_one_of_ne_isets(conditions, ne_isets)
+
+    print("has %d iconditions" % len(conditions))
+    iscu.count_ne_iset_occurrences(conditions)
+
+    total_ne_isets = iscu.get_iconditions_ne_isets(conditions)
+    print("\ntotal ne isets ", total_ne_isets, len(total_ne_isets))
+    ignore_remove_isets = {8, 17, 72, 145}
+    # total_ne_isets = total_ne_isets.difference(ignore_remove_isets)
+    total_ne_isets = list(total_ne_isets)
+    total_ne_isets.sort()
+    remove_ne_isets = set()
+    for ne in total_ne_isets:
+        remove_ne_isets.add(ne)
+        print("remove ne ", remove_ne_isets)
+        conditions = iscu.get_iconditions_not_contains_all_ne_isets(conditions, {ne})
+
+        print("has %d iconditions" % len(conditions))
+
+        ne_isets = iscu.get_iconditions_ne_isets(conditions)
+        print("ne isets: ", [i + 1 for i in ne_isets], len(ne_isets))
+        ignore_ne_isets = iscu.find_common_ne_isets_from_iconditions(conditions)
+        print("common ne isets: ", [i + 1 for i in ignore_ne_isets], len(ignore_ne_isets))
+        # iscu.count_ne_iset_occurrences(conditions)
+        print("\n")
+
+
+def check_111_icondition_3_1():
+    file = config.get_isc_results_file_path(*kmn_data["1-1-1"])
+    conditions = iscu.load_iconditions_from_file(file)
+    total_ne_isets = {1, 2, 8, 9, 10, 16, 17, 18, 36, 64, 73, 82, 100, 128, 137, 146, 164, 256, 258, 265, 268, 272, 274, 289, 292}
+    # iscu.normalize_iconditions(conditions)
+    # iscu.count_ne_iset_occurrences(conditions)
+    ne_isets = {291, 35, 63, 81, 99, 127, 136, 163}
+    conditions = iscu.get_iconditions_contains_at_least_one_of_ne_isets(conditions, ne_isets)
+
+    ne_isets = {35, 63, 81, 99, 127, 136, 163, 255, 257, 271, 273}
+    conditions = iscu.get_iconditions_contains_at_least_one_of_ne_isets(conditions, ne_isets)
+
+    print("has %d iconditions" % len(conditions))
+    iscu.count_ne_iset_occurrences(conditions)
+
+    remove_ne_isets = {291, 273, 255, 163, 136, 127, 99, 81, 267, 288}
+    print("remove ne ", remove_ne_isets)
+    conditions = iscu.get_iconditions_not_contains_all_ne_isets(conditions, remove_ne_isets)
+
+    outf = r"C:\Users\wangb\Desktop\111.csv"
+    iscu.normalize_iconditions(conditions, outf)
+
+    print("has %d iconditions" % len(conditions))
+
+    ne_isets = iscu.get_iconditions_ne_isets(conditions)
+    print("ne isets: ", [i + 1 for i in ne_isets], len(ne_isets))
+    ignore_ne_isets = iscu.find_common_ne_isets_from_iconditions(conditions)
+    print("common ne isets: ", [i + 1 for i in ignore_ne_isets], len(ignore_ne_isets))
+    iscu.count_ne_iset_occurrences(conditions)
+    print("\n")
+
+def check_111_icondition_3_2():
+    file = config.get_isc_results_file_path(*kmn_data["1-1-1"])
+    conditions = iscu.load_iconditions_from_file(file)
+    total_ne_isets = {1, 2, 8, 9, 10, 16, 17, 18, 36, 64, 73, 82, 100, 128, 137, 146, 164, 256, 258, 265, 268, 272, 274, 289, 292}
+    # iscu.normalize_iconditions(conditions)
+    # iscu.count_ne_iset_occurrences(conditions)
+    ne_isets = {291, 35, 63, 81, 99, 127, 136, 163}
+    conditions = iscu.get_iconditions_contains_at_least_one_of_ne_isets(conditions, ne_isets)
+
+    ne_isets = {35, 63, 81, 99, 127, 136, 163, 255, 257, 271, 273}
+    conditions = iscu.get_iconditions_contains_at_least_one_of_ne_isets(conditions, ne_isets)
+
+    ne_isets = {291, 273, 255, 163, 136, 127, 99, 81, 267, 288}
+    conditions = iscu.get_iconditions_contains_at_least_one_of_ne_isets(conditions, ne_isets)
+
+    print("has %d iconditions" % len(conditions))
+    iscu.count_ne_iset_occurrences(conditions)
+
+    remove_ne_isets = {291, 273, 264, 163, 136, 127, 35}
+    print("remove ne ", remove_ne_isets)
+    conditions = iscu.get_iconditions_not_contains_all_ne_isets(conditions, remove_ne_isets)
+
+    outf = r"C:\Users\wangb\Desktop\111.csv"
+    iscu.normalize_iconditions(conditions, outf)
+
+    print("has %d iconditions" % len(conditions))
+
+    ne_isets = iscu.get_iconditions_ne_isets(conditions)
+    print("ne isets: ", [i + 1 for i in ne_isets], len(ne_isets))
+    ignore_ne_isets = iscu.find_common_ne_isets_from_iconditions(conditions)
+    print("common ne isets: ", [i + 1 for i in ignore_ne_isets], len(ignore_ne_isets))
+    iscu.count_ne_iset_occurrences(conditions)
+    print("\n")
+
+def check_111_icondition_3_3():
+    file = config.get_isc_results_file_path(*kmn_data["1-1-1"])
+    conditions = iscu.load_iconditions_from_file(file)
+    ne_isets = {291, 35, 63, 81, 99, 127, 136, 163}
+    conditions = iscu.get_iconditions_contains_at_least_one_of_ne_isets(conditions, ne_isets)
+
+    ne_isets = {35, 63, 81, 99, 127, 136, 163, 255, 257, 271, 273}
+    conditions = iscu.get_iconditions_contains_at_least_one_of_ne_isets(conditions, ne_isets)
+
+    ne_isets = {291, 273, 255, 163, 136, 127, 99, 81, 267, 288}
+    conditions = iscu.get_iconditions_contains_at_least_one_of_ne_isets(conditions, ne_isets)
+
+    ne_isets = {291, 273, 264, 163, 136, 127, 35}
+    conditions = iscu.get_iconditions_contains_at_least_one_of_ne_isets(conditions, ne_isets)
+
+    print("has %d iconditions" % len(conditions))
+    iscu.count_ne_iset_occurrences(conditions)
+
+    remove_ne_isets = {291, 163, 35}
+    print("remove ne ", remove_ne_isets)
+    conditions = iscu.get_iconditions_not_contains_all_ne_isets(conditions, remove_ne_isets)
+
+    outf = r"C:\Users\wangb\Desktop\111.csv"
+    iscu.normalize_iconditions(conditions, outf)
+
+    print("has %d iconditions" % len(conditions))
+
+    ne_isets = iscu.get_iconditions_ne_isets(conditions)
+    print("ne isets: ", [i + 1 for i in ne_isets], len(ne_isets))
+    ignore_ne_isets = iscu.find_common_ne_isets_from_iconditions(conditions)
+    print("common ne isets: ", [i + 1 for i in ignore_ne_isets], len(ignore_ne_isets))
+    iscu.count_ne_iset_occurrences(conditions)
+    print("\n")
+
 if __name__ == '__main__':
     # check_isc_data("0-2-1")
     # check_isc_data("1-1-0")
@@ -216,6 +352,6 @@ if __name__ == '__main__':
     # check_120_icondition_no_292()
     # check_120_icondition_with_292()
     # check_isc_data("1-1-1", False)
-    check_111_icondition_2()
+    check_111_icondition_3_3()
     pass
     
