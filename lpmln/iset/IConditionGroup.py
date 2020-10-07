@@ -18,8 +18,14 @@ class IConditionGroup:
     def to_map(self):
         data = dict()
         for v in vars(self):
-            data[v] = set.__getattribute__(v)
+            data[v] = self.__getattribute__(v)
         return data
+
+
+    def load_from_map(self, data):
+        for v in data:
+            self.__setattr__(v, data[v])
+
 
 if __name__ == '__main__':
     pass

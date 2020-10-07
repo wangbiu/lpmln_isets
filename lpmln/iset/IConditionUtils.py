@@ -33,6 +33,11 @@ def load_iconditions_from_file(ic_file, is_ne_formate=True):
     return conditions
 
 
+def get_icondition_group_file(k_size, m_size, n_size, min_ne, max_ne):
+    group_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, "group")
+    return group_file
+
+
 def parse_ne_formate_icondition(data):
     cdt, singleton = parse_raw_icondition_data(data)
     condition = ISetCondition(list(), list(), True)
@@ -318,7 +323,7 @@ def compute_isets_compostions(comp_data, isets, label, rule_sets):
 def preliminary_group_kmn_iconditions(k_size, m_size, n_size, min_ne, max_ne):
     ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne)
     iconditions = load_iconditions_from_file(ic_file)
-    group_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, "group")
+    group_file = get_icondition_group_file(k_size, m_size, n_size, min_ne, max_ne)
 
     groups = dict()
     size = len(iconditions)
@@ -344,6 +349,10 @@ def preliminary_group_kmn_iconditions(k_size, m_size, n_size, min_ne, max_ne):
             groups[parent].group_childern.append(child)
             groups[child].group_childern.append(parent)
 
+    dump_iconditions_groups(groups, group_file)
+
+
+def dump_iconditions_groups(groups, group_file):
     group_json = dict()
     for g in groups:
         group_json[g] = groups[g].to_map()
@@ -352,6 +361,16 @@ def preliminary_group_kmn_iconditions(k_size, m_size, n_size, min_ne, max_ne):
         json.dump(group_json, f, indent=2)
 
 
+def load_iconditions_groups(group_file):
+    with open(group_file, encoding="utf-8", mode="r") as f:
+        data = json.load(f)
+        groups = dict()
+        for d in data:
+            groups[d] = data[d]
+
+
+
 if __name__ == '__main__':
+    preliminary_group_kmn_iconditions(0, 2, 1, 1, 33)
     pass
     
