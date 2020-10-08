@@ -631,6 +631,7 @@ def find_max_clique_3(k_size, m_size, n_size, min_ne, max_ne, type):
 
     prettify_max_clique_from_clique_data(clique_data, iconditions, clique_file)
     print("remained groups: ", all_group_ids.difference(used_nodes))
+    return clique_data
 
 
 def prettify_max_clique_from_clique_data(clique_data, iconditions, outf=None):
