@@ -379,6 +379,7 @@ def refine_iconditions_groups(k_size, m_size, n_size, min_ne, max_ne, type):
     ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, type)
     iconditions = load_iconditions_from_file(ic_file)
     groups = load_iconditions_groups(group_file)
+    refine_cnt = 0
     # ic_id = 1
     # print(iconditions[ic_id])
     # print(groups[ic_id])
@@ -392,8 +393,8 @@ def refine_iconditions_groups(k_size, m_size, n_size, min_ne, max_ne, type):
     # for r in roots:
     #     print(r, iconditions[r])
 
-
     for g in groups:
+        refine_cnt += 1
         current = groups[g]
         parents = current.group_parents
         redundant_parents = set()
@@ -409,6 +410,8 @@ def refine_iconditions_groups(k_size, m_size, n_size, min_ne, max_ne, type):
 
         current.group_parents = parents.difference(redundant_parents)
 
+    print("\t refine %d groups" % refine_cnt)
+
     for g in groups:
         groups[g].to_list()
     group_file = get_icondition_refine_group_file(k_size, m_size, n_size, min_ne, max_ne, type)
@@ -421,20 +424,34 @@ def compute_common_isets(k_size, m_size, n_size, min_ne, max_ne, type):
     groups = load_iconditions_groups(group_file)
     ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, type)
     iconditions = load_iconditions_from_file(ic_file)
+    compute_groups = set()
+    total_groups = set()
+
 
     leaves = list()
+    compute_cnt = 0
     for g in groups:
+        total_groups.add(g)
         if len(groups[g].group_children) == 0:
             leaves.append(g)
             ic_ne_isets = copy.deepcopy(iconditions[g].ne_iset_ids)
             ic_ne_isets = list(ic_ne_isets)
             groups[g].group_common_isets = ic_ne_isets
+            compute_groups.add(g)
+            compute_cnt += 1
+
 
     while len(leaves) > 0:
         new_leaves = list()
         for g in leaves:
             parents = groups[g].group_parents
             for p in parents:
+                if p in compute_groups:
+                    continue
+
+                # print("compute common atoms of leaf ", p)
+                compute_cnt += 1
+                compute_groups.add(p)
                 new_leaves.append(p)
                 element_list = list()
                 children = groups[p].group_children
@@ -443,6 +460,7 @@ def compute_common_isets(k_size, m_size, n_size, min_ne, max_ne, type):
                 common = get_common_elements(element_list)
                 groups[p].group_common_isets = common
         leaves = new_leaves
+        print("\t compute %d nodes " % compute_cnt, "remained groups", total_groups.difference(compute_groups))
 
     dump_iconditions_groups(groups, outf)
 
@@ -452,6 +470,7 @@ def get_common_elements(element_lists):
     common = list()
     for ele in element_lists:
         all_elements.extend(ele)
+
 
     all_elements = set(all_elements)
 
