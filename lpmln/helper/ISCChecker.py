@@ -351,6 +351,17 @@ def group_111_iconditions(type):
     iscu.compute_common_isets(*kmn_data["1-1-1"], type)
 
 
+def group_kmn_iconditions(kmn_key, type):
+    param = kmn_data[kmn_key]
+    print("compute preliminary_group_kmn_iconditions ... ")
+    iscu.preliminary_group_kmn_iconditions(*param, type)
+    print("compute refine_iconditions_groups ... ")
+    iscu.refine_iconditions_groups(*param, type)
+    print("compute compute_common_isets")
+    iscu.compute_common_isets(*param, type)
+
+
+
 if __name__ == '__main__':
     # check_isc_data("0-2-1")
     # check_isc_data("1-1-0")
@@ -363,6 +374,7 @@ if __name__ == '__main__':
     # check_120_icondition_with_292()
     # check_isc_data("1-1-1", False)
     # check_111_icondition_3_3()
-    group_111_iconditions("s")
+    # group_111_iconditions("s")
+    group_kmn_iconditions("0-2-1", "")
     pass
     

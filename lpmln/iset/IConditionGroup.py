@@ -14,6 +14,7 @@ class IConditionGroup:
         self.group_children = list()
         self.group_parents = list()
         self.group_common_isets = list()
+        self.group_descendant_number = 0
 
     def to_map(self):
         data = dict()

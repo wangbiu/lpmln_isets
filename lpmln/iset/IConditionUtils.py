@@ -462,6 +462,11 @@ def compute_common_isets(k_size, m_size, n_size, min_ne, max_ne, type):
         leaves = new_leaves
         print("\t compute %d nodes " % compute_cnt, "remained groups", total_groups.difference(compute_groups))
 
+    print("compute descendant number ")
+    for g in groups:
+        desc = get_group_descentdants(groups, g)
+        groups[g].group_descendant_number = len(desc)
+
     dump_iconditions_groups(groups, outf)
 
 
@@ -483,6 +488,34 @@ def get_common_elements(element_lists):
             common.append(e)
 
     return common
+
+
+def find_max_clique(k_size, m_size, n_size, min_ne, max_ne, type):
+    group_file = get_icondition_refine_group_file(k_size, m_size, n_size, min_ne, max_ne, type, 1)
+    groups = load_iconditions_groups(group_file)
+    ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, type)
+    iconditions = load_iconditions_from_file(ic_file)
+
+
+
+def get_group_descentdants(groups, g):
+    parent = groups[g]
+    children = parent.group_children
+    descendant = list()
+    descendant.extend(children)
+
+    while len(children) > 0:
+        new_children = list()
+        for ch in children:
+            child = groups[ch]
+            new_children.extend(child.group_children)
+            descendant.extend(child.group_children)
+
+        new_children = set(new_children)
+        children = new_children
+
+    descendant = set(descendant)
+    return descendant
 
 
 
