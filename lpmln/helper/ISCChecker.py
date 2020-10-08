@@ -37,9 +37,9 @@ def process_010_iconditions():
             outf.write("\n")
 
 
-def check_isc_data(kmn_key, is_simplify=True):
+def check_isc_data(kmn_key, type, is_simplify=True):
     print(kmn_key, "iset conditions: ")
-    file = config.get_isc_results_file_path(*kmn_data[kmn_key])
+    file = config.get_isc_results_file_path(*kmn_data[kmn_key], type)
     conditions = iscu.load_iconditions_from_file(file)
     ne_isets = iscu.get_iconditions_ne_isets(conditions)
     print("ne isets: ", [i + 1 for i in ne_isets])
@@ -409,13 +409,15 @@ if __name__ == '__main__':
     # group_and_find_max_clique_kmn_iconditions("0-1-1", "")
     # iscu.compute_common_isets(*kmn_data["1-2-0"], "")
     # process_010_iconditions()
-    group_and_find_max_clique_kmn_iconditions("0-1-0", "ne")
+    # group_and_find_max_clique_kmn_iconditions("0-1-0", "ne")
+    # group_and_find_max_clique_kmn_iconditions("1-1-1", "s")
 
-    # find_max_clique("1-2-0", "")
+    find_max_clique("1-2-0", "")
     # find_max_clique("0-2-1", "")
     # find_max_clique("0-1-0", "")
     # find_max_clique("0-1-1", "")
     # find_max_clique("1-1-0", "")
+    # find_max_clique("1-1-1", "s")
 
 
     pass
