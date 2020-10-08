@@ -380,12 +380,14 @@ def find_021_max_clique():
 def group_and_find_max_clique_kmn_iconditions(kmn_key, type):
     group_kmn_iconditions(kmn_key, type)
     print("find max clique ...")
-    iscu.find_max_clique_3(*kmn_data[kmn_key], type)
+    clique_data = iscu.find_max_clique_3(*kmn_data[kmn_key], type)
+    return clique_data
 
 
 def find_max_clique(kmn_key, type):
     print("find max clique ...")
-    iscu.find_max_clique_3(*kmn_data[kmn_key], type)
+    clique_data = iscu.find_max_clique_3(*kmn_data[kmn_key], type)
+    return clique_data
 
 
 if __name__ == '__main__':
