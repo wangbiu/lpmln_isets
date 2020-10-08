@@ -13,7 +13,8 @@ class IConditionGroup:
         self.group_icondition_id = icondition_id
         self.group_children = list()
         self.group_parents = list()
-        self.group_common_isets = list()
+        self.group_common_ne_isets = list()
+        self.group_common_empty_isets = list()
         self.group_descendant_number = 0
 
     def to_map(self):

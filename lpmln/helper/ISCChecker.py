@@ -361,6 +361,10 @@ def group_kmn_iconditions(kmn_key, type):
     iscu.compute_common_isets(*param, type)
 
 
+def find_021_max_clique():
+    param = kmn_data["0-2-1"]
+    iscu.find_max_clique(*param, "")
+
 
 if __name__ == '__main__':
     # check_isc_data("0-2-1")
@@ -375,6 +379,7 @@ if __name__ == '__main__':
     # check_isc_data("1-1-1", False)
     # check_111_icondition_3_3()
     # group_111_iconditions("s")
-    group_kmn_iconditions("0-2-1", "")
+    # group_kmn_iconditions("0-2-1", "")
+    find_021_max_clique()
     pass
     

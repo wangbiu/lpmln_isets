@@ -436,7 +436,7 @@ def compute_common_isets(k_size, m_size, n_size, min_ne, max_ne, type):
             leaves.append(g)
             ic_ne_isets = copy.deepcopy(iconditions[g].ne_iset_ids)
             ic_ne_isets = list(ic_ne_isets)
-            groups[g].group_common_isets = ic_ne_isets
+            groups[g].group_common_ne_isets = ic_ne_isets
             compute_groups.add(g)
             compute_cnt += 1
 
@@ -456,9 +456,9 @@ def compute_common_isets(k_size, m_size, n_size, min_ne, max_ne, type):
                 element_list = list()
                 children = groups[p].group_children
                 for ch in children:
-                    element_list.append(copy.deepcopy(groups[ch].group_common_isets))
+                    element_list.append(copy.deepcopy(groups[ch].group_common_ne_isets))
                 common = get_common_elements(element_list)
-                groups[p].group_common_isets = common
+                groups[p].group_common_ne_isets = common
         leaves = new_leaves
         print("\t compute %d nodes " % compute_cnt, "remained groups", total_groups.difference(compute_groups))
 
@@ -490,12 +490,68 @@ def get_common_elements(element_lists):
     return common
 
 
+def check_max_clique(groups, root_id, condition):
+    ne_isets = condition.ne_iset_ids
+    root = groups[root_id]
+    common_ne_isets = root.group_common_isets
+    max_clique_size = 2 ** (len(ne_isets) - len(common_ne_isets)) -  1
+    if max_clique_size == root.group_descendant_number:
+        return True
+    else:
+        return False
+
+
 def find_max_clique(k_size, m_size, n_size, min_ne, max_ne, type):
     group_file = get_icondition_refine_group_file(k_size, m_size, n_size, min_ne, max_ne, type, 1)
     groups = load_iconditions_groups(group_file)
     ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, type)
     iconditions = load_iconditions_from_file(ic_file)
+    roots = get_group_roots(groups)
+    used_nodes = set()
+    max_cliques = set()
 
+    while len(roots) > 0:
+        new_roots = list()
+        for r in roots:
+            if r in used_nodes:
+                continue
+
+            is_max_clique = check_max_clique(groups, r, iconditions[r])
+            if is_max_clique:
+                max_cliques.add(r)
+                desc = get_group_descentdants(groups, r)
+                used_nodes = used_nodes.union(desc)
+            else:
+                new_roots.extend(groups[r].group_children)
+
+        roots = set(new_roots)
+
+    prettify_max_clique(groups, max_cliques)
+
+
+def prettify_max_clique(groups, cliques):
+    for c in cliques:
+        node = groups[c]
+        common = node.group_common_isets
+        strs = ["I%d neq es" % (i + 1) for i in common]
+        print("group %d " % c)
+        print("\t", ", ".join(strs))
+
+
+def get_group_roots(groups):
+    roots = list()
+    for g in groups:
+        if len(groups[g].group_parents) == 0:
+            roots.append(g)
+    return roots
+
+
+def get_group_leaves(groups):
+    leaves = list()
+    for g in groups:
+        if len(groups[g].group_children) == 0:
+            leaves.append(g)
+    return leaves
 
 
 def get_group_descentdants(groups, g):
