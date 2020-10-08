@@ -426,7 +426,7 @@ def compute_common_isets(k_size, m_size, n_size, min_ne, max_ne, type):
     iconditions = load_iconditions_from_file(ic_file)
     compute_groups = set()
     total_groups = set()
-
+    iset_space = get_iconditions_ne_isets(iconditions)
 
     leaves = list()
     compute_cnt = 0
@@ -439,7 +439,6 @@ def compute_common_isets(k_size, m_size, n_size, min_ne, max_ne, type):
             groups[g].group_common_ne_isets = ic_ne_isets
             compute_groups.add(g)
             compute_cnt += 1
-
 
     while len(leaves) > 0:
         new_leaves = list()
@@ -466,6 +465,11 @@ def compute_common_isets(k_size, m_size, n_size, min_ne, max_ne, type):
     for g in groups:
         desc = get_group_descentdants(groups, g)
         groups[g].group_descendant_number = len(desc)
+        group_ne_isets = set()
+        for d in desc:
+            group_ne_isets = group_ne_isets.union(iconditions[d].ne_iset_ids)
+        group_common_empty_isets = iset_space.difference(group_ne_isets)
+        groups[g].group_common_empty_isets = list(group_common_empty_isets)
 
     dump_iconditions_groups(groups, outf)
 
@@ -493,8 +497,8 @@ def get_common_elements(element_lists):
 def check_max_clique(groups, root_id, condition):
     ne_isets = condition.ne_iset_ids
     root = groups[root_id]
-    common_ne_isets = root.group_common_isets
-    max_clique_size = 2 ** (len(ne_isets) - len(common_ne_isets)) -  1
+    common_ne_isets = root.group_common_ne_isets
+    max_clique_size = 2 ** (len(ne_isets) - len(common_ne_isets)) - 1
     if max_clique_size == root.group_descendant_number:
         return True
     else:
@@ -532,10 +536,12 @@ def find_max_clique(k_size, m_size, n_size, min_ne, max_ne, type):
 def prettify_max_clique(groups, cliques):
     for c in cliques:
         node = groups[c]
-        common = node.group_common_isets
-        strs = ["I%d neq es" % (i + 1) for i in common]
+        ne_strs = ["I%d neq es" % (i + 1) for i in node.group_common_ne_isets]
+        empty_strs = ["I%d = es" % (i + 1) for i in node.group_common_empty_isets]
+
         print("group %d " % c)
-        print("\t", ", ".join(strs))
+        print("\t", ", ".join(ne_strs))
+        print("\t", ", ".join(empty_strs))
 
 
 def get_group_roots(groups):
@@ -572,15 +578,6 @@ def get_group_descentdants(groups, g):
 
     descendant = set(descendant)
     return descendant
-
-
-
-
-
-
-
-
-
 
 
 def process_children(groups, roots):

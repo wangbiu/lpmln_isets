@@ -366,6 +366,12 @@ def find_021_max_clique():
     iscu.find_max_clique(*param, "")
 
 
+def group_and_find_max_clique_kmn_iconditions(kmn_key, type):
+    group_kmn_iconditions(kmn_key, type)
+    print("find max clique ...")
+    iscu.find_max_clique(*kmn_data[kmn_key], type)
+
+
 if __name__ == '__main__':
     # check_isc_data("0-2-1")
     # check_isc_data("1-1-0")
@@ -380,6 +386,7 @@ if __name__ == '__main__':
     # check_111_icondition_3_3()
     # group_111_iconditions("s")
     # group_kmn_iconditions("0-2-1", "")
-    find_021_max_clique()
+    # find_021_max_clique()
+    group_and_find_max_clique_kmn_iconditions("1-2-0", "")
     pass
     
