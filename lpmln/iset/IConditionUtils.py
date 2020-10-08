@@ -29,6 +29,7 @@ def load_iconditions_from_file(ic_file, is_ne_formate=True):
         parse = parse_01_formate_icondition
     with open(ic_file, encoding="utf-8", mode="r") as icf:
         for ic in icf:
+            ic = ic.strip("\r\n ")
             ic = parse(ic)
             conditions.append(ic)
 
@@ -64,6 +65,9 @@ def parse_01_formate_icondition(data):
 
 
 def parse_raw_icondition_data(data):
+    if data == "":
+        return list(), list()
+
     data = data.split(":")
     cdt = data[0].split(",")
     cdt = [int(s) for s in cdt]
@@ -418,12 +422,7 @@ def refine_iconditions_groups(k_size, m_size, n_size, min_ne, max_ne, type):
     dump_iconditions_groups(groups, group_file)
 
 
-def compute_common_isets(k_size, m_size, n_size, min_ne, max_ne, type):
-    group_file = get_icondition_refine_group_file(k_size, m_size, n_size, min_ne, max_ne, type)
-    outf = get_icondition_refine_group_file(k_size, m_size, n_size, min_ne, max_ne, type, 1)
-    groups = load_iconditions_groups(group_file)
-    ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, type)
-    iconditions = load_iconditions_from_file(ic_file)
+def compute_common_isets_from_groups_and_iconditions(groups, iconditions):
     compute_groups = set()
     total_groups = set()
     iset_space = get_iconditions_ne_isets(iconditions)
@@ -466,11 +465,20 @@ def compute_common_isets(k_size, m_size, n_size, min_ne, max_ne, type):
         desc = get_group_descentdants(groups, g)
         groups[g].group_descendant_number = len(desc)
         group_ne_isets = set()
+        group_ne_isets = group_ne_isets.union(iconditions[g].ne_iset_ids)
         for d in desc:
             group_ne_isets = group_ne_isets.union(iconditions[d].ne_iset_ids)
         group_common_empty_isets = iset_space.difference(group_ne_isets)
         groups[g].group_common_empty_isets = list(group_common_empty_isets)
 
+
+def compute_common_isets(k_size, m_size, n_size, min_ne, max_ne, type):
+    group_file = get_icondition_refine_group_file(k_size, m_size, n_size, min_ne, max_ne, type)
+    outf = get_icondition_refine_group_file(k_size, m_size, n_size, min_ne, max_ne, type, 1)
+    groups = load_iconditions_groups(group_file)
+    ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, type)
+    iconditions = load_iconditions_from_file(ic_file)
+    compute_common_isets_from_groups_and_iconditions(groups, iconditions)
     dump_iconditions_groups(groups, outf)
 
 
@@ -479,7 +487,6 @@ def get_common_elements(element_lists):
     common = list()
     for ele in element_lists:
         all_elements.extend(ele)
-
 
     all_elements = set(all_elements)
 
@@ -498,7 +505,10 @@ def check_max_clique(groups, root_id, condition):
     ne_isets = condition.ne_iset_ids
     root = groups[root_id]
     common_ne_isets = root.group_common_ne_isets
+    # common_empty_isets = root.group_common_empty_isets
+
     max_clique_size = 2 ** (len(ne_isets) - len(common_ne_isets)) - 1
+    # print("group %d max clique size %d descendant size %d " % (root_id, max_clique_size, root.group_descendant_number))
     if max_clique_size == root.group_descendant_number:
         return True
     else:
@@ -507,12 +517,55 @@ def check_max_clique(groups, root_id, condition):
 
 def find_max_clique(k_size, m_size, n_size, min_ne, max_ne, type):
     group_file = get_icondition_refine_group_file(k_size, m_size, n_size, min_ne, max_ne, type, 1)
+    clique_file = get_icondition_refine_group_file(k_size, m_size, n_size, min_ne, max_ne, type) + ".clique"
+
     groups = load_iconditions_groups(group_file)
     ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, type)
     iconditions = load_iconditions_from_file(ic_file)
     roots = get_group_roots(groups)
     used_nodes = set()
     max_cliques = set()
+
+    print("roots", roots)
+
+    has_clique = False
+    while len(roots) > 0:
+        new_roots = list()
+        for r in roots:
+            if r in used_nodes:
+                continue
+
+            print("check root ", r)
+            is_max_clique = check_max_clique(groups, r, iconditions[r])
+            if is_max_clique:
+                max_cliques.add(r)
+                desc = get_group_descentdants(groups, r)
+                used_nodes = used_nodes.union(desc)
+            else:
+                new_roots.extend(groups[r].group_children)
+
+        roots = set(new_roots)
+
+    prettify_max_clique(groups, max_cliques, iconditions, clique_file)
+
+
+def find_max_clique_2(k_size, m_size, n_size, min_ne, max_ne, type):
+    group_file = get_icondition_refine_group_file(k_size, m_size, n_size, min_ne, max_ne, type, 1)
+    clique_file = get_icondition_refine_group_file(k_size, m_size, n_size, min_ne, max_ne, type) + ".clique"
+
+    groups = load_iconditions_groups(group_file)
+    ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, type)
+    iconditions = load_iconditions_from_file(ic_file)
+    roots = get_group_roots(groups)
+
+    all_group_ids = set()
+    for g in groups:
+        all_group_ids.add(g)
+
+    used_nodes = set()
+    max_cliques = set()
+
+    print("roots", roots)
 
     while len(roots) > 0:
         new_roots = list()
@@ -525,24 +578,121 @@ def find_max_clique(k_size, m_size, n_size, min_ne, max_ne, type):
                 max_cliques.add(r)
                 desc = get_group_descentdants(groups, r)
                 used_nodes = used_nodes.union(desc)
+                used_nodes.add(r)
+                remove_clique_from_groups(groups, r)
+                compute_common_isets_from_groups_and_iconditions(groups, iconditions)
             else:
                 new_roots.extend(groups[r].group_children)
 
         roots = set(new_roots)
 
-    prettify_max_clique(groups, max_cliques)
+    print("remained groups: ", all_group_ids.difference(used_nodes))
+    prettify_max_clique(groups, max_cliques, iconditions, clique_file)
 
 
-def prettify_max_clique(groups, cliques):
+def find_max_clique_3(k_size, m_size, n_size, min_ne, max_ne, type):
+    group_file = get_icondition_refine_group_file(k_size, m_size, n_size, min_ne, max_ne, type, 1)
+    clique_file = get_icondition_refine_group_file(k_size, m_size, n_size, min_ne, max_ne, type) + ".clique"
+
+    groups = load_iconditions_groups(group_file)
+    ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, type)
+    iconditions = load_iconditions_from_file(ic_file)
+    roots = get_group_roots(groups)
+
+    all_group_ids = set()
+    for g in groups:
+        all_group_ids.add(g)
+
+    used_nodes = set()
+    max_cliques = set()
+
+    print("roots", roots)
+
+    clique_id = -1
+    for r in roots:
+        while clique_id != r:
+            clique_id = find_a_max_clique_from_root(groups, r, iconditions)
+            print("find clique %d" % clique_id)
+            max_cliques.add(clique_id)
+            desc = get_group_descentdants(groups, clique_id)
+            used_nodes = used_nodes.union(desc)
+            used_nodes.add(clique_id)
+            remove_clique_from_groups(groups, clique_id)
+            compute_common_isets_from_groups_and_iconditions(groups, iconditions)
+
+    print("remained groups: ", all_group_ids.difference(used_nodes))
+    prettify_max_clique(groups, max_cliques, iconditions, clique_file)
+
+
+def find_a_max_clique_from_root(groups, root_id, iconditions):
+    roots = [root_id]
+    clique_id = -1
+    while len(roots) > 0:
+        new_roots = list()
+        for r in roots:
+            root = groups[r]
+            is_max_clique = check_max_clique(groups, r, iconditions[r])
+            if is_max_clique:
+                clique_id = r
+                break
+            else:
+                new_roots.extend(root.group_children)
+
+        if clique_id != -1:
+            break
+
+        roots = set(new_roots)
+
+    return clique_id
+
+
+def remove_clique_from_groups(groups, clique_id):
+    clique = groups[clique_id]
+    desc = get_group_descentdants(groups, clique_id)
+    desc.add(clique_id)
+    nodes = clique.group_parents
+
+    while len(nodes) > 0:
+        new_nodes = set()
+        for n in nodes:
+            children = copy.deepcopy(groups[n].group_children)
+            children = set(children)
+            children = children.difference(desc)
+            new_nodes = new_nodes.union(children)
+            groups[n].group_children = list(children)
+        nodes = new_nodes
+
+
+def prettify_max_clique(groups, cliques, iconditions, outf=None):
+    if outf is not None:
+        outf = open(outf, encoding="utf-8", mode="w")
+
+    total_cnt = 0
     for c in cliques:
+        desc = get_group_descentdants(groups, c)
         node = groups[c]
         ne_strs = ["I%d neq es" % (i + 1) for i in node.group_common_ne_isets]
         empty_strs = ["I%d = es" % (i + 1) for i in node.group_common_empty_isets]
 
-        print("group %d " % c)
-        print("\t", ", ".join(ne_strs))
-        print("\t", ", ".join(empty_strs))
+        parents = [str(s) for s in node.group_parents]
+        parents = "[%s]" % (", ".join(parents))
+        group_msg = "group %d has %d iconditions, ne isets: %s, parents: %s \n" % (c, len(desc) + 1, str(iconditions[c]), parents)
+        group_msg = group_msg + "\t" + ", ".join(ne_strs)
+        group_msg = group_msg + "\n\t" + ", ".join(empty_strs)
+        total_cnt += len(desc) + 1
+        print(group_msg)
+        if outf is not None:
+            outf.write(group_msg)
+            outf.write("\n")
 
+    msg = "total has %d iconditios" % total_cnt
+    print(msg)
+    if outf is not None:
+        outf.write("\n")
+        outf.write(msg)
+        outf.write("\n")
+
+        outf.close()
 
 def get_group_roots(groups):
     roots = list()

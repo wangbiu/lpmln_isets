@@ -26,6 +26,17 @@ kmn_data = {
 }
 
 
+def process_010_iconditions():
+    key = "0-1-0"
+    file = config.get_isc_results_file_path(*kmn_data[key])
+    conditions = iscu.load_iconditions_from_file(file, False)
+    new_file = config.get_isc_results_file_path(*kmn_data[key], "ne")
+    with open(new_file, encoding="utf-8", mode="w") as outf:
+        for ic in conditions:
+            outf.write(str(ic))
+            outf.write("\n")
+
+
 def check_isc_data(kmn_key, is_simplify=True):
     print(kmn_key, "iset conditions: ")
     file = config.get_isc_results_file_path(*kmn_data[kmn_key])
@@ -369,7 +380,12 @@ def find_021_max_clique():
 def group_and_find_max_clique_kmn_iconditions(kmn_key, type):
     group_kmn_iconditions(kmn_key, type)
     print("find max clique ...")
-    iscu.find_max_clique(*kmn_data[kmn_key], type)
+    iscu.find_max_clique_2(*kmn_data[kmn_key], type)
+
+
+def find_max_clique(kmn_key, type):
+    print("find max clique ...")
+    iscu.find_max_clique_3(*kmn_data[kmn_key], type)
 
 
 if __name__ == '__main__':
@@ -387,6 +403,20 @@ if __name__ == '__main__':
     # group_111_iconditions("s")
     # group_kmn_iconditions("0-2-1", "")
     # find_021_max_clique()
-    group_and_find_max_clique_kmn_iconditions("1-2-0", "")
+    # group_and_find_max_clique_kmn_iconditions("1-2-0", "")
+    # group_and_find_max_clique_kmn_iconditions("0-2-1", "")
+    # group_and_find_max_clique_kmn_iconditions("1-1-0", "")
+    # group_and_find_max_clique_kmn_iconditions("0-1-1", "")
+    # iscu.compute_common_isets(*kmn_data["1-2-0"], "")
+    # process_010_iconditions()
+    group_and_find_max_clique_kmn_iconditions("0-1-0", "ne")
+
+    # find_max_clique("1-2-0", "")
+    # find_max_clique("0-2-1", "")
+    # find_max_clique("0-1-0", "")
+    # find_max_clique("0-1-1", "")
+    # find_max_clique("1-1-0", "")
+
+
     pass
     
