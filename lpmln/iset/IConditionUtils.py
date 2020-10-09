@@ -730,9 +730,6 @@ def remove_clique_from_groups_2(groups, clique_id):
     for d in desc:
         del groups[d]
 
-    print(groups.keys())
-
-
 
 def prettify_max_clique(groups, cliques, iconditions, outf=None):
     if outf is not None:
