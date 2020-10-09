@@ -80,10 +80,14 @@ def parse_raw_icondition_data(data):
     return cdt, singleton
 
 
-def get_iconditions_ne_isets(iconditions):
+def get_iconditions_ne_isets(iconditions, subsets=None):
     ne_isets = set()
-    for ic in iconditions:
-        ne_isets = ne_isets.union(ic.ne_iset_ids)
+
+    if subsets is None:
+        subsets = [i for i in range(len(iconditions))]
+
+    for s in subsets:
+        ne_isets = ne_isets.union(iconditions[s].ne_iset_ids)
 
     return ne_isets
 
@@ -426,7 +430,11 @@ def compute_common_isets_from_groups_and_iconditions(groups, iconditions):
     print("compute common isets from groups and iconditions")
     compute_groups = set()
     total_groups = set()
-    iset_space = get_iconditions_ne_isets(iconditions)
+    subsets = list()
+    for g in groups:
+        subsets.append(g)
+
+    iset_space = get_iconditions_ne_isets(iconditions, subsets)
 
     leaves = list()
     compute_cnt = 0
@@ -626,12 +634,8 @@ def find_max_clique_3(k_size, m_size, n_size, min_ne, max_ne, type):
             else:
                 print("wrong case: max clique id: ", clique_id)
 
-            remove_clique_from_groups(groups, clique_id)
-            new_iconditions = list()
-            for g in groups:
-                new_iconditions.append(iconditions[g])
-
-            compute_common_isets_from_groups_and_iconditions(groups, new_iconditions)
+            remove_clique_from_groups_2(groups, clique_id)
+            compute_common_isets_from_groups_and_iconditions(groups, iconditions)
 
     prettify_max_clique_from_clique_data(clique_data, iconditions, clique_file)
     print("remained groups: ", all_group_ids.difference(used_nodes))
@@ -714,7 +718,6 @@ def remove_clique_from_groups_2(groups, clique_id):
     clique = groups[clique_id]
     desc = get_group_descentdants(groups, clique_id)
     desc.add(clique_id)
-    nodes = clique.group_parents
 
     for g in groups:
         if g in desc:
@@ -726,6 +729,8 @@ def remove_clique_from_groups_2(groups, clique_id):
 
     for d in desc:
         del groups[d]
+
+    print(groups.keys())
 
 
 
