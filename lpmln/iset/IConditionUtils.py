@@ -627,7 +627,11 @@ def find_max_clique_3(k_size, m_size, n_size, min_ne, max_ne, type):
                 print("wrong case: max clique id: ", clique_id)
 
             remove_clique_from_groups(groups, clique_id)
-            compute_common_isets_from_groups_and_iconditions(groups, iconditions)
+            new_iconditions = list()
+            for g in groups:
+                new_iconditions.append(iconditions[g])
+
+            compute_common_isets_from_groups_and_iconditions(groups, new_iconditions)
 
     prettify_max_clique_from_clique_data(clique_data, iconditions, clique_file)
     print("remained groups: ", all_group_ids.difference(used_nodes))
@@ -704,6 +708,25 @@ def remove_clique_from_groups(groups, clique_id):
             new_nodes = new_nodes.union(children)
             groups[n].group_children = list(children)
         nodes = new_nodes
+
+
+def remove_clique_from_groups_2(groups, clique_id):
+    clique = groups[clique_id]
+    desc = get_group_descentdants(groups, clique_id)
+    desc.add(clique_id)
+    nodes = clique.group_parents
+
+    for g in groups:
+        if g in desc:
+            continue
+        children = copy.deepcopy(groups[g].group_children)
+        children = set(children)
+        children = children.difference(desc)
+        groups[g].group_children = list(children)
+
+    for d in desc:
+        del groups[d]
+
 
 
 def prettify_max_clique(groups, cliques, iconditions, outf=None):

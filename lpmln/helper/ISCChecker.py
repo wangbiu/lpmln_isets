@@ -390,6 +390,27 @@ def find_max_clique(kmn_key, type):
     return clique_data
 
 
+def find_011_se_conditions_non_same_rules():
+    file = config.get_isc_results_file_path(*kmn_data["0-1-1"], "")
+    conditions = iscu.load_iconditions_from_file(file)
+    non_same_conditions = list()
+    same_rule_isets = {8, 17, 35, 44}
+    for ic in conditions:
+        ne_isets = ic.ne_iset_ids
+        if ne_isets.issubset(same_rule_isets):
+            print(ic)
+        else:
+            non_same_conditions.append(ic)
+
+    simplified_dnf, sim_dnf = iscu.simplify_iconditions(non_same_conditions)
+    ne_isets = iscu.get_iconditions_ne_isets(non_same_conditions)
+    print(ne_isets)
+    print(simplified_dnf)
+
+
+
+
+
 if __name__ == '__main__':
     # check_isc_data("0-2-1")
     # check_isc_data("1-1-0")
@@ -414,12 +435,14 @@ if __name__ == '__main__':
     # group_and_find_max_clique_kmn_iconditions("0-1-0", "ne")
     # group_and_find_max_clique_kmn_iconditions("1-1-1", "s")
 
-    find_max_clique("1-2-0", "")
+    # find_max_clique("1-2-0", "")
     # find_max_clique("0-2-1", "")
     # find_max_clique("0-1-0", "")
     # find_max_clique("0-1-1", "")
     # find_max_clique("1-1-0", "")
     # find_max_clique("1-1-1", "s")
+
+    # find_011_se_conditions_non_same_rules()
 
 
     pass
