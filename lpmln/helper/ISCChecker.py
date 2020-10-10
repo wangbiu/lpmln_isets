@@ -435,12 +435,12 @@ if __name__ == '__main__':
     # group_and_find_max_clique_kmn_iconditions("0-1-0", "ne")
     # group_and_find_max_clique_kmn_iconditions("1-1-1", "s")
 
-    find_max_clique("1-2-0", "")
-    find_max_clique("0-2-1", "")
+    # find_max_clique("1-2-0", "")
+    # find_max_clique("0-2-1", "")
     # find_max_clique("0-1-0", "")
-    find_max_clique("0-1-1", "")
-    find_max_clique("1-1-0", "")
-    # find_max_clique("1-1-1", "s")
+    # find_max_clique("0-1-1", "")
+    # find_max_clique("1-1-0", "")
+    find_max_clique("1-1-1", "s")
 
     # find_011_se_conditions_non_same_rules()
 

@@ -438,11 +438,11 @@ def compute_common_isets_from_groups_and_iconditions(groups, iconditions):
     print("compute common isets from groups and iconditions")
     compute_groups = set()
     total_groups = set()
-    subsets = list()
-    for g in groups:
-        subsets.append(g)
+    # subsets = list()
+    # for g in groups:
+    #     subsets.append(g)
 
-    iset_space = get_iconditions_ne_isets(iconditions, subsets)
+    iset_space = get_iconditions_ne_isets(iconditions, None)
 
     leaves = list()
     compute_cnt = 0
