@@ -50,6 +50,14 @@ def get_icondition_refine_group_file(k_size, m_size, n_size, min_ne, max_ne, typ
     return group_file
 
 
+def get_icondition_simplified_file(k_size, m_size, n_size, min_ne, max_ne, type, postfix=""):
+    file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, type)
+    file = file + ".simp"
+    if postfix != "":
+        file = file + "." + postfix
+    return file
+
+
 def parse_ne_formate_icondition(data):
     cdt, singleton = parse_raw_icondition_data(data)
     condition = ISetCondition(list(), list(), True)
@@ -599,9 +607,10 @@ def find_max_clique_2(k_size, m_size, n_size, min_ne, max_ne, type):
     print("remained groups: ", all_group_ids.difference(used_nodes))
 
 
-def find_max_clique_3(k_size, m_size, n_size, min_ne, max_ne, type):
+def find_max_clique_3(k_size, m_size, n_size, min_ne, max_ne, type, result_postfix=""):
     group_file = get_icondition_refine_group_file(k_size, m_size, n_size, min_ne, max_ne, type, 1)
     clique_file = get_icondition_refine_group_file(k_size, m_size, n_size, min_ne, max_ne, type) + ".clique"
+    sim_file = get_icondition_simplified_file(k_size, m_size, n_size, min_ne, max_ne, type, result_postfix)
 
     groups = load_iconditions_groups(group_file)
     ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, type)
@@ -639,7 +648,20 @@ def find_max_clique_3(k_size, m_size, n_size, min_ne, max_ne, type):
 
     prettify_max_clique_from_clique_data(clique_data, iconditions, clique_file)
     print("remained groups: ", all_group_ids.difference(used_nodes))
+    dump_simplified_se_conditions(clique_data, sim_file)
     return clique_data
+
+
+def dump_simplified_se_conditions(clique_data, sim_file):
+    with open(sim_file, encoding="utf-8", mode="w") as f:
+        for data in clique_data:
+            cq = data[1]
+            common_ne = copy.deepcopy(cq.group_common_ne_isets)
+            common_empty = copy.deepcopy(cq.group_common_empty_isets)
+            common_ne = [str(s) for s in common_ne]
+            common_empty = [str(s) for s in common_empty]
+            condition = "%s:%s\n" % (",".join(common_ne), ",".join(common_empty))
+            f.write(condition)
 
 
 def prettify_max_clique_from_clique_data(clique_data, iconditions, outf=None):
