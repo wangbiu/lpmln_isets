@@ -332,9 +332,10 @@ def simplify_kmn_se_conditions(k_size, m_size, n_size, min_ne, max_ne, type, res
     all_singleton_isets = iscu.get_iconditions_singleton_isets(iconditions)
     max_clique_data = list()
     for m in max_clique_ids:
-        common_empty = all_ne_isets.difference(clique_data[m][2])
-        singletons = all_singleton_isets.intersection(clique_data[m][1])
-        max_clique_data.append((clique_data[m][0], clique_data[m][1], common_empty, singletons))
+        common_empty_isets = all_ne_isets.difference(clique_data[m][2])
+        may_non_empty_isets = all_ne_isets.difference(common_empty_isets)
+        singletons_isets = all_singleton_isets.intersection(may_non_empty_isets)
+        max_clique_data.append((clique_data[m][0], clique_data[m][1], common_empty_isets, singletons_isets))
 
     logging.info("\nmax cliques: \n")
     prettify_max_clique_from_clique_data(max_clique_data, clique_file)
