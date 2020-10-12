@@ -11,6 +11,7 @@ import lpmln.iset.IConditionUtils as iscu
 import lpmln.config.GlobalConfig as cfg
 import lpmln.iset.ISetUtils as isu
 from lpmln.itask.ITaskMeta import ITaskMeta
+import lpmln.iset.IConditionCliquesUtils as icq
 
 config = cfg.load_configuration()
 
@@ -35,6 +36,14 @@ def process_010_iconditions():
         for ic in conditions:
             outf.write(str(ic))
             outf.write("\n")
+
+
+def check_010_iconditions():
+    key = "0-1-0"
+    file = config.get_isc_results_file_path(*kmn_data[key], "ne")
+    conditions = iscu.load_iconditions_from_file(file)
+    outf = r"C:\Users\wangb\Desktop\010.csv"
+    iscu.normalize_iconditions(conditions, outf)
 
 
 def check_isc_data(kmn_key, type, is_simplify=True):
@@ -440,7 +449,15 @@ if __name__ == '__main__':
     # find_max_clique("0-1-0", "")
     # find_max_clique("0-1-1", "")
     # find_max_clique("1-1-0", "")
-    find_max_clique("1-1-1", "s")
+    # find_max_clique("1-1-1", "s")
+
+    # check_010_iconditions()
+    # icq.simplify_kmn_se_conditions(*kmn_data["0-1-0"], "ne", "")
+    # icq.simplify_kmn_se_conditions(*kmn_data["0-1-1"], "", "")
+    # icq.simplify_kmn_se_conditions(*kmn_data["1-1-0"], "", "")
+    # icq.simplify_kmn_se_conditions(*kmn_data["0-2-1"], "", "")
+    icq.simplify_kmn_se_conditions(*kmn_data["1-2-0"], "", "")
+    # icq.simplify_kmn_se_conditions(*kmn_data["1-1-1"], "s", "")
 
     # find_011_se_conditions_non_same_rules()
 

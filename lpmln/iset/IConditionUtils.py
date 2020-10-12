@@ -100,6 +100,20 @@ def get_iconditions_ne_isets(iconditions, subsets=None):
     return ne_isets
 
 
+def get_iconditions_singleton_isets(iconditions, subsets=None):
+    singletons = set()
+
+    if subsets is None:
+        subsets = [i for i in range(len(iconditions))]
+
+    for s in subsets:
+        singletons = singletons.union(set(iconditions[s].singletom_iset_ids))
+
+    new_singletons = [s - 1 for s in singletons]
+
+    return set(new_singletons)
+
+
 def get_iconditions_ne_isets_logic_symbols(iconditions, ignore_ne_isets):
     ne_isets = get_iconditions_ne_isets(iconditions)
     ne_symboles = dict()
