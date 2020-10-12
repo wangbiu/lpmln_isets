@@ -122,7 +122,7 @@ def get_all_kmn_cliques(kmn_groups, iconditions):
 
     group_ne_isets = iscu.get_iconditions_ne_isets(group_iconditions)
     check_cases = 2 ** len(group_ne_isets) - 1
-    print("has %d non-empty isets, check %d cases" % (len(group_ne_isets), check_cases))
+    logging.info("kmn groups has %d non-empty isets, check %d cases" % (len(group_ne_isets), check_cases))
     empty_isets = empty_isets_generator(group_ne_isets)
 
     clique_data = list()
@@ -135,8 +135,8 @@ def get_all_kmn_cliques(kmn_groups, iconditions):
             clique_meta.append(len(cq[0]))
         clique_data.extend(cliques)
         is_finish = check_iconditions_in_cliques(all_icondition_ids, clique_data)
-        print("\t check non-empty isets: ", [i+1 for i in eis],
-              ", find %d cliques, is finish %s, clique sizes: " % (len(cliques), str(is_finish)), clique_meta)
+        logging.info(("\t check non-empty isets: ", [i+1 for i in eis],
+              ", find %d cliques, is finish %s, clique sizes: " % (len(cliques), str(is_finish)), clique_meta))
         if is_finish:
             break
 
@@ -147,8 +147,8 @@ def get_all_kmn_cliques(kmn_groups, iconditions):
             clique_meta.append(len(cq[0]))
         clique_data.extend(cliques)
         is_finish = check_iconditions_in_cliques(all_icondition_ids, clique_data)
-        print("\t check empty isets: ",  [i+1 for i in eis],
-              ", find %d cliques, is finish %s, clique sizes: " % (len(cliques), str(is_finish)), clique_meta)
+        logging.info(("\t check empty isets: ",  [i+1 for i in eis],
+              ", find %d cliques, is finish %s, clique sizes: " % (len(cliques), str(is_finish)), clique_meta))
 
         if is_finish:
             break
@@ -253,7 +253,7 @@ def get_clique_data_icondition_ids(clique_data):
 
 
 def find_max_cliques_from_clique_data(clique_data):
-    print("finding max cliques from clique data ... ")
+    logging.info("finding max cliques from clique data ... ")
     size = len(clique_data)
     meta = list()
     max_cliques_ids = set()
@@ -282,7 +282,7 @@ def find_max_cliques_from_clique_data(clique_data):
             max_cliques_ids.add(i)
             meta.append(len(clique_data[i][0]))
 
-    print("find %d max cliques, meta data: " % len(max_cliques_ids), meta)
+    logging.info(("find %d max cliques, meta data: " % len(max_cliques_ids), meta))
     return max_cliques_ids
 
 
@@ -291,25 +291,25 @@ def simplify_kmn_se_conditions(k_size, m_size, n_size, min_ne, max_ne, type, res
     clique_file = iscu.get_icondition_refine_group_file(k_size, m_size, n_size, min_ne, max_ne, type) + ".clique"
     sim_file = iscu.get_icondition_simplified_file(k_size, m_size, n_size, min_ne, max_ne, type, result_postfix)
 
-    print("init simplify_kmn_se_conditions ... ")
+    logging.info("init simplify_kmn_se_conditions ... ")
 
     groups = iscu.load_iconditions_groups(group_file)
     ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, type)
 
-    print("load iconditions from %s " % ic_file)
+    logging.info("load iconditions from %s " % ic_file)
     iconditions = iscu.load_iconditions_from_file(ic_file)
     all_icondition_ids = get_all_icondition_ids_from_kmn_groups(groups)
 
-    print("init groups data ...")
+    logging.info("init groups data ...")
     for g in groups:
         desc = get_group_descentdants(groups, g)
         asc = get_group_ascentdants(groups, g)
         groups[g].group_parents = asc
         groups[g].group_children = desc
 
-    print("compute single root groups ... ")
+    logging.info("compute single root groups ... ")
     single_root_groups = split_kmn_group_into_single_root_groups(groups)
-    print("simplify %d-%d-%d (%d ~ %d) %s iconditions, load %d iconditions, find %d single root gropus" % (
+    logging.info("simplify %d-%d-%d (%d ~ %d) %s iconditions, load %d iconditions, find %d single root gropus" % (
         k_size, m_size, n_size, min_ne, max_ne, type, len(iconditions), len(single_root_groups)))
     clique_data = list()
 
@@ -321,8 +321,8 @@ def simplify_kmn_se_conditions(k_size, m_size, n_size, min_ne, max_ne, type, res
     clique_icondition_ids = get_clique_data_icondition_ids(clique_data)
     remained_iconditions = all_icondition_ids.difference(clique_icondition_ids)
 
-    print("total find %d cliques, is finish %s, remain %d iconditions, remained iconditions " % (
-        len(clique_data), str(is_finish), len(remained_iconditions)), remained_iconditions)
+    logging.info(("total find %d cliques, is finish %s, remain %d iconditions, remained iconditions " % (
+        len(clique_data), str(is_finish), len(remained_iconditions)), remained_iconditions))
 
     if not is_finish:
         raise RuntimeError("clique not complete ...")
@@ -336,9 +336,10 @@ def simplify_kmn_se_conditions(k_size, m_size, n_size, min_ne, max_ne, type, res
         singletons = all_singleton_isets.intersection(clique_data[m][1])
         max_clique_data.append((clique_data[m][0], clique_data[m][1], common_empty, singletons))
 
-    print("\nmax cliques: \n")
+    logging.info("\nmax cliques: \n")
     prettify_max_clique_from_clique_data(max_clique_data, clique_file)
     dump_simplified_se_conditions(max_clique_data, sim_file)
+    logging.info("max cliques output to %s , %s " % (clique_file, sim_file))
 
 
 def dump_simplified_se_conditions(clique_data, sim_file):
@@ -371,13 +372,13 @@ def prettify_max_clique_from_clique_data(clique_data, outf=None):
         group_msg = group_msg + "\n\t empty: " + ", ".join(empty_strs)
         group_msg = group_msg + "\n\t singleton: " + ", ".join(singleton_strs)
         total_cnt += len(data[0])
-        print(group_msg)
+        logging.info(group_msg)
         if outf is not None:
             outf.write(group_msg)
             outf.write("\n")
 
     msg = "total has %d iconditios" % total_cnt
-    print(msg)
+    logging.info(msg)
     if outf is not None:
         outf.write("\n")
         outf.write(msg)

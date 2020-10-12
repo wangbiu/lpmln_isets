@@ -455,8 +455,8 @@ if __name__ == '__main__':
     # icq.simplify_kmn_se_conditions(*kmn_data["0-1-0"], "ne", "")
     # icq.simplify_kmn_se_conditions(*kmn_data["0-1-1"], "", "")
     # icq.simplify_kmn_se_conditions(*kmn_data["1-1-0"], "", "")
-    # icq.simplify_kmn_se_conditions(*kmn_data["0-2-1"], "", "")
-    icq.simplify_kmn_se_conditions(*kmn_data["1-2-0"], "", "")
+    icq.simplify_kmn_se_conditions(*kmn_data["0-2-1"], "", "")
+    # icq.simplify_kmn_se_conditions(*kmn_data["1-2-0"], "", "")
     # icq.simplify_kmn_se_conditions(*kmn_data["1-1-1"], "s", "")
 
     # find_011_se_conditions_non_same_rules()
