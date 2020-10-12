@@ -291,6 +291,8 @@ def simplify_kmn_se_conditions(k_size, m_size, n_size, min_ne, max_ne, type, res
     clique_file = iscu.get_icondition_refine_group_file(k_size, m_size, n_size, min_ne, max_ne, type) + ".clique"
     sim_file = iscu.get_icondition_simplified_file(k_size, m_size, n_size, min_ne, max_ne, type, result_postfix)
 
+    print("init simplify_kmn_se_conditions ... ")
+
     groups = iscu.load_iconditions_groups(group_file)
     ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, type)
     iconditions = iscu.load_iconditions_from_file(ic_file)
