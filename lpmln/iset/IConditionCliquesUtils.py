@@ -295,15 +295,19 @@ def simplify_kmn_se_conditions(k_size, m_size, n_size, min_ne, max_ne, type, res
 
     groups = iscu.load_iconditions_groups(group_file)
     ic_file = config.get_isc_results_file_path(k_size, m_size, n_size, min_ne, max_ne, type)
+
+    print("load iconditions from %s " % ic_file)
     iconditions = iscu.load_iconditions_from_file(ic_file)
     all_icondition_ids = get_all_icondition_ids_from_kmn_groups(groups)
 
+    print("init groups data ...")
     for g in groups:
         desc = get_group_descentdants(groups, g)
         asc = get_group_ascentdants(groups, g)
         groups[g].group_parents = asc
         groups[g].group_children = desc
 
+    print("compute single root groups ... ")
     single_root_groups = split_kmn_group_into_single_root_groups(groups)
     print("simplify %d-%d-%d (%d ~ %d) %s iconditions, load %d iconditions, find %d single root gropus" % (
         k_size, m_size, n_size, min_ne, max_ne, type, len(iconditions), len(single_root_groups)))
