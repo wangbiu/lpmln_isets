@@ -22,6 +22,15 @@ class GlobalConfiguration:
         self.isc_tmp_path = "isc-tmp"
         self.isc_task_path = "isc-tasks"
         self.isc_results_path = "isc-results"
+        self.isc_raw_results_path = "isc-raw"
+        self.isc_i4_results_path = "isc-i4"
+        self.isc_non_se_icondition_path = "isc-non-se-results"
+        self.isc_meta_data_file = "isc-meta.json"
+        self.max_space_size = 10000000000
+
+        #ssh
+        self.ssh_user_name = ""
+        self.ssh_password = ""
 
         # mattermost
         self.mattermost_username = ""
@@ -55,6 +64,7 @@ class GlobalConfiguration:
 
         self.project_base_dir = cwd_path
 
+        self.isc_meta_data_file = os.path.join(cwd_path, self.isc_meta_data_file)
         global_config_path = os.path.join(cwd_path, self.global_config_file_name)
         cf.read(global_config_path)
 
@@ -87,7 +97,22 @@ class GlobalConfiguration:
         self.isc_results_path = os.path.join(self.io_data_dir, self.isc_results_path)
         self.create_dirs(self.isc_results_path)
 
+        self.isc_non_se_icondition_path = os.path.join(self.io_data_dir, self.isc_non_se_icondition_path)
+        self.create_dirs(self.isc_non_se_icondition_path)
+
+        self.isc_raw_results_path = os.path.join(self.io_data_dir, self.isc_raw_results_path)
+        self.create_dirs(self.isc_raw_results_path)
+
+        self.isc_i4_results_path = os.path.join(self.io_data_dir, self.isc_i4_results_path)
+        self.create_dirs(self.isc_i4_results_path)
+
         self.task_host_lock_file = os.path.join(self.project_base_dir, self.task_host_lock_file)
+
+    def get_itask_progress_info_file(self, k_size, m_size, n_size, min_ne, max_ne, lp_type, rule_set_size):
+        file_name = "%s-%d-kmn-prg-%d-%d-%d-%d-%d.csv" % (lp_type, rule_set_size, k_size, m_size, n_size, min_ne,max_ne)
+        file_name = os.path.join(self.isc_results_path, file_name)
+        return file_name
+
 
     def create_dirs(self, path):
         if not os.path.exists(path):
@@ -98,9 +123,19 @@ class GlobalConfiguration:
         slice_file = os.path.join(self.isc_task_path, slice_file)
         return slice_file
 
-    def get_isc_results_file_path(self, k_size, m_size, n_size, min_non_empty_iset_number, max_non_empty_iset_number):
-        result_file = "%d-%d-%d-isc-%d-%d-emp.txt" % (
-            k_size, m_size, n_size, min_non_empty_iset_number, max_non_empty_iset_number)
+    def get_task_slice_file_path_by_kmn(self, k_size, m_size, n_size, min_non_empty_iset_number, max_non_empty_iset_number):
+        slice_file = "ts-%d%d%d-%d-%d.txt" % (k_size,m_size, n_size, min_non_empty_iset_number, max_non_empty_iset_number)
+        slice_file = os.path.join(self.isc_task_path, slice_file)
+        return slice_file
+
+    def get_isc_results_file_path(self, k_size, m_size, n_size, min_non_empty_iset_number, max_non_empty_iset_number, isc_task_type=""):
+        if isc_task_type == "":
+            result_file = "%d-%d-%d-isc-%d-%d-emp.txt" % (
+                k_size, m_size, n_size, min_non_empty_iset_number, max_non_empty_iset_number)
+        else:
+            result_file = "%d-%d-%d-%s-isc-%d-%d-emp.txt" % (
+                k_size, m_size, n_size, isc_task_type, min_non_empty_iset_number, max_non_empty_iset_number)
+
         result_file = os.path.join(self.isc_results_path, result_file)
         return result_file
 

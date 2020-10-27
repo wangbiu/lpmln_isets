@@ -18,7 +18,7 @@ from lpmln.iset.ISetConditionValidator import ISetConditionValidator
 import lpmln.iset.ISetUtils as isu
 import lpmln.message.Messager as msg
 import lpmln.config.GlobalConfig as cfg
-import lpmln.config.ISCTaskConfig as isc_cfg
+import lpmln.config.deprecated.ISCTaskConfig as isc_cfg
 
 config = cfg.load_configuration()
 
@@ -50,7 +50,7 @@ def get_result_queue():
     return global_result_queue
 
 
-def init_kmn_isc_task_master_from_config(isc_config_file="isets-tasks.json", sleep_time=60):
+def init_kmn_isc_task_master_from_config(isc_config_file="isets-tasks.json", sleep_time=60, is_use_extended_rules=True):
     start_time = datetime.now()
     ISCFileTaskMasterQueueManager.register("get_task_queue", callable=get_task_queue)
     ISCFileTaskMasterQueueManager.register("get_result_queue", callable=get_result_queue)
@@ -65,7 +65,7 @@ def init_kmn_isc_task_master_from_config(isc_config_file="isets-tasks.json", sle
     logging.info(msg_text)
     msg.send_message(msg_text)
 
-    isc_tasks_cfg = isc_cfg.ISCTaskConfig(isc_config_file)
+    isc_tasks_cfg = isc_cfg.ISCTaskConfig(isc_config_file, is_use_extended_rules)
     isc_tasks = isc_tasks_cfg.isc_tasks
 
     for isc_id in range(len(isc_tasks)):
@@ -165,7 +165,7 @@ def dump_isc_task_results(isc_tasks):
     return msg_texts
 
 
-def init_kmn_isc_task_workers(isc_config_file="isets-tasks.json", is_check_valid_rules=True, lp_type="lpmln"):
+def init_kmn_isc_task_workers(isc_config_file="isets-tasks.json", is_check_valid_rules=True, lp_type="lpmln", is_use_extended_rules=True):
     payload = config.worker_payload
     worker_pool = Pool(payload)
     pathlib.Path(config.task_host_lock_file).touch()
@@ -181,7 +181,7 @@ def init_kmn_isc_task_workers(isc_config_file="isets-tasks.json", is_check_valid
 
     for i in range(payload):
         worker_pool.apply_async(kmn_isc_task_worker,
-                                args=(isc_config_file, "worker-%d" % (i + 1), is_check_valid_rules, lp_type))
+                                args=(isc_config_file, "worker-%d" % (i + 1), is_check_valid_rules, lp_type, is_use_extended_rules))
     worker_pool.close()
     worker_pool.join()
     # if pathlib.Path(task_worker_host_lock_file).exists():
@@ -190,7 +190,7 @@ def init_kmn_isc_task_workers(isc_config_file="isets-tasks.json", is_check_valid
     logging.info("task worker host %s exit ..." % config.worker_host_name)
 
 
-def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_name="", is_check_valid_rules=True, lp_type="lpmln"):
+def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_name="", is_check_valid_rules=True, lp_type="lpmln", is_use_extended_rules=True):
     ISCFileTaskWorkerQueueManager.register("get_task_queue")
     ISCFileTaskWorkerQueueManager.register("get_result_queue")
     manager = ISCFileTaskWorkerQueueManager(address=(config.task_host, config.task_host_port),
@@ -204,7 +204,7 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_name="", is_c
     msg_text = "task worker %s start!" % (worker_name)
     logging.info(msg_text)
 
-    isc_tasks = isc_cfg.ISCTaskConfig(isc_config_file)
+    isc_tasks = isc_cfg.ISCTaskConfig(isc_config_file, is_use_extended_rules)
     isc_tasks = isc_tasks.isc_tasks
     processed_task_slices_number = 0
 
@@ -251,14 +251,14 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_name="", is_c
         se_cdt_cnt = 0
 
         se_conditions_cache = list()
-        validator = ISetConditionValidator(lp_type)
+        validator = ISetConditionValidator(lp_type=lp_type, is_use_extended_rules=is_use_extended_rules)
 
         for i in range(task_number):
             task_idx = task_counter.get_current_indicator()
             non_ne_ids = isu.get_real_nonempty_iset_ids_from_partial_nonemtpy_iset_ids(task_idx, empty_iset_ids)
 
             is_contain_valid_rule, is_strongly_equivalent, condition = \
-                validator.validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids(
+                validator.validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids_return_icondition_str(
                     non_ne_ids, k_size, m_size, n_size, is_check_valid_rule=is_check_valid_rules)
 
             if not is_contain_valid_rule and is_strongly_equivalent:
@@ -281,4 +281,4 @@ def kmn_isc_task_worker(isc_config_file="isets-tasks.json", worker_name="", is_c
 
 if __name__ == '__main__':
     # init_kmn_isc_task_master_from_config(sleep_time=2)
-    init_kmn_isc_task_workers()
+    init_kmn_isc_task_workers(is_use_extended_rules=False, is_check_valid_rules=False)

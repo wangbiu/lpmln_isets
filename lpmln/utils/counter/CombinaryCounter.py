@@ -38,7 +38,18 @@ class CombinaryCounter(BaseCounter):
             init_val += 1
             self.current_indicator[i] = init_val
 
+    @staticmethod
+    def compute_comb(n, m):
+        part1 = CombinaryCounter.product(n - m + 1, n)
+        part2 = CombinaryCounter.product(1, m)
+        return part1 // part2
 
+    @staticmethod
+    def product(i, j):
+        result = 1
+        for k in range(i, j + 1):
+            result *= k
+        return result
 
 if __name__ == '__main__':
     counter = CombinaryCounter(2, 7)

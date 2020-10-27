@@ -20,7 +20,7 @@ class BaseCounter:
 
     def __init__(self, digits, max_boundary):
         self.digits = digits
-        self.max_boundary = [max_boundary] * digits
+        self.max_boundary = max_boundary
         self.init_counter()
 
     def init_counter(self):
@@ -64,17 +64,24 @@ class BaseCounter:
 
         return copy.deepcopy(self.current_indicator)
 
+    def get_counter_str(self, counter):
+        strs = [str(s) for s in counter]
+        return "".join(strs)
+
 
 
 if __name__ == '__main__':
     digits = 4
-    boundary = [3, 2, 2, 1]
+    boundary = [3] * 4
     counter = BaseCounter(4, boundary)
     indicator = []
-
+    cnt = 0
     while indicator is not None:
         indicator = counter.get_current_indicator()
+        cnt += 1
         print(indicator)
+
+    print("has %d counter index" % cnt )
 
 
 

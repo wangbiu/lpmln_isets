@@ -40,6 +40,15 @@ def test_lpmln_sat_rule():
     print("program sat: ", sat)
 
 
+def test_lpmln_sat_rule_1():
+    rule = [[1, 2, 3], [0], [1]]
+    here = set([0, 2])
+    there = set([0, 2, 3])
+
+    sat = LPMLNSAT.se_satisfy_rule(LPMLNSAT, here, there, rule)
+    print("rule: ", rule, ", sat: ", sat)
+
+
 if __name__ == '__main__':
     pass
     

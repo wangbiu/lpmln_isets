@@ -17,10 +17,15 @@ config = cfg.load_configuration()
 
 
 class ISCTask:
-    def __init__(self, rule_number, min_ne, max_ne, kmn):
+    def __init__(self, rule_number, min_ne, max_ne, kmn, is_use_extended_rules):
         self.rule_number = rule_number
         self.min_ne = min_ne
         self.max_ne = max_ne
+        self.is_use_extended_rules = is_use_extended_rules
+        if self.is_use_extended_rules:
+            self.rule_set_size = 4
+        else:
+            self.rule_set_size = 3
 
         self.empty_iset_ids = set()
         self.iset_number = 0
@@ -44,9 +49,9 @@ class ISCTask:
         self.se_condition_dump_file = "no file"
 
     def complete_params(self):
-        self.iset_number = 2 ** (3 * self.rule_number) - 1
+        self.iset_number = 2 ** (self.rule_set_size * self.rule_number) - 1
         self.task_slice_file = config.get_task_slice_file_path(self.rule_number, self.min_ne, self.max_ne)
-        self.empty_iset_ids = oisu.get_empty_indpendent_set_ids(self.rule_number)
+        self.empty_iset_ids = oisu.get_empty_indpendent_set_ids(self.rule_number, self.is_use_extended_rules)
         self.unknown_iset_number = self.iset_number - len(self.empty_iset_ids)
         self.result_file = config.get_isc_results_file_path(self.k_m_n[0], self.k_m_n[1], self.k_m_n[2], self.min_ne, self.max_ne)
         self.task_flag = self.task_flag % (self.k_m_n[0], self.k_m_n[1], self.k_m_n[2], self.min_ne, self.max_ne)
@@ -89,15 +94,15 @@ class ISCTask:
 
     def get_progress_info(self):
         if self.task_complete_number == 0:
-            prg_info = ":unicorn: %s: total tasks: %d, waiting for resources !" % (self.task_flag, self.task_total_number)
+            prg_info = ":timer_clock:  %s: total tasks: %d, waiting for resources !" % (self.task_flag, self.task_total_number)
         else:
             self.task_progress_rate = 100.0 * self.task_complete_number / self.task_total_number
+            task_running_time = self.task_end_time - self.task_start_time
             if len(self.se_conditions) == 0:
-                prg_info = ":unicorn: %s: total tasks: %d, complete tasks: %d (%.3f%%), find 0 se conditions." % (
-                    self.task_flag, self.task_total_number, self.task_complete_number, self.task_progress_rate)
+                prg_info = ":mag_right: %s: total tasks: %d, complete tasks: %d (%.3f%%, running time: %s), find 0 se conditions." % (
+                    self.task_flag, self.task_total_number, self.task_complete_number, self.task_progress_rate, str(task_running_time))
             else:
-                task_running_time = self.task_end_time - self.task_start_time
-                prg_info = ":unicorn: %s: total tasks: %d, complete tasks: %d (%.3f%%, running time: %s), find %d se conditions,  dumped to %s" % (
+                prg_info = ":rocket: %s: total tasks: %d, complete tasks: %d (%.3f%%, running time: %s), find %d se conditions,  dumped to %s" % (
                     self.task_flag, self.task_total_number, self.task_complete_number, self.task_progress_rate,
                     str(task_running_time), len(self.se_conditions), self.se_condition_dump_file)
         return prg_info
@@ -131,10 +136,13 @@ class ISCTask:
 
 
 class ISCTaskConfig:
-    def __init__(self, config_file):
+    def __init__(self, config_file, is_use_extended_rules):
         self.config_file = os.path.join(config.project_base_dir, config_file)
         self.isc_tasks = list()
+        self.is_use_extended_rules = is_use_extended_rules
+        self.load_isc_config_file()
 
+    def load_isc_config_file(self):
         with open(self.config_file, encoding="utf-8", mode="r") as cf:
             jobj = json.load(cf)
             for task in jobj:
@@ -152,8 +160,9 @@ class ISCTaskConfig:
                     kmns = self.get_kmn_by_rule_number(rule_number)
 
                 for kmn in kmns:
-                    itask = ISCTask(rule_number, min_ne, max_ne, kmn)
+                    itask = ISCTask(rule_number, min_ne, max_ne, kmn, self.is_use_extended_rules)
                     self.isc_tasks.append(itask)
+
 
     def get_kmn_by_rule_number(self, rule_number):
         kmns = list()
@@ -184,5 +193,5 @@ class ISCTaskConfig:
 
 
 if __name__ == '__main__':
-    tsc = ISCTaskConfig("isc-tasks-temp.json")
+    tsc = ISCTaskConfig("isc-tasks-temp.json", True)
     pass

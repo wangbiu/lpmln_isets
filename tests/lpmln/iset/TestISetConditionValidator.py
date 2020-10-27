@@ -155,7 +155,7 @@ def test_010_non_se_condition():
     cnt = 1
     for c in non_se_010:
         icondition = parse_icondition(c)
-        is_contain_valid, is_se_sat, condition = validator.validate_isets_kmn_program_from_iset_condition(
+        is_contain_valid, is_se_sat, condition = validator.validate_isets_kmn_program_from_iset_condition_return_str(
             icondition, 0, 1, 0, is_check_valid_rule=False)
         if is_se_sat:
             raise RuntimeError("wrong iset condition: %s" % condition)
@@ -170,7 +170,7 @@ def test_010_se_condition():
     cnt = 1
     for c in se_010:
         icondition = parse_icondition(c)
-        is_contain_valid, is_se_sat, condition = validator.validate_isets_kmn_program_from_iset_condition(
+        is_contain_valid, is_se_sat, condition = validator.validate_isets_kmn_program_from_iset_condition_return_str(
             icondition, 0, 1, 0, is_check_valid_rule=False)
         if not is_se_sat:
             raise RuntimeError("wrong iset condition: %s" % condition)
@@ -192,7 +192,7 @@ def test_singleton_condition():
     print(non_empty_ids)
 
     validator = ISetConditionValidator()
-    is_contain_valid, is_se_sat, condition = validator.validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids(non_empty_ids, k, m, n)
+    is_contain_valid, is_se_sat, condition = validator.validate_kmn_extended_iset_condition_from_non_emtpy_iset_ids_return_icondition_str(non_empty_ids, k, m, n)
     print(is_contain_valid, is_se_sat)
     print(condition)
 

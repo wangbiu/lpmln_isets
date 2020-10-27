@@ -21,11 +21,20 @@ class BaseSAT(abc.ABC):
         pass
 
     @staticmethod
-    def satisfy_head(interpretation, head):
+    def satisfy_positive_head(interpretation, pos_head):
         itp = set(interpretation)
-        h = set(head)
+        h = set(pos_head)
         ist = itp.intersection(h)
         if len(ist) != 0:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def satisfy_negative_head(interpretation, neg_head):
+        itp = set(interpretation)
+        nh = set(neg_head)
+        if nh.issubset(itp):
             return True
         else:
             return False
@@ -51,15 +60,20 @@ class BaseSAT(abc.ABC):
 
     @staticmethod
     def satisfy_rule(cls, interpretation, rule):
-        head = rule[0]
+        ph = rule[0]
         pb = rule[1]
         nb = rule[2]
+        if len(rule) == 4:
+            nh = rule[3]
+        else:
+            nh = set()
 
-        sat_head = cls.satisfy_head(interpretation, head)
+        sat_ph = cls.satisfy_positive_head(interpretation, ph)
         not_sat_pb = not cls.satisfy_positive_body(interpretation, pb)
         not_sat_nb = not cls.satisfy_negative_body(interpretation, nb)
+        not_sat_nh = not cls.satisfy_negative_head(interpretation, nh)
 
-        if sat_head or not_sat_pb or not_sat_nb:
+        if sat_ph or not_sat_pb or not_sat_nb or not_sat_nh:
             return True
         else:
             return False

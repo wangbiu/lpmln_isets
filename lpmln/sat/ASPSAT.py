@@ -17,8 +17,13 @@ class ASPSAT(BaseSAT):
 
     @staticmethod
     def rule_gl_reduct(cls, interpretation, rule):
+        if len(rule) == 3:
+            nh = set()
+        else:
+            nh = rule[3]
+
         gl_rule = None
-        if cls.satisfy_negative_body(interpretation, rule[2]):
+        if cls.satisfy_negative_body(interpretation, rule[2]) and cls.satisfy_negative_head(interpretation, nh):
             gl_rule = [rule[0], rule[1], []]
         return gl_rule
 
