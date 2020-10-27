@@ -25,11 +25,11 @@ class ISetCondition:
             self.icondition = None
 
     def __str__(self):
-        ne_isets = [str(s) for s in self.ne_iset_ids]
+        ne_isets = [str(s + 1) for s in self.ne_iset_ids]
         if len(self.singletom_iset_ids) == 0:
             return ",".join(ne_isets)
         else:
-            singletons = [str(s) for s in self.singletom_iset_ids]
+            singletons = [str(s + 1) for s in self.singletom_iset_ids]
             string = "%s:%s" % (",".join(ne_isets), ",".join(singletons))
             return string
 

@@ -60,6 +60,8 @@ def get_icondition_simplified_file(k_size, m_size, n_size, min_ne, max_ne, type,
 
 def parse_ne_formate_icondition(data):
     cdt, singleton = parse_raw_icondition_data(data)
+    cdt = [s - 1 for s in cdt]
+    singleton = [s - 1 for s in singleton]
     condition = ISetCondition(list(), list(), True)
     condition.set_ne_iset_ids(set(cdt))
     condition.singletom_iset_ids = set(singleton)
@@ -109,7 +111,7 @@ def get_iconditions_singleton_isets(iconditions, subsets=None):
     for s in subsets:
         singletons = singletons.union(set(iconditions[s].singletom_iset_ids))
 
-    new_singletons = [s - 1 for s in singletons]
+    new_singletons = [s for s in singletons]
 
     return set(new_singletons)
 

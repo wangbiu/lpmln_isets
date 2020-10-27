@@ -388,6 +388,16 @@ def prettify_max_clique_from_clique_data(clique_data, outf=None):
         outf.close()
 
 
+def group_and_simplify_se_condtions(k_size, m_size, n_size, min_ne, max_ne, type):
+    print("compute preliminary_group_kmn_iconditions ... ")
+    iscu.preliminary_group_kmn_iconditions(k_size, m_size, n_size, min_ne, max_ne, type)
+    print("compute refine_iconditions_groups ... ")
+    iscu.refine_iconditions_groups(k_size, m_size, n_size, min_ne, max_ne, type)
+    print("compute compute_common_isets ...")
+    iscu.compute_common_isets(k_size, m_size, n_size, min_ne, max_ne, type)
+    print("start simplify SE-conditions ...")
+    simplify_kmn_se_conditions(k_size, m_size, n_size, min_ne, max_ne, type)
+
 if __name__ == '__main__':
     pass
     
