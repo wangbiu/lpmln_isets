@@ -55,6 +55,13 @@ def search(k_size, m_size, n_size, is_use_extended_rules, is_check_valid_rule=Fa
     for c in non_se_conditions:
         print("\t", c)
 
+    se_ic_file = config.get_isc_results_file_path(0, 1, 0, 1, 7)
+    nse_ic_file = se_ic_file + ".nse"
+    save_iconditions(se_ic_file, se_conditions)
+    save_iconditions(nse_ic_file, non_se_conditions)
+
+
+
     return se_conditions, non_se_conditions
 
 
@@ -66,5 +73,5 @@ def save_iconditions(file, iconditions):
 
 
 if __name__ == '__main__':
-    search(0, 1, 0, is_use_extended_rules=False, lp_type="asp")
+    search(0, 1, 0, is_use_extended_rules=False, lp_type="lpmln")
     pass
