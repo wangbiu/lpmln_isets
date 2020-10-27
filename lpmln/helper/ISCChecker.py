@@ -420,12 +420,13 @@ def find_011_se_conditions_non_same_rules():
 def group_and_simplify_all_se_condtions():
     kmns = ["0-1-0", "0-1-1", "1-1-0", "0-2-1", "1-2-0", "1-1-1"]
     for kmn in kmns:
-        icq.group_and_simplify_se_condtions(*kmn, "")
+        icq.group_and_simplify_se_condtions(*kmn_data[kmn], "")
 
 
 if __name__ == '__main__':
     # check_isc_data("0-2-1")
     # check_isc_data("1-1-0")
+    check_isc_data("1-1-1", "", False)
     # check_011_programs()
     # check_011_icondition()
     # check_110_icondition()
@@ -458,7 +459,7 @@ if __name__ == '__main__':
     # icq.simplify_kmn_se_conditions(*kmn_data["0-1-0"], "ne", "")
     # icq.simplify_kmn_se_conditions(*kmn_data["0-1-1"], "", "")
     # icq.simplify_kmn_se_conditions(*kmn_data["1-1-0"], "", "")
-    icq.simplify_kmn_se_conditions(*kmn_data["0-2-1"], "", "")
+    # icq.simplify_kmn_se_conditions(*kmn_data["0-2-1"], "", "")
     # icq.simplify_kmn_se_conditions(*kmn_data["1-2-0"], "", "")
     # icq.simplify_kmn_se_conditions(*kmn_data["1-1-1"], "s", "")
 
