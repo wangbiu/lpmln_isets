@@ -417,7 +417,10 @@ def find_011_se_conditions_non_same_rules():
     print(simplified_dnf)
 
 
-
+def group_and_simplify_all_se_condtions():
+    kmns = ["0-1-0", "0-1-1", "1-1-0", "0-2-1", "1-2-0", "1-1-1"]
+    for kmn in kmns:
+        icq.group_and_simplify_se_condtions(*kmn, "")
 
 
 if __name__ == '__main__':
