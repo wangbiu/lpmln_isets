@@ -1,6 +1,10 @@
 [
-  {"rule_number": 2, "min_ne": 1, "max_ne": 6, "is_skip": false},
-  {"rule_number": 2, "min_ne": 7, "max_ne": 7, "is_skip": false, "kmns": ["0-1-1"]},
-  {"rule_number": 2, "min_ne": 1, "max_ne": 24, "is_skip": true, "kmns": ["0-1-1"]},
-  {"rule_number": 3, "min_ne": 1, "max_ne": 6, "is_skip": true}
+  {"rule_number": 2, "lp_type":"lpmln", "is_use_extended_rules":false, "min_ne": 1, "max_ne": -1, "is_skip": false, "kmns": ["0-1-1"]},
+  {"rule_number": 2, "lp_type":"lpmln", "is_use_extended_rules":false, "min_ne": 1, "max_ne": -1, "is_skip": false, "kmns": ["1-1-0"]},
+  {"rule_number": 3, "lp_type":"lpmln", "is_use_extended_rules":false, "min_ne": 1, "max_ne": -1, "is_skip": false, "kmns": ["0-2-1"]},
+  {"rule_number": 3, "lp_type":"lpmln", "is_use_extended_rules":false, "min_ne": 1, "max_ne": -1, "is_skip": false, "kmns": ["1-2-0"]},
+  {"rule_number": 3, "lp_type":"lpmln", "is_use_extended_rules":false, "min_ne": 1, "max_ne": -1, "is_skip": false, "kmns": ["1-1-1"]},
+  {"rule_number": 3, "lp_type":"lpmln", "is_use_extended_rules":false, "min_ne": 26, "max_ne": -1, "is_skip": true, "kmns": ["2-1-0"]},
+  {"rule_number": 4, "lp_type":"lpmln", "is_use_extended_rules":false, "min_ne": 1, "max_ne": -1, "is_skip": true, "kmns": ["0-3-1"]},
+  {"rule_number": 5, "lp_type":"lpmln", "is_use_extended_rules":false, "min_ne": 1, "max_ne": -1, "is_skip": true, "kmns": ["0-4-1"]}
 ]

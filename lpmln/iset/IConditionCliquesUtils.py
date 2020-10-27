@@ -349,9 +349,9 @@ def dump_simplified_se_conditions(clique_data, sim_file):
             common_ne = copy.deepcopy(data[1])
             common_empty = copy.deepcopy(data[2])
             singletons = copy.deepcopy(data[3])
-            common_ne = [str(s) for s in common_ne]
-            common_empty = [str(s) for s in common_empty]
-            singletons = [str(s) for s in singletons]
+            common_ne = [str(s+1) for s in common_ne]
+            common_empty = [str(s+1) for s in common_empty]
+            singletons = [str(s+1) for s in singletons]
             condition = "%s:%s:%s\n" % (",".join(common_ne), ",".join(common_empty), ",".join(singletons))
             f.write(condition)
 
